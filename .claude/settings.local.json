@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del \"C:\\Users\\profe\\OneDrive - Georgia College\\starter-kit-f25\\app\\blueprints\\clubs.py\")",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(move:*)",
+      "Bash(echo $VIRTUAL_ENV)",
+      "Bash(.venvScriptsactivate)",
+      "Bash(\".venv\\Scripts\\activate\")",
+      "Bash(source:*)",
+      "Bash(pip freeze)",
+      "WebSearch",
+      "WebFetch(domain:www.gcsu.edu)",
+      "WebFetch(domain:www.brandcolorcode.com)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

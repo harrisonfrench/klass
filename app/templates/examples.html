@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Examples</h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExampleModal">
+        Add New Example
+    </button>
+
+    <!-- Table displaying all examples -->
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>Example ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Date of Birth</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for example in all_examples %}
+            <tr>
+                <td>{{ example.sample_table_id }}</td>
+                <td>{{ example.first_name }}</td>
+                <td>{{ example.last_name }}</td>
+                <td>{{ example.date_of_birth }}</td>
+                <td>{{ example.created_at }}</td>
+                <td>{{ example.updated_at }}</td>
+                <td>
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editExampleModal{{ example.sample_table_id }}">
+                        Edit
+                    </button>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteExampleModal{{ example.sample_table_id }}">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+
+            <!-- Edit Example Modal -->
+            <div class="modal fade" id="editExampleModal{{ example.sample_table_id }}" tabindex="-1" aria-labelledby="editExampleModalLabel{{ example.sample_table_id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editExampleModalLabel{{ example.sample_table_id }}">Edit Example</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post" action="{{ url_for('examples.update_example', sample_id=example.sample_table_id) }}">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" name="first_name" value="{{ example.first_name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" name="last_name" value="{{ example.last_name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                                    <input type="date" class="form-control" name="date_of_birth" value="{{ example.date_of_birth }}" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-warning">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Example Modal -->
+            <div class="modal fade" id="deleteExampleModal{{ example.sample_table_id }}" tabindex="-1" aria-labelledby="deleteExampleModalLabel{{ example.sample_table_id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteExampleModalLabel{{ example.sample_table_id }}">Delete Example</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete {{ example.first_name }} {{ example.last_name }}?
+                        </div>
+                        <div class="modal-footer">
+                            <form method="post" action="{{ url_for('examples.delete_example', sample_id=example.sample_table_id) }}">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Example Modal -->
+<div class="modal fade" id="addExampleModal" tabindex="-1" aria-labelledby="addExampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addExampleModalLabel">Add New Example</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{{ url_for('examples.show_examples') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="firstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" name="first_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" name="last_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" name="date_of_birth" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Example</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
