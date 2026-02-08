@@ -1,0 +1,463 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: var(--bg-card, #fff);
+        border-radius: 12px;
+        border: 1px solid var(--border, #e2e8f0);
+        padding: 1.25rem;
+        height: 100%;
+    }
+
+    .stat-card .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .stat-card .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text, #1e293b);
+        line-height: 1.2;
+    }
+
+    .stat-card .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-muted, #64748b);
+    }
+
+    .analytics-card {
+        background: var(--bg-card, #fff);
+        border-radius: 12px;
+        border: 1px solid var(--border, #e2e8f0);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .analytics-card h5 {
+        color: var(--text, #1e293b);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+
+    /* Mastery Progress Bars */
+    .deck-progress {
+        margin-bottom: 1rem;
+    }
+
+    .deck-progress .deck-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .deck-progress .deck-title {
+        font-weight: 500;
+        color: var(--text, #1e293b);
+    }
+
+    .deck-progress .deck-stats {
+        font-size: 0.75rem;
+        color: var(--text-muted, #64748b);
+    }
+
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background-color: var(--border, #e2e8f0);
+    }
+
+    .progress-bar {
+        border-radius: 4px;
+    }
+
+    .progress-mastered {
+        background-color: #22c55e;
+    }
+
+    .progress-learning {
+        background-color: #f59e0b;
+    }
+
+    .progress-new {
+        background-color: #e2e8f0;
+    }
+
+    /* Activity Heatmap */
+    .activity-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+    }
+
+    .activity-day {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        background-color: var(--border, #e2e8f0);
+    }
+
+    .activity-day[data-level="1"] {
+        background-color: #c6e48b;
+    }
+
+    .activity-day[data-level="2"] {
+        background-color: #7bc96f;
+    }
+
+    .activity-day[data-level="3"] {
+        background-color: #449240;
+    }
+
+    .activity-day[data-level="4"] {
+        background-color: #196127;
+    }
+
+    [data-theme="dark"] .activity-day {
+        background-color: #1e293b;
+    }
+
+    [data-theme="dark"] .activity-day[data-level="1"] {
+        background-color: #0e4429;
+    }
+
+    [data-theme="dark"] .activity-day[data-level="2"] {
+        background-color: #006d32;
+    }
+
+    [data-theme="dark"] .activity-day[data-level="3"] {
+        background-color: #26a641;
+    }
+
+    [data-theme="dark"] .activity-day[data-level="4"] {
+        background-color: #39d353;
+    }
+
+    .activity-legend {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        font-size: 0.75rem;
+        color: var(--text-muted, #64748b);
+    }
+
+    .activity-legend .activity-day {
+        width: 12px;
+        height: 12px;
+    }
+
+    /* Class Table */
+    .class-table {
+        width: 100%;
+    }
+
+    .class-table th {
+        font-weight: 500;
+        color: var(--text-muted, #64748b);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+    }
+
+    .class-table td {
+        padding: 0.75rem 0.5rem;
+        color: var(--text, #1e293b);
+        border-bottom: 1px solid var(--border, #e2e8f0);
+    }
+
+    .class-color {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted, #64748b);
+    }
+
+    .empty-state svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Analytics</h1>
+</div>
+
+<!-- Stats Overview -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                <span data-feather="check-circle"></span>
+            </div>
+            <div class="stat-value">{{ stats.total_quizzes }}</div>
+            <div class="stat-label">Quizzes Taken</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                <span data-feather="percent"></span>
+            </div>
+            <div class="stat-value">{{ stats.avg_quiz_score }}%</div>
+            <div class="stat-label">Avg Score</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                <span data-feather="layers"></span>
+            </div>
+            <div class="stat-value">{{ stats.flashcards_studied }}</div>
+            <div class="stat-label">Cards Studied</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">
+                <span data-feather="award"></span>
+            </div>
+            <div class="stat-value">{{ stats.mastered_cards }}</div>
+            <div class="stat-label">Mastered</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">
+                <span data-feather="file-text"></span>
+            </div>
+            <div class="stat-value">{{ stats.total_notes }}</div>
+            <div class="stat-label">Notes</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                <span data-feather="calendar"></span>
+            </div>
+            <div class="stat-value">{{ stats.study_days }}</div>
+            <div class="stat-label">Study Days</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quiz Trends Chart -->
+    <div class="col-lg-8">
+        <div class="analytics-card">
+            <h5><span data-feather="trending-up" class="me-2"></span>Quiz Performance</h5>
+            {% if quiz_data.scores %}
+            <div class="chart-container">
+                <canvas id="quizChart"></canvas>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <span data-feather="check-circle"></span>
+                <p>No quiz attempts yet. Take a quiz to see your progress!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Study Activity -->
+    <div class="col-lg-4">
+        <div class="analytics-card">
+            <h5><span data-feather="activity" class="me-2"></span>Study Activity (30 days)</h5>
+            <div class="activity-grid">
+                {% for day in activity_data %}
+                <div class="activity-day" data-level="{{ day.level }}" title="{{ day.date }}: {{ day.count }} activities"></div>
+                {% endfor %}
+            </div>
+            <div class="activity-legend">
+                <span>Less</span>
+                <div class="activity-day" data-level="0"></div>
+                <div class="activity-day" data-level="1"></div>
+                <div class="activity-day" data-level="2"></div>
+                <div class="activity-day" data-level="3"></div>
+                <div class="activity-day" data-level="4"></div>
+                <span>More</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Flashcard Mastery -->
+    <div class="col-lg-6">
+        <div class="analytics-card">
+            <h5><span data-feather="layers" class="me-2"></span>Flashcard Mastery</h5>
+            {% if flashcard_data %}
+            {% for deck in flashcard_data %}
+            <div class="deck-progress">
+                <div class="deck-header">
+                    <span class="deck-title">{{ deck.title }}</span>
+                    <span class="deck-stats">{{ deck.mastered }}/{{ deck.total_cards }} mastered</span>
+                </div>
+                <div class="progress">
+                    {% set mastered_pct = (deck.mastered / deck.total_cards * 100) if deck.total_cards > 0 else 0 %}
+                    {% set learning_pct = (deck.learning / deck.total_cards * 100) if deck.total_cards > 0 else 0 %}
+                    <div class="progress-bar progress-mastered" style="width: {{ mastered_pct }}%"></div>
+                    <div class="progress-bar progress-learning" style="width: {{ learning_pct }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="mt-3">
+                <span class="badge" style="background: #22c55e;">Mastered</span>
+                <span class="badge" style="background: #f59e0b;">Learning</span>
+                <span class="badge" style="background: #e2e8f0; color: #64748b;">New</span>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <span data-feather="layers"></span>
+                <p>No flashcard decks yet. Create some flashcards to track your progress!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Class Performance -->
+    <div class="col-lg-6">
+        <div class="analytics-card">
+            <h5><span data-feather="book" class="me-2"></span>Class Performance</h5>
+            {% if class_performance %}
+            <table class="class-table">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Notes</th>
+                        <th>Decks</th>
+                        <th>Quizzes</th>
+                        <th>Avg Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cls in class_performance %}
+                    <tr>
+                        <td>
+                            <span class="class-color" style="background-color: {{ cls.color }};"></span>
+                            {{ cls.name }}
+                        </td>
+                        <td>{{ cls.note_count }}</td>
+                        <td>{{ cls.deck_count }}</td>
+                        <td>{{ cls.quiz_count }}</td>
+                        <td>
+                            {% if cls.avg_score > 0 %}
+                            <span class="badge {% if cls.avg_score >= 80 %}bg-success{% elif cls.avg_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ cls.avg_score }}%
+                            </span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <span data-feather="book"></span>
+                <p>No classes yet. Create a class to get started!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+
+    {% if quiz_data.scores %}
+    // Quiz Performance Chart
+    const ctx = document.getElementById('quizChart').getContext('2d');
+    const quizData = {{ quiz_data | tojson }};
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: quizData.labels,
+            datasets: [{
+                label: 'Quiz Score (%)',
+                data: quizData.scores,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#6366f1',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const idx = context[0].dataIndex;
+                            return quizData.quiz_names[idx];
+                        },
+                        label: function(context) {
+                            return 'Score: ' + context.raw + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

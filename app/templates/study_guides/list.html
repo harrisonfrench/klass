@@ -1,0 +1,144 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Study Guides{% endblock %}
+
+{% block extra_css %}
+<style>
+    .guide-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        transition: all 0.2s ease;
+        border-left: 4px solid #10b981;
+        height: 100%;
+    }
+
+    .guide-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .guide-card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #37352f;
+        margin-bottom: 0.5rem;
+    }
+
+    .guide-card-meta {
+        font-size: 0.8rem;
+        color: #9b9a97;
+    }
+
+    .empty-guides {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #f8fafc;
+        border-radius: 12px;
+    }
+
+    .empty-guides svg {
+        width: 64px;
+        height: 64px;
+        color: #10b981;
+        margin-bottom: 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #37352f;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="max-width: 1100px;">
+    <div class="page-header">
+        <h1>
+            <span data-feather="book-open" style="color: #10b981;"></span>
+            Study Guides
+        </h1>
+        {% if classes %}
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
+                <span data-feather="plus"></span> Generate Guide
+            </button>
+            <ul class="dropdown-menu">
+                {% for class in classes %}
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('study_guides.generate_guide', class_id=class.id) }}">
+                        <span class="badge me-2" style="background-color: {{ class.color }};">{{ class.code or '---' }}</span>
+                        {{ class.name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if guides %}
+    <div class="row">
+        {% for guide in guides %}
+        <div class="col-md-4 mb-4">
+            <a href="{{ url_for('study_guides.view_guide', guide_id=guide.id) }}" class="text-decoration-none">
+                <div class="guide-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge" style="background-color: {{ guide.class_color }};">
+                            {{ guide.class_code or guide.class_name }}
+                        </span>
+                        <span data-feather="book-open" style="width: 18px; height: 18px; color: #10b981;"></span>
+                    </div>
+                    <div class="guide-card-title">{{ guide.title }}</div>
+                    <div class="guide-card-meta">
+                        Created {{ guide.created_at[:10] if guide.created_at else '' }}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-guides">
+        <span data-feather="book-open"></span>
+        <h4>No study guides yet</h4>
+        <p class="text-muted mb-3">Generate a study guide from your notes to help you prepare for exams.</p>
+        {% if classes %}
+        <div class="dropdown d-inline-block">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
+                <span data-feather="zap"></span> Generate Your First Guide
+            </button>
+            <ul class="dropdown-menu">
+                {% for class in classes %}
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('study_guides.generate_guide', class_id=class.id) }}">
+                        <span class="badge me-2" style="background-color: {{ class.color }};">{{ class.code or '---' }}</span>
+                        {{ class.name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <p class="text-muted">Create a class and add some notes first.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+</script>
+{% endblock %}

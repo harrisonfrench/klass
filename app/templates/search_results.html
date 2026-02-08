@@ -1,0 +1,184 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Search: {{ query }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Search Results for "{{ query }}"</h1>
+</div>
+
+{% set total_results = classes|length + assignments|length + events|length + notes|length %}
+
+{% if total_results == 0 %}
+<div class="empty-state">
+    <span data-feather="search"></span>
+    <h5>No results found</h5>
+    <p class="text-muted">Try a different search term</p>
+</div>
+{% else %}
+
+<!-- Classes Results -->
+{% if classes %}
+<div class="section-header">
+    <h4>Classes</h4>
+    <span class="badge bg-secondary">{{ classes|length }}</span>
+</div>
+<div class="row mb-4">
+    {% for class in classes %}
+    <div class="col-md-4 mb-3">
+        <a href="{{ url_for('classes.view_class', class_id=class.id) }}" class="text-decoration-none">
+            <div class="card class-card h-100">
+                <div class="card-header" style="background-color: {{ class.color }}; color: white;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>{{ class.code or 'No Code' }}</strong>
+                        <span class="badge bg-light text-dark">{{ class.semester or '' }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title text-dark">{{ class.name }}</h6>
+                    {% if class.instructor %}
+                    <p class="card-text text-muted small mb-0">
+                        <span data-feather="user" class="me-1"></span>{{ class.instructor }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Assignments Results -->
+{% if assignments %}
+<div class="section-header">
+    <h4>Assignments</h4>
+    <span class="badge bg-secondary">{{ assignments|length }}</span>
+</div>
+<div class="table-responsive mb-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Class</th>
+                <th>Due Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assignment in assignments %}
+            <tr>
+                <td>
+                    <strong>{{ assignment.title }}</strong>
+                    {% if assignment.description %}
+                    <br><small class="text-muted">{{ assignment.description[:80] }}{% if assignment.description|length > 80 %}...{% endif %}</small>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge" style="background-color: {{ assignment.class_color }};">{{ assignment.class_name }}</span>
+                </td>
+                <td>{{ assignment.due_date or 'No date' }}</td>
+                <td>
+                    {% if assignment.status == 'completed' %}
+                    <span class="badge bg-success">Completed</span>
+                    {% elif assignment.status == 'reminder' %}
+                    <span class="badge bg-info">Reminder</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Calendar Events Results -->
+{% if events %}
+<div class="section-header">
+    <h4>Calendar Events</h4>
+    <span class="badge bg-secondary">{{ events|length }}</span>
+</div>
+<div class="table-responsive mb-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Class</th>
+                <th>Type</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td>
+                    <strong>{{ event.title }}</strong>
+                    {% if event.description %}
+                    <br><small class="text-muted">{{ event.description[:80] }}{% if event.description|length > 80 %}...{% endif %}</small>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge" style="background-color: {{ event.class_color }};">{{ event.class_name }}</span>
+                </td>
+                <td>
+                    {% if event.event_type == 'exam' %}
+                    <span class="badge bg-danger">Exam</span>
+                    {% elif event.event_type == 'deadline' %}
+                    <span class="badge bg-warning text-dark">Deadline</span>
+                    {% elif event.event_type == 'holiday' %}
+                    <span class="badge bg-success">Holiday</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ event.event_type or 'Other' }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ event.event_date or 'No date' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Notes Results -->
+{% if notes %}
+<div class="section-header">
+    <h4>Notes</h4>
+    <span class="badge bg-secondary">{{ notes|length }}</span>
+</div>
+<div class="row mb-4">
+    {% for note in notes %}
+    <div class="col-md-4 mb-3">
+        <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="text-decoration-none">
+            <div class="note-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge" style="background-color: {{ note.class_color }};">
+                        {{ note.class_name }}
+                    </span>
+                    {% if note.is_pinned %}
+                    <span data-feather="bookmark" style="width: 14px; height: 14px; color: var(--warning);"></span>
+                    {% endif %}
+                </div>
+                <div class="note-card-title">{{ note.title or 'Untitled' }}</div>
+                <div class="note-card-preview">
+                    {{ note.content|striptags|truncate(100) if note.content else 'Empty note' }}
+                </div>
+                <div class="note-card-meta">
+                    {{ note.updated_at[:10] if note.updated_at else '' }}
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+</script>
+{% endblock %}

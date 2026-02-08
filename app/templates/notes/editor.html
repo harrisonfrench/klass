@@ -1,0 +1,1564 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ note.title or 'Untitled' }}{% endblock %}
+
+{% block extra_css %}
+<!-- Quill Editor CSS -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<style>
+    /* Notion-style editor page */
+    .note-editor-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    /* Breadcrumb styling */
+    .note-breadcrumb {
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .note-breadcrumb a {
+        color: #666;
+        text-decoration: none;
+    }
+
+    .note-breadcrumb a:hover {
+        color: var(--primary);
+    }
+
+    .note-breadcrumb .separator {
+        color: #ccc;
+        margin: 0 0.5rem;
+    }
+
+    /* Large title input */
+    .note-title-input {
+        font-size: 2.5rem;
+        font-weight: 700;
+        border: none;
+        outline: none;
+        width: 100%;
+        padding: 0;
+        margin-bottom: 0.5rem;
+        color: var(--dark);
+        background: transparent;
+    }
+
+    .note-title-input::placeholder {
+        color: #ccc;
+    }
+
+    /* Meta info */
+    .note-meta {
+        font-size: 0.8rem;
+        color: #999;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .save-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .save-status.saving {
+        color: var(--warning);
+    }
+
+    .save-status.saved {
+        color: var(--success);
+    }
+
+    /* Quill customization for Notion feel */
+    .ql-container {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        border: none !important;
+    }
+
+    .ql-editor {
+        padding: 0;
+        min-height: 400px;
+        line-height: 1.8;
+    }
+
+    .ql-editor:focus {
+        outline: none;
+    }
+
+    .ql-editor p {
+        margin-bottom: 0.75rem;
+    }
+
+    .ql-editor h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .ql-editor h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .ql-editor h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .ql-editor ul, .ql-editor ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .ql-editor li {
+        margin-bottom: 0.25rem;
+    }
+
+    .ql-editor blockquote {
+        border-left: 3px solid var(--primary);
+        padding-left: 1rem;
+        color: #666;
+        margin: 1rem 0;
+    }
+
+    .ql-editor pre {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 1rem;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+    }
+
+    .ql-editor code {
+        background: #f1f3f5;
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.9em;
+    }
+
+    .ql-editor a {
+        color: var(--primary);
+    }
+
+    /* Color-coded headers from AI cleanup */
+    .ql-editor h1[style*="color"],
+    .ql-editor h2[style*="color"],
+    .ql-editor h3[style*="color"] {
+        font-weight: 600;
+    }
+
+    /* Highlighted text from AI cleanup */
+    .ql-editor mark {
+        padding: 0.1rem 0.25rem;
+        border-radius: 3px;
+    }
+
+    /* Summary content with formatting */
+    .summary-content h1,
+    .summary-content h2,
+    .summary-content h3 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-content h1:first-child,
+    .summary-content h2:first-child,
+    .summary-content h3:first-child {
+        margin-top: 0;
+    }
+
+    .summary-content mark {
+        padding: 0.1rem 0.25rem;
+        border-radius: 3px;
+    }
+
+    .summary-content ul, .summary-content ol {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+    }
+
+    .summary-content blockquote {
+        margin: 0.75rem 0;
+    }
+
+    /* Toolbar styling */
+    .ql-toolbar {
+        border: none !important;
+        border-bottom: 1px solid var(--border) !important;
+        padding: 0.75rem 0 !important;
+        margin-bottom: 1.5rem;
+        position: sticky;
+        top: 56px;
+        background: white;
+        z-index: 10;
+    }
+
+    .ql-toolbar .ql-formats {
+        margin-right: 1rem;
+    }
+
+    /* Actions bar */
+    .note-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
+
+    .note-actions .btn {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    /* Pin button styling */
+    .btn-pin {
+        color: #666;
+    }
+
+    .btn-pin.pinned {
+        color: var(--warning);
+    }
+
+    /* AI Toolbar */
+    .ai-toolbar {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1rem;
+    }
+
+    .ai-toolbar .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .btn-ai {
+        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        color: white;
+        border: none;
+    }
+
+    .btn-ai:hover {
+        background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+        color: white;
+    }
+
+    .btn-ai:disabled {
+        opacity: 0.7;
+    }
+
+    /* Summary modal content */
+    .summary-content {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        max-height: 400px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        line-height: 1.6;
+    }
+
+    .summary-content ul {
+        margin: 0;
+        padding-left: 1.25rem;
+    }
+
+    .summary-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Floating Selection Toolbar (Notion-style) */
+    .selection-toolbar {
+        position: absolute;
+        display: none;
+        background: #37352f;
+        border-radius: 6px;
+        padding: 4px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+        z-index: 1000;
+        gap: 1px;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .selection-toolbar.visible {
+        display: flex;
+    }
+
+    .sel-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.9);
+        padding: 6px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-family: inherit;
+        transition: background 0.1s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .sel-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sel-btn.active {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .sel-btn-ai {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .ai-sparkle {
+        font-size: 14px;
+    }
+
+    .code-icon {
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 12px;
+    }
+
+    .sel-divider {
+        width: 1px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 0 4px;
+    }
+
+    .dropdown-arrow {
+        font-size: 10px;
+        opacity: 0.7;
+    }
+
+    .color-a {
+        font-weight: 600;
+        border-bottom: 2px solid #e03e3e;
+        padding-bottom: 1px;
+    }
+
+    /* Dropdown menus */
+    .sel-dropdown {
+        position: relative;
+    }
+
+    .sel-dropdown-menu {
+        display: none;
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+        padding: 6px;
+        margin-bottom: 8px;
+        min-width: 200px;
+        z-index: 1001;
+    }
+
+    .sel-dropdown-menu.visible {
+        display: block;
+    }
+
+    .color-menu-title {
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+        color: #9b9a97;
+        padding: 8px 10px 4px;
+        letter-spacing: 0.5px;
+    }
+
+    /* AI Menu */
+    .ai-menu {
+        min-width: 220px;
+    }
+
+    .ai-menu-section {
+        padding-bottom: 4px;
+    }
+
+    .ai-menu-section + .ai-menu-section {
+        border-top: 1px solid #f1f1ef;
+        padding-top: 4px;
+    }
+
+    .ai-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 8px 10px;
+        text-align: left;
+        background: none;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #37352f;
+    }
+
+    .ai-option:hover {
+        background: #f1f1ef;
+    }
+
+    .ai-option span {
+        font-size: 16px;
+    }
+
+    /* Color options list */
+    .color-options {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .color-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 6px 10px;
+        text-align: left;
+        background: none;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #37352f;
+    }
+
+    .color-option:hover {
+        background: #f1f1ef;
+    }
+
+    .color-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    /* Turn into menu */
+    .turn-into-menu {
+        min-width: 160px;
+    }
+
+    .turn-into-option {
+        display: block;
+        width: 100%;
+        padding: 8px 12px;
+        text-align: left;
+        background: none;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #37352f;
+    }
+
+    .turn-into-option:hover {
+        background: #f1f1ef;
+    }
+
+    /* Color picker styling in toolbar */
+    .ql-snow .ql-color-picker .ql-picker-label,
+    .ql-snow .ql-background .ql-picker-label {
+        padding: 2px 4px;
+    }
+
+    /* AI Processing Overlay */
+    .ai-processing-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+    }
+
+    .ai-processing-box {
+        background: white;
+        border-radius: 12px;
+        padding: 24px 32px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .ai-processing-spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid #f1f1ef;
+        border-top-color: #6940a5;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .ai-processing-text {
+        font-size: 15px;
+        color: #37352f;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="note-editor-page">
+    <!-- Breadcrumb -->
+    <div class="note-breadcrumb d-flex align-items-center">
+        <a href="{{ url_for('classes.view_class', class_id=note.class_id) }}">
+            <span style="color: {{ note.class_color }};">&#9679;</span>
+            {{ note.class_code or note.class_name }}
+        </a>
+        <span class="separator">/</span>
+        <span class="text-dark">{{ note.title or 'Untitled' }}</span>
+
+        <div class="note-actions">
+            <form method="POST" action="{{ url_for('notes.toggle_pin', note_id=note.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-secondary btn-pin {% if note.is_pinned %}pinned{% endif %}" title="{% if note.is_pinned %}Unpin{% else %}Pin{% endif %}">
+                    <span data-feather="bookmark"></span>
+                </button>
+            </form>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <span data-feather="trash-2"></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Title input -->
+    <input type="text"
+           class="note-title-input"
+           id="noteTitle"
+           value="{{ note.title }}"
+           placeholder="Untitled"
+           autocomplete="off">
+
+    <!-- Meta info -->
+    <div class="note-meta">
+        <span class="save-status saved" id="saveStatus">
+            <span data-feather="check" style="width: 14px; height: 14px;"></span>
+            Saved
+        </span>
+        <span>Last edited {{ note.updated_at[:16] if note.updated_at else 'just now' }}</span>
+    </div>
+
+    <!-- AI Toolbar -->
+    <div class="ai-toolbar">
+        <button type="button" class="btn btn-sm btn-ai" id="summarizeBtn" onclick="summarizeNote()">
+            <span data-feather="zap"></span>
+            Summarize
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="expandBtn" onclick="expandNote()" disabled title="Select text first">
+            <span data-feather="maximize-2"></span>
+            Expand
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="cleanupBtn" onclick="cleanupNote()">
+            <span data-feather="edit-3"></span>
+            Clean Up
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="flashcardsBtn" onclick="generateFlashcards()">
+            <span data-feather="layers"></span>
+            Generate Flashcards
+        </button>
+    </div>
+
+    <!-- Quill Editor Toolbar -->
+    <div id="toolbar">
+        <span class="ql-formats">
+            <select class="ql-header">
+                <option value="1">Heading 1</option>
+                <option value="2">Heading 2</option>
+                <option value="3">Heading 3</option>
+                <option selected>Normal</option>
+            </select>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-bold"></button>
+            <button class="ql-italic"></button>
+            <button class="ql-underline"></button>
+            <button class="ql-strike"></button>
+        </span>
+        <span class="ql-formats">
+            <select class="ql-color" title="Text Color"></select>
+            <select class="ql-background" title="Highlight"></select>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-list" value="ordered"></button>
+            <button class="ql-list" value="bullet"></button>
+            <button class="ql-list" value="check"></button>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-blockquote"></button>
+            <button class="ql-code-block"></button>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-link"></button>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-clean"></button>
+        </span>
+    </div>
+
+    <!-- Floating Selection Toolbar (Notion-style) -->
+    <div id="selection-toolbar" class="selection-toolbar">
+        <!-- AI Features -->
+        <button class="sel-btn sel-btn-ai" id="improveWritingBtn" title="Improve writing">
+            <span class="ai-sparkle">✨</span> Improve writing
+        </button>
+
+        <!-- Ask AI dropdown -->
+        <div class="sel-dropdown">
+            <button class="sel-btn sel-btn-ai sel-dropdown-toggle" id="askAiToggle" title="Ask AI">
+                <span>🔑</span> Ask AI
+            </button>
+            <div class="sel-dropdown-menu ai-menu" id="askAiMenu">
+                <div class="ai-menu-section">
+                    <div class="color-menu-title">Suggested</div>
+                    <button class="ai-option" data-action="improve"><span>✨</span> Improve writing</button>
+                    <button class="ai-option" data-action="proofread"><span>✓</span> Proofread</button>
+                    <button class="ai-option" data-action="simplify"><span>💡</span> Simplify language</button>
+                </div>
+                <div class="ai-menu-section">
+                    <div class="color-menu-title">Edit</div>
+                    <button class="ai-option" data-action="shorter"><span>📝</span> Make shorter</button>
+                    <button class="ai-option" data-action="longer"><span>📄</span> Make longer</button>
+                    <button class="ai-option" data-action="formal"><span>👔</span> More formal</button>
+                    <button class="ai-option" data-action="casual"><span>😊</span> More casual</button>
+                </div>
+            </div>
+        </div>
+
+        <span class="sel-divider"></span>
+
+        <!-- Turn into dropdown -->
+        <div class="sel-dropdown">
+            <button class="sel-btn sel-dropdown-toggle" id="turnIntoToggle" title="Turn into">
+                Bulleted list <span class="dropdown-arrow">▾</span>
+            </button>
+            <div class="sel-dropdown-menu turn-into-menu" id="turnIntoMenu">
+                <div class="color-menu-title">Turn into</div>
+                <button class="turn-into-option" data-header="">Text</button>
+                <button class="turn-into-option" data-header="1">Heading 1</button>
+                <button class="turn-into-option" data-header="2">Heading 2</button>
+                <button class="turn-into-option" data-header="3">Heading 3</button>
+                <button class="turn-into-option" data-list="bullet">Bulleted list</button>
+                <button class="turn-into-option" data-list="ordered">Numbered list</button>
+                <button class="turn-into-option" data-blockquote="true">Quote</button>
+            </div>
+        </div>
+
+        <span class="sel-divider"></span>
+
+        <!-- Text formatting -->
+        <button class="sel-btn" data-format="bold" title="Bold"><strong>B</strong></button>
+        <button class="sel-btn" data-format="italic" title="Italic"><em>I</em></button>
+        <button class="sel-btn" data-format="underline" title="Underline"><u>U</u></button>
+        <button class="sel-btn" data-format="strike" title="Strikethrough"><s>S</s></button>
+        <button class="sel-btn" data-format="code" title="Code"><span class="code-icon">&lt;/&gt;</span></button>
+        <button class="sel-btn" data-format="link" title="Add Link"><span>🔗</span></button>
+
+        <!-- Color dropdown -->
+        <div class="sel-dropdown">
+            <button class="sel-btn sel-dropdown-toggle" id="colorToggle" title="Color">
+                <span class="color-a" id="colorIcon">A</span> <span class="dropdown-arrow">▾</span>
+            </button>
+            <div class="sel-dropdown-menu color-menu" id="colorMenu">
+                <div class="color-menu-title">Color</div>
+                <div class="color-options">
+                    <button class="color-option" data-color="#37352f"><span class="color-dot" style="background: #37352f;"></span> Default</button>
+                    <button class="color-option" data-color="#9b9a97"><span class="color-dot" style="background: #9b9a97;"></span> Gray</button>
+                    <button class="color-option" data-color="#64473a"><span class="color-dot" style="background: #64473a;"></span> Brown</button>
+                    <button class="color-option" data-color="#d9730d"><span class="color-dot" style="background: #d9730d;"></span> Orange</button>
+                    <button class="color-option" data-color="#dfab01"><span class="color-dot" style="background: #dfab01;"></span> Yellow</button>
+                    <button class="color-option" data-color="#0f7b6c"><span class="color-dot" style="background: #0f7b6c;"></span> Green</button>
+                    <button class="color-option" data-color="#0b6e99"><span class="color-dot" style="background: #0b6e99;"></span> Blue</button>
+                    <button class="color-option" data-color="#6940a5"><span class="color-dot" style="background: #6940a5;"></span> Purple</button>
+                    <button class="color-option" data-color="#ad1a72"><span class="color-dot" style="background: #ad1a72;"></span> Pink</button>
+                    <button class="color-option" data-color="#e03e3e"><span class="color-dot" style="background: #e03e3e;"></span> Red</button>
+                </div>
+                <div class="color-menu-title" style="margin-top: 8px;">Background</div>
+                <div class="color-options">
+                    <button class="color-option bg-option" data-bg=""><span class="color-dot" style="background: white; border: 1px solid #ddd;"></span> None</button>
+                    <button class="color-option bg-option" data-bg="#f1f1ef"><span class="color-dot" style="background: #f1f1ef;"></span> Gray</button>
+                    <button class="color-option bg-option" data-bg="#f4eeee"><span class="color-dot" style="background: #f4eeee;"></span> Brown</button>
+                    <button class="color-option bg-option" data-bg="#fbecdd"><span class="color-dot" style="background: #fbecdd;"></span> Orange</button>
+                    <button class="color-option bg-option" data-bg="#fbf3db"><span class="color-dot" style="background: #fbf3db;"></span> Yellow</button>
+                    <button class="color-option bg-option" data-bg="#edf3ec"><span class="color-dot" style="background: #edf3ec;"></span> Green</button>
+                    <button class="color-option bg-option" data-bg="#e7f3f8"><span class="color-dot" style="background: #e7f3f8;"></span> Blue</button>
+                    <button class="color-option bg-option" data-bg="#f4f0f7"><span class="color-dot" style="background: #f4f0f7;"></span> Purple</button>
+                    <button class="color-option bg-option" data-bg="#f9f2f5"><span class="color-dot" style="background: #f9f2f5;"></span> Pink</button>
+                    <button class="color-option bg-option" data-bg="#fdebec"><span class="color-dot" style="background: #fdebec;"></span> Red</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="sel-btn" id="moreOptionsBtn" title="More options">⋯</button>
+    </div>
+
+    <!-- Quill Editor -->
+    <div id="editor">{{ note.content|safe }}</div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ note.title or 'this note' }}</strong>?</p>
+                <p class="text-danger small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('notes.delete_note', note_id=note.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete Note</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Summary Modal -->
+<div class="modal fade" id="summaryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span data-feather="zap" class="me-2"></span>
+                    AI Summary
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="summary-content" id="summaryContent">
+                    <!-- Summary will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" onclick="copySummary()">
+                    <span data-feather="copy"></span>
+                    Copy
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="appendSummary()">
+                    <span data-feather="plus"></span>
+                    Append to Note
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Result Modal (for expand/cleanup) -->
+<div class="modal fade" id="aiResultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aiResultTitle">AI Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="summary-content" id="aiResultContent">
+                    <!-- Result will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" onclick="copyAiResult()">
+                    <span data-feather="copy"></span>
+                    Copy
+                </button>
+                <button type="button" class="btn btn-primary" onclick="replaceWithAiResult()">
+                    <span data-feather="check"></span>
+                    Replace Content
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Flashcards Modal -->
+<div class="modal fade" id="flashcardsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span data-feather="layers" class="me-2"></span>
+                    Generated Flashcards
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Review the generated flashcards and save them to a new deck.</p>
+                <div class="mb-3">
+                    <label class="form-label">Deck Name</label>
+                    <input type="text" class="form-control" id="newDeckName" value="">
+                </div>
+                <div id="flashcardsPreview" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Cards will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span class="me-auto text-muted" id="flashcardCount">0 cards</span>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveFlashcardDeck()">
+                    <span data-feather="save"></span>
+                    Create Deck
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Quill Editor JS -->
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+    feather.replace();
+
+    // Register inline style attributors for colors (allows AI-generated inline styles)
+    const ColorStyle = Quill.import('attributors/style/color');
+    const BackgroundStyle = Quill.import('attributors/style/background');
+    Quill.register(ColorStyle, true);
+    Quill.register(BackgroundStyle, true);
+
+    // Initialize Quill editor with color support
+    const quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: '#toolbar'
+        },
+        placeholder: 'Start writing...',
+        formats: [
+            'header', 'bold', 'italic', 'underline', 'strike',
+            'color', 'background',
+            'list', 'bullet', 'check',
+            'blockquote', 'code-block',
+            'link', 'image'
+        ]
+    });
+
+    const noteId = {{ note.id }};
+    const titleInput = document.getElementById('noteTitle');
+    const saveStatus = document.getElementById('saveStatus');
+
+    let saveTimeout = null;
+    let hasChanges = false;
+
+    // Function to show save status
+    function showSaveStatus(status) {
+        if (status === 'saving') {
+            saveStatus.className = 'save-status saving';
+            saveStatus.innerHTML = '<span data-feather="loader" style="width: 14px; height: 14px;"></span> Saving...';
+        } else if (status === 'saved') {
+            saveStatus.className = 'save-status saved';
+            saveStatus.innerHTML = '<span data-feather="check" style="width: 14px; height: 14px;"></span> Saved';
+        } else if (status === 'error') {
+            saveStatus.className = 'save-status';
+            saveStatus.innerHTML = '<span data-feather="alert-circle" style="width: 14px; height: 14px; color: var(--danger);"></span> Error saving';
+        }
+        feather.replace();
+    }
+
+    // Function to save note
+    async function saveNote() {
+        if (!hasChanges) return;
+
+        showSaveStatus('saving');
+
+        try {
+            const response = await fetch(`/notes/${noteId}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: titleInput.value || 'Untitled',
+                    content: quill.root.innerHTML
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showSaveStatus('saved');
+                hasChanges = false;
+
+                // Update page title and breadcrumb
+                document.title = (titleInput.value || 'Untitled') + ' - Class Manager';
+                document.querySelector('.note-breadcrumb span.text-dark').textContent = titleInput.value || 'Untitled';
+            } else {
+                showSaveStatus('error');
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            showSaveStatus('error');
+        }
+    }
+
+    // Debounced save function
+    function debouncedSave() {
+        hasChanges = true;
+        showSaveStatus('saving');
+
+        if (saveTimeout) {
+            clearTimeout(saveTimeout);
+        }
+
+        saveTimeout = setTimeout(saveNote, 1500);
+    }
+
+    // Listen for content changes
+    quill.on('text-change', function(delta, oldDelta, source) {
+        if (source === 'user') {
+            debouncedSave();
+        }
+    });
+
+    // Listen for title changes
+    titleInput.addEventListener('input', debouncedSave);
+
+    // Save before leaving page
+    window.addEventListener('beforeunload', function(e) {
+        if (hasChanges) {
+            saveNote();
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    // Keyboard shortcut: Ctrl/Cmd + S to save
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            saveNote();
+        }
+    });
+
+    // ===== AI FUNCTIONS =====
+
+    let currentSummary = '';
+    let currentAiResult = '';
+    let currentAiResultIsHtml = false;  // Track if result is HTML
+
+    // Summarize note
+    async function summarizeNote() {
+        const btn = document.getElementById('summarizeBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Summarizing...';
+
+        const overlay = showAiOverlay('Generating summary...');
+
+        try {
+            const response = await fetch(`/notes/${noteId}/summarize`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+
+            hideAiOverlay(overlay);
+
+            if (data.success) {
+                currentSummary = data.summary;
+                document.getElementById('summaryContent').innerHTML = formatSummary(data.summary);
+                const modal = new bootstrap.Modal(document.getElementById('summaryModal'));
+                modal.show();
+                feather.replace();
+            } else {
+                alert('Failed to summarize: ' + data.error);
+            }
+        } catch (error) {
+            hideAiOverlay(overlay);
+            console.error('Summarize error:', error);
+            alert('Error: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            feather.replace();
+        }
+    }
+
+    // Format summary with proper HTML
+    function formatSummary(text) {
+        // Convert markdown-style bullets to HTML list
+        const lines = text.split('\n').filter(line => line.trim());
+        let html = '<ul>';
+        for (const line of lines) {
+            const cleaned = line.replace(/^[-*]\s*/, '').trim();
+            if (cleaned) {
+                html += `<li>${cleaned}</li>`;
+            }
+        }
+        html += '</ul>';
+        return html;
+    }
+
+    // Copy summary to clipboard
+    function copySummary() {
+        navigator.clipboard.writeText(currentSummary).then(() => {
+            alert('Summary copied to clipboard!');
+        });
+    }
+
+    // Append summary to note
+    function appendSummary() {
+        const summaryHtml = '<h2>Summary</h2>' + formatSummary(currentSummary);
+        quill.clipboard.dangerouslyPasteHTML(quill.getLength(), summaryHtml);
+        bootstrap.Modal.getInstance(document.getElementById('summaryModal')).hide();
+        debouncedSave();
+    }
+
+    // Expand selected text
+    async function expandNote() {
+        const selection = quill.getSelection();
+        if (!selection || selection.length === 0) {
+            alert('Please select some text to expand');
+            return;
+        }
+
+        const selectedText = quill.getText(selection.index, selection.length);
+        const btn = document.getElementById('expandBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Expanding...';
+
+        const overlay = showAiOverlay('Expanding text...');
+
+        try {
+            const response = await fetch(`/notes/${noteId}/expand`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: selectedText })
+            });
+            const data = await response.json();
+
+            hideAiOverlay(overlay);
+
+            if (data.success) {
+                currentAiResult = data.expanded;
+                currentAiResultIsHtml = false;
+                document.getElementById('aiResultTitle').textContent = 'Expanded Text';
+                document.getElementById('aiResultContent').innerHTML = `<p>${data.expanded.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+                const modal = new bootstrap.Modal(document.getElementById('aiResultModal'));
+                modal.show();
+            } else {
+                alert('Failed to expand: ' + data.error);
+            }
+        } catch (error) {
+            hideAiOverlay(overlay);
+            alert('Error: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            feather.replace();
+        }
+    }
+
+    // Clean up note
+    async function cleanupNote() {
+        const btn = document.getElementById('cleanupBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Cleaning...';
+
+        const overlay = showAiOverlay('Formatting notes...');
+
+        try {
+            const response = await fetch(`/notes/${noteId}/cleanup`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+
+            hideAiOverlay(overlay);
+
+            if (data.success) {
+                currentAiResult = data.cleaned;
+                currentAiResultIsHtml = true;
+                document.getElementById('aiResultTitle').textContent = 'Formatted Notes';
+                document.getElementById('aiResultContent').innerHTML = data.cleaned;
+                const modal = new bootstrap.Modal(document.getElementById('aiResultModal'));
+                modal.show();
+            } else {
+                alert('Failed to clean up: ' + data.error);
+            }
+        } catch (error) {
+            hideAiOverlay(overlay);
+            alert('Error: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            feather.replace();
+        }
+    }
+
+    // Copy AI result
+    function copyAiResult() {
+        let textToCopy = currentAiResult;
+        if (currentAiResultIsHtml) {
+            // Strip HTML tags for plain text copy
+            const temp = document.createElement('div');
+            temp.innerHTML = currentAiResult;
+            textToCopy = temp.textContent || temp.innerText || '';
+        }
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('Copied to clipboard!');
+        });
+    }
+
+    // Replace note content with AI result
+    function replaceWithAiResult() {
+        quill.setText('');
+        if (currentAiResultIsHtml) {
+            // Insert HTML directly (from cleanup)
+            quill.clipboard.dangerouslyPasteHTML(0, currentAiResult);
+        } else {
+            // Format plain text (from expand)
+            quill.clipboard.dangerouslyPasteHTML(0, `<p>${currentAiResult.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`);
+        }
+        bootstrap.Modal.getInstance(document.getElementById('aiResultModal')).hide();
+        debouncedSave();
+    }
+
+    // ===== FLOATING SELECTION TOOLBAR =====
+    const selectionToolbar = document.getElementById('selection-toolbar');
+    let toolbarVisible = false;
+
+    function showSelectionToolbar(range) {
+        if (!range || range.length === 0) {
+            hideSelectionToolbar();
+            return;
+        }
+
+        const bounds = quill.getBounds(range.index, range.length);
+        const editorRect = document.getElementById('editor').getBoundingClientRect();
+
+        // Position toolbar above selection
+        const toolbarHeight = 44;
+        const left = editorRect.left + bounds.left + (bounds.width / 2);
+        const top = editorRect.top + bounds.top - toolbarHeight - 8 + window.scrollY;
+
+        selectionToolbar.style.left = `${Math.max(10, left - 150)}px`;
+        selectionToolbar.style.top = `${top}px`;
+        selectionToolbar.classList.add('visible');
+        toolbarVisible = true;
+
+        // Update active states
+        updateToolbarActiveStates(range);
+    }
+
+    function hideSelectionToolbar() {
+        selectionToolbar.classList.remove('visible');
+        toolbarVisible = false;
+    }
+
+    function updateToolbarActiveStates(range) {
+        const formats = quill.getFormat(range);
+        document.querySelectorAll('.sel-btn[data-format]').forEach(btn => {
+            const format = btn.dataset.format;
+            btn.classList.toggle('active', !!formats[format]);
+        });
+    }
+
+    // Handle selection changes
+    quill.on('selection-change', function(range) {
+        const expandBtn = document.getElementById('expandBtn');
+        if (range && range.length > 0) {
+            expandBtn.disabled = false;
+            expandBtn.title = 'Expand selected text';
+            // Delay to ensure selection is complete
+            setTimeout(() => showSelectionToolbar(range), 10);
+        } else {
+            expandBtn.disabled = true;
+            expandBtn.title = 'Select text first';
+            // Delay hide to allow clicking toolbar buttons
+            setTimeout(() => {
+                if (!selectionToolbar.matches(':hover')) {
+                    hideSelectionToolbar();
+                }
+            }, 150);
+        }
+    });
+
+    // Handle format button clicks
+    document.querySelectorAll('.sel-btn[data-format]').forEach(btn => {
+        btn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const format = btn.dataset.format;
+
+            if (format === 'link') {
+                const range = quill.getSelection();
+                if (range) {
+                    const url = prompt('Enter link URL:');
+                    if (url) {
+                        quill.format('link', url);
+                    }
+                }
+            } else {
+                const currentFormat = quill.getFormat();
+                quill.format(format, !currentFormat[format]);
+            }
+
+            setTimeout(() => {
+                const range = quill.getSelection();
+                if (range) updateToolbarActiveStates(range);
+            }, 10);
+        });
+    });
+
+    // Handle dropdown toggles
+    function closeAllDropdowns() {
+        document.querySelectorAll('.sel-dropdown-menu').forEach(menu => {
+            menu.classList.remove('visible');
+        });
+    }
+
+    document.querySelectorAll('.sel-dropdown-toggle').forEach(toggle => {
+        toggle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const menu = toggle.nextElementSibling;
+            const isVisible = menu.classList.contains('visible');
+            closeAllDropdowns();
+            if (!isVisible) {
+                menu.classList.add('visible');
+            }
+        });
+    });
+
+    // Handle text color options
+    document.querySelectorAll('.color-option[data-color]').forEach(option => {
+        option.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const color = option.dataset.color;
+            quill.format('color', color);
+            document.getElementById('colorIcon').style.borderBottomColor = color;
+            closeAllDropdowns();
+            debouncedSave();
+        });
+    });
+
+    // Handle background color options
+    document.querySelectorAll('.color-option[data-bg]').forEach(option => {
+        option.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const bg = option.dataset.bg;
+            quill.format('background', bg || false);
+            closeAllDropdowns();
+            debouncedSave();
+        });
+    });
+
+    // Handle turn into options
+    document.querySelectorAll('.turn-into-option').forEach(option => {
+        option.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const header = option.dataset.header;
+            const list = option.dataset.list;
+            const blockquote = option.dataset.blockquote;
+
+            if (header !== undefined) {
+                quill.format('header', header ? parseInt(header) : false);
+                quill.format('list', false);
+                quill.format('blockquote', false);
+            } else if (list) {
+                quill.format('list', list);
+                quill.format('header', false);
+                quill.format('blockquote', false);
+            } else if (blockquote) {
+                quill.format('blockquote', true);
+                quill.format('header', false);
+                quill.format('list', false);
+            }
+
+            closeAllDropdowns();
+            debouncedSave();
+        });
+    });
+
+    // ===== AI INLINE ACTIONS =====
+    const actionLabels = {
+        'improve': 'Improving writing...',
+        'proofread': 'Proofreading...',
+        'simplify': 'Simplifying...',
+        'shorter': 'Making shorter...',
+        'longer': 'Expanding...',
+        'formal': 'Making formal...',
+        'casual': 'Making casual...'
+    };
+
+    async function processAiAction(action) {
+        const range = quill.getSelection();
+        if (!range || range.length === 0) {
+            alert('Please select some text first');
+            return;
+        }
+
+        const selectedText = quill.getText(range.index, range.length);
+        hideSelectionToolbar();
+
+        // Show loading overlay
+        const overlay = showAiOverlay(actionLabels[action] || 'Processing...');
+
+        try {
+            const response = await fetch(`/notes/${noteId}/ai-transform`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: selectedText, action: action })
+            });
+            const data = await response.json();
+
+            hideAiOverlay(overlay);
+
+            if (data.success) {
+                // Replace selected text with transformed text
+                quill.deleteText(range.index, range.length);
+                quill.insertText(range.index, data.result);
+                debouncedSave();
+            } else {
+                alert('AI Error: ' + data.error);
+            }
+        } catch (error) {
+            hideAiOverlay(overlay);
+            alert('Error: ' + error.message);
+        }
+    }
+
+    function showAiOverlay(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'ai-processing-overlay';
+        overlay.innerHTML = `
+            <div class="ai-processing-box">
+                <div class="ai-processing-spinner"></div>
+                <div class="ai-processing-text">${message}</div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        return overlay;
+    }
+
+    function hideAiOverlay(overlay) {
+        if (overlay && overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+        }
+    }
+
+    // Improve writing button
+    document.getElementById('improveWritingBtn').addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        processAiAction('improve');
+    });
+
+    // AI dropdown options
+    document.querySelectorAll('.ai-option').forEach(option => {
+        option.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const action = option.dataset.action;
+            closeAllDropdowns();
+            processAiAction(action);
+        });
+    });
+
+    // Prevent toolbar from hiding when clicking on it
+    selectionToolbar.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+    });
+
+    // Hide toolbar and dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!selectionToolbar.contains(e.target)) {
+            closeAllDropdowns();
+            if (!document.getElementById('editor').contains(e.target)) {
+                hideSelectionToolbar();
+            }
+        }
+    });
+
+    // Update toolbar position on scroll
+    document.addEventListener('scroll', () => {
+        if (toolbarVisible) {
+            const range = quill.getSelection();
+            if (range && range.length > 0) {
+                showSelectionToolbar(range);
+            }
+        }
+    });
+
+    // ===== FLASHCARD GENERATION =====
+    let generatedFlashcards = [];
+    let flashcardClassId = {{ note.class_id }};
+
+    async function generateFlashcards() {
+        const btn = document.getElementById('flashcardsBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+
+        const overlay = showAiOverlay('Generating flashcards...');
+
+        try {
+            const response = await fetch(`/notes/${noteId}/generate-flashcards`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ num_cards: 10 })
+            });
+            const data = await response.json();
+
+            hideAiOverlay(overlay);
+
+            if (data.success) {
+                generatedFlashcards = data.cards;
+                flashcardClassId = data.class_id;
+
+                // Set default deck name
+                document.getElementById('newDeckName').value = data.note_title + ' - Flashcards';
+
+                // Render preview
+                renderFlashcardsPreview();
+
+                const modal = new bootstrap.Modal(document.getElementById('flashcardsModal'));
+                modal.show();
+                feather.replace();
+            } else {
+                alert('Failed to generate flashcards: ' + data.error);
+            }
+        } catch (error) {
+            hideAiOverlay(overlay);
+            alert('Error: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            feather.replace();
+        }
+    }
+
+    function renderFlashcardsPreview() {
+        const container = document.getElementById('flashcardsPreview');
+        let html = '';
+
+        generatedFlashcards.forEach((card, index) => {
+            html += `
+                <div class="flashcard-preview-item" style="background: #f8fafc; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <div style="font-size: 11px; text-transform: uppercase; color: #9b9a97; margin-bottom: 4px;">Front</div>
+                            <input type="text" class="form-control form-control-sm" value="${escapeHtml(card.front)}" onchange="updateFlashcard(${index}, 'front', this.value)">
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; text-transform: uppercase; color: #9b9a97; margin-bottom: 4px;">Back</div>
+                            <input type="text" class="form-control form-control-sm" value="${escapeHtml(card.back)}" onchange="updateFlashcard(${index}, 'back', this.value)">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0 mt-2" onclick="removeFlashcard(${index})">Remove</button>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        document.getElementById('flashcardCount').textContent = generatedFlashcards.length + ' cards';
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML.replace(/"/g, '&quot;');
+    }
+
+    function updateFlashcard(index, field, value) {
+        generatedFlashcards[index][field] = value;
+    }
+
+    function removeFlashcard(index) {
+        generatedFlashcards.splice(index, 1);
+        renderFlashcardsPreview();
+    }
+
+    async function saveFlashcardDeck() {
+        const deckName = document.getElementById('newDeckName').value.trim();
+        if (!deckName) {
+            alert('Please enter a deck name');
+            return;
+        }
+
+        if (generatedFlashcards.length === 0) {
+            alert('No flashcards to save');
+            return;
+        }
+
+        const overlay = showAiOverlay('Creating deck...');
+
+        try {
+            // Create deck
+            const formData = new FormData();
+            formData.append('class_id', flashcardClassId);
+            formData.append('title', deckName);
+
+            const deckResponse = await fetch('/flashcards/deck/create', {
+                method: 'POST',
+                body: formData
+            });
+
+            // Get the redirect URL to extract deck ID
+            const deckUrl = deckResponse.url;
+            const deckIdMatch = deckUrl.match(/\/deck\/(\d+)/);
+
+            if (deckIdMatch) {
+                const deckId = deckIdMatch[1];
+
+                // Add all cards
+                for (const card of generatedFlashcards) {
+                    const cardForm = new FormData();
+                    cardForm.append('front', card.front);
+                    cardForm.append('back', card.back);
+
+                    await fetch(`/flashcards/deck/${deckId}/card/add`, {
+                        method: 'POST',
+                        body: cardForm
+                    });
+                }
+
+                hideAiOverlay(overlay);
+                bootstrap.Modal.getInstance(document.getElementById('flashcardsModal')).hide();
+
+                // Redirect to the new deck
+                window.location.href = `/flashcards/deck/${deckId}`;
+            } else {
+                hideAiOverlay(overlay);
+                alert('Deck created but could not navigate to it');
+            }
+        } catch (error) {
+            hideAiOverlay(overlay);
+            alert('Error creating deck: ' + error.message);
+        }
+    }
+</script>
+{% endblock %}

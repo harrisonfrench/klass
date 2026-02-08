@@ -1,0 +1,65 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}My Classes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">My Classes</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('classes.create_class') }}" class="btn btn-sm btn-primary">
+            <span data-feather="plus"></span>
+            New Class
+        </a>
+    </div>
+</div>
+
+{% if classes %}
+<div class="row">
+    {% for class in classes %}
+    <div class="col-md-4 mb-4">
+        <div class="card class-card h-100">
+            <div class="card-header" style="background-color: {{ class.color }}; color: white;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>{{ class.code or 'No Code' }}</strong>
+                    <span class="badge bg-light text-dark">{{ class.semester or 'No Semester' }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ class.name }}</h5>
+                {% if class.instructor %}
+                <p class="card-text text-muted small">
+                    <span data-feather="user" class="me-1"></span>{{ class.instructor }}
+                </p>
+                {% endif %}
+                {% if class.description %}
+                <p class="card-text small">{{ class.description[:100] }}{% if class.description|length > 100 %}...{% endif %}</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white border-top-0">
+                <a href="{{ url_for('classes.view_class', class_id=class.id) }}" class="btn btn-sm btn-outline-primary">
+                    <span data-feather="folder"></span>
+                    Open
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <span data-feather="book-open"></span>
+    <h5>No classes yet</h5>
+    <p class="text-muted">Create your first class to get started.</p>
+    <a href="{{ url_for('classes.create_class') }}" class="btn btn-sm btn-primary">
+        <span data-feather="plus"></span>
+        New Class
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+</script>
+{% endblock %}

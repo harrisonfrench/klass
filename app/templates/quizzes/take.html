@@ -1,0 +1,423 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ quiz.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .quiz-header {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 70px;
+        z-index: 100;
+    }
+
+    .progress-info {
+        font-weight: 500;
+        color: #37352f;
+    }
+
+    .timer {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #9b9a97;
+    }
+
+    .question-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .question-number {
+        font-size: 0.85rem;
+        color: #9b9a97;
+        margin-bottom: 0.5rem;
+    }
+
+    .question-type {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        background: #f1f1ef;
+        color: #9b9a97;
+    }
+
+    .question-text {
+        font-size: 1.15rem;
+        font-weight: 500;
+        color: #37352f;
+        margin-bottom: 1rem;
+    }
+
+    .option-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 1rem 1.25rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background: white;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .option-btn:hover {
+        border-color: #f59e0b;
+        background: #fffbeb;
+    }
+
+    .option-btn.selected {
+        border-color: #f59e0b;
+        background: #fef3c7;
+    }
+
+    .option-letter {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        background: #f1f1ef;
+        margin-right: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .option-btn.selected .option-letter {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .tf-options {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .tf-btn {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .tf-btn:hover {
+        border-color: #f59e0b;
+    }
+
+    .tf-btn.selected {
+        border-color: #f59e0b;
+        background: #fef3c7;
+    }
+
+    .tf-btn.true-btn.selected {
+        border-color: #10b981;
+        background: #d1fae5;
+    }
+
+    .tf-btn.false-btn.selected {
+        border-color: #ef4444;
+        background: #fee2e2;
+    }
+
+    .short-answer-input {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+    .short-answer-input:focus {
+        outline: none;
+        border-color: #f59e0b;
+    }
+
+    .submit-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        text-align: center;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        border: none;
+        padding: 1rem 3rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .submit-btn:hover {
+        background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+    }
+
+    /* Results Modal */
+    .results-score {
+        font-size: 4rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .results-score.good { color: #10b981; }
+    .results-score.okay { color: #f59e0b; }
+    .results-score.poor { color: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 quiz-container">
+    <div class="quiz-header">
+        <div>
+            <span style="color: {{ quiz.class_color }};">{{ quiz.class_code or quiz.class_name }}</span>
+            <span class="text-muted mx-2">/</span>
+            <strong>{{ quiz.title }}</strong>
+        </div>
+        <div class="d-flex align-items-center gap-4">
+            <span class="progress-info">
+                <span id="answeredCount">0</span> / {{ questions|length }} answered
+            </span>
+            <span class="timer" id="timer">00:00</span>
+        </div>
+    </div>
+
+    <form id="quizForm">
+        {% for question in questions %}
+        <div class="question-card" data-question-index="{{ loop.index0 }}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="question-number">Question {{ loop.index }}</span>
+                <span class="question-type">{{ question.type|replace('_', ' ') }}</span>
+            </div>
+            <div class="question-text">{{ question.question }}</div>
+
+            {% if question.type == 'multiple_choice' %}
+            <div class="options">
+                {% for option in question.options %}
+                <button type="button" class="option-btn" data-question="{{ loop.parent.loop.index0 }}" data-answer="{{ loop.index0 }}">
+                    <span class="option-letter">{{ ['A', 'B', 'C', 'D'][loop.index0] }}</span>
+                    {{ option }}
+                </button>
+                {% endfor %}
+            </div>
+            {% elif question.type == 'true_false' %}
+            <div class="tf-options">
+                <button type="button" class="tf-btn true-btn" data-question="{{ loop.index0 }}" data-answer="true">
+                    <span data-feather="check" style="width: 20px; height: 20px;"></span>
+                    True
+                </button>
+                <button type="button" class="tf-btn false-btn" data-question="{{ loop.index0 }}" data-answer="false">
+                    <span data-feather="x" style="width: 20px; height: 20px;"></span>
+                    False
+                </button>
+            </div>
+            {% elif question.type == 'short_answer' %}
+            <textarea class="short-answer-input" data-question="{{ loop.index0 }}" rows="3" placeholder="Type your answer..."></textarea>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="submit-section">
+            <p class="text-muted mb-3">Make sure you've answered all questions before submitting.</p>
+            <button type="button" class="btn btn-primary submit-btn" onclick="submitQuiz()">
+                <span data-feather="check-circle"></span>
+                Submit Quiz
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Results Modal -->
+<div class="modal fade" id="resultsModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quiz Results</h5>
+            </div>
+            <div class="modal-body text-center" id="resultsBody">
+                <!-- Filled by JS -->
+            </div>
+            <div class="modal-footer">
+                <a href="{{ url_for('quizzes.view_quiz', quiz_id=quiz.id) }}" class="btn btn-secondary">View Details</a>
+                <a href="{{ url_for('quizzes.take_quiz', quiz_id=quiz.id) }}" class="btn btn-primary">Retake Quiz</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+
+    const quizId = {{ quiz.id }};
+    const totalQuestions = {{ questions|length }};
+    let answers = {};
+    let startTime = Date.now();
+    let timerInterval;
+
+    // Start timer
+    timerInterval = setInterval(updateTimer, 1000);
+
+    function updateTimer() {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const seconds = (elapsed % 60).toString().padStart(2, '0');
+        document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+    }
+
+    function updateAnsweredCount() {
+        const count = Object.keys(answers).length;
+        document.getElementById('answeredCount').textContent = count;
+    }
+
+    // Multiple choice buttons
+    document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const questionIndex = this.dataset.question;
+            const answer = parseInt(this.dataset.answer);
+
+            // Deselect others in this question
+            document.querySelectorAll(`.option-btn[data-question="${questionIndex}"]`).forEach(b => {
+                b.classList.remove('selected');
+            });
+
+            this.classList.add('selected');
+            answers[questionIndex] = answer;
+            updateAnsweredCount();
+        });
+    });
+
+    // True/False buttons
+    document.querySelectorAll('.tf-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const questionIndex = this.dataset.question;
+            const answer = this.dataset.answer === 'true';
+
+            // Deselect others
+            document.querySelectorAll(`.tf-btn[data-question="${questionIndex}"]`).forEach(b => {
+                b.classList.remove('selected');
+            });
+
+            this.classList.add('selected');
+            answers[questionIndex] = answer;
+            updateAnsweredCount();
+        });
+    });
+
+    // Short answer inputs
+    document.querySelectorAll('.short-answer-input').forEach(input => {
+        input.addEventListener('input', function() {
+            const questionIndex = this.dataset.question;
+            const value = this.value.trim();
+
+            if (value) {
+                answers[questionIndex] = value;
+            } else {
+                delete answers[questionIndex];
+            }
+            updateAnsweredCount();
+        });
+    });
+
+    async function submitQuiz() {
+        if (Object.keys(answers).length < totalQuestions) {
+            if (!confirm(`You've only answered ${Object.keys(answers).length} of ${totalQuestions} questions. Submit anyway?`)) {
+                return;
+            }
+        }
+
+        clearInterval(timerInterval);
+        const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+
+        try {
+            const response = await fetch(`/quizzes/${quizId}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answers: answers, time_taken: timeTaken })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showResults(data);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('Error submitting quiz: ' + error.message);
+        }
+    }
+
+    function showResults(data) {
+        const percentage = data.percentage;
+        let scoreClass = 'poor';
+        if (percentage >= 80) scoreClass = 'good';
+        else if (percentage >= 60) scoreClass = 'okay';
+
+        let resultsHTML = `
+            <div class="results-score ${scoreClass}">${data.score}/${data.total}</div>
+            <p class="text-muted mb-4">You scored ${percentage}%</p>
+            <div class="text-start">
+        `;
+
+        data.results.forEach((result, i) => {
+            const icon = result.is_correct ?
+                '<span class="text-success"><span data-feather="check-circle"></span></span>' :
+                '<span class="text-danger"><span data-feather="x-circle"></span></span>';
+
+            resultsHTML += `
+                <div class="mb-3 p-3 rounded" style="background: ${result.is_correct ? '#d1fae5' : '#fee2e2'};">
+                    <div class="d-flex align-items-start gap-2">
+                        ${icon}
+                        <div>
+                            <strong>Q${i + 1}:</strong> ${result.question}
+                            ${!result.is_correct ? `<div class="text-muted small mt-1">Correct answer: ${formatAnswer(result)}</div>` : ''}
+                            ${result.explanation ? `<div class="text-muted small mt-1"><em>${result.explanation}</em></div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        resultsHTML += '</div>';
+
+        document.getElementById('resultsBody').innerHTML = resultsHTML;
+        feather.replace();
+
+        const modal = new bootstrap.Modal(document.getElementById('resultsModal'));
+        modal.show();
+    }
+
+    function formatAnswer(result) {
+        if (result.type === 'multiple_choice') {
+            return result.options[result.correct_answer];
+        } else if (result.type === 'true_false') {
+            return result.correct_answer ? 'True' : 'False';
+        } else {
+            return result.correct_answer;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} - Class Manager</title>
+
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Dashboard CSS -->
+    <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navbar -->
+    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="{{ url_for('dashboard') }}">Class Manager</a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <form class="w-100" action="{{ url_for('search') }}" method="GET">
+            <input class="form-control form-control-dark w-100" type="text" name="q" placeholder="Search classes, assignments..." aria-label="Search" style="color: #fff;">
+        </form>
+        <div class="navbar-nav">
+            <div class="nav-item text-nowrap d-flex align-items-center">
+                <button class="btn btn-link nav-link px-2" onclick="toggleTheme()" title="Toggle dark mode" style="font-size: 1.1rem;">
+                    <span id="themeIcon" data-feather="moon"></span>
+                </button>
+                {% if g.user %}
+                <span class="text-light px-2">{{ g.user.username }}</span>
+                <a class="nav-link px-3" href="{{ url_for('auth.logout') }}">Sign out</a>
+                {% else %}
+                <a class="nav-link px-3" href="{{ url_for('auth.login') }}">Sign in</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3 sidebar-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                                <span data-feather="home"></span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'classes.list_classes' %}active{% endif %}" href="{{ url_for('classes.list_classes') }}">
+                                <span data-feather="book"></span>
+                                My Classes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'notes.list_notes' %}active{% endif %}" href="{{ url_for('notes.list_notes') }}">
+                                <span data-feather="file-text"></span>
+                                All Notes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'flashcards' in request.endpoint %}active{% endif %}" href="{{ url_for('flashcards.list_decks') }}">
+                                <span data-feather="layers"></span>
+                                Flashcards
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'study_guides' in request.endpoint %}active{% endif %}" href="{{ url_for('study_guides.list_guides') }}">
+                                <span data-feather="book-open"></span>
+                                Study Guides
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'quizzes' in request.endpoint %}active{% endif %}" href="{{ url_for('quizzes.list_quizzes') }}">
+                                <span data-feather="check-circle"></span>
+                                Quizzes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">
+                                <span data-feather="calendar"></span>
+                                Calendar
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'ai_chat' in request.endpoint %}active{% endif %}" href="{{ url_for('ai_chat.chat_home') }}">
+                                <span data-feather="message-circle"></span>
+                                AI Tutor
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>My Classes</span>
+                        <a class="link-secondary" href="{{ url_for('classes.create_class') }}" aria-label="Add a new class">
+                            <span data-feather="plus-circle"></span>
+                        </a>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        {% if sidebar_classes %}
+                            {% for class in sidebar_classes %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'classes.view_class' and request.view_args.get('class_id') == class.id %}active{% endif %}" href="{{ url_for('classes.view_class', class_id=class.id) }}">
+                                    <span class="me-1" style="color: {{ class.color }};">&#9679;</span>
+                                    {{ class.code or class.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link text-muted" href="{{ url_for('classes.create_class') }}">
+                                <span data-feather="folder"></span>
+                                No classes yet
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Settings</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'settings' in request.endpoint %}active{% endif %}" href="{{ url_for('settings.preferences') }}">
+                                <span data-feather="settings"></span>
+                                Preferences
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show mt-3" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <script>
+        // Theme Toggle
+        function getStoredTheme() {
+            return localStorage.getItem('theme') || 'light';
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        function updateThemeIcon(theme) {
+            const iconSpan = document.getElementById('themeIcon');
+            if (iconSpan) {
+                iconSpan.setAttribute('data-feather', theme === 'dark' ? 'sun' : 'moon');
+                feather.replace();
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = getStoredTheme();
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        // Apply theme on page load
+        (function() {
+            const theme = getStoredTheme();
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+
+        // Initialize Feather Icons
+        feather.replace();
+
+        // Update icon after feather replaces
+        updateThemeIcon(getStoredTheme());
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

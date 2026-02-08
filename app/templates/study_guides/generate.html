@@ -1,0 +1,205 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Generate Study Guide - {{ class_data.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .generate-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #37352f;
+    }
+
+    .note-selector {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .note-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        transition: background 0.2s;
+    }
+
+    .note-item:hover {
+        background: #f8fafc;
+    }
+
+    .note-item input[type="checkbox"] {
+        margin-top: 4px;
+        margin-right: 12px;
+        width: 18px;
+        height: 18px;
+        accent-color: #10b981;
+    }
+
+    .note-info {
+        flex: 1;
+    }
+
+    .note-title {
+        font-weight: 500;
+        color: #37352f;
+        margin-bottom: 2px;
+    }
+
+    .note-preview {
+        font-size: 0.85rem;
+        color: #9b9a97;
+    }
+
+    .options-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .generate-btn {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 500;
+    }
+
+    .generate-btn:hover {
+        background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    }
+
+    .select-all-btn {
+        font-size: 0.85rem;
+        color: #10b981;
+        cursor: pointer;
+    }
+
+    .select-all-btn:hover {
+        text-decoration: underline;
+    }
+
+    .empty-notes {
+        text-align: center;
+        padding: 3rem;
+        color: #9b9a97;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 generate-container">
+    <div class="page-header">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <a href="{{ url_for('study_guides.list_guides') }}" class="text-decoration-none text-muted">
+                <span data-feather="arrow-left"></span>
+            </a>
+            <span class="text-muted">/</span>
+            <span style="color: {{ class_data.color }};">{{ class_data.code or class_data.name }}</span>
+        </div>
+        <h1>
+            <span data-feather="zap" style="color: #10b981;"></span>
+            Generate Study Guide
+        </h1>
+        <p class="text-muted">Select notes to include and let AI create a comprehensive study guide.</p>
+    </div>
+
+    {% if notes %}
+    <form method="POST" id="generateForm">
+        <div class="options-section">
+            <h5 class="mb-3">Study Guide Title</h5>
+            <input type="text" class="form-control" name="title" value="Study Guide - {{ class_data.name }}" placeholder="Enter a title for your study guide">
+        </div>
+
+        <div class="note-selector">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Select Notes to Include</h5>
+                <span class="select-all-btn" onclick="toggleSelectAll()">Select All</span>
+            </div>
+
+            {% for note in notes %}
+            <label class="note-item">
+                <input type="checkbox" name="notes" value="{{ note.id }}">
+                <div class="note-info">
+                    <div class="note-title">{{ note.title or 'Untitled' }}</div>
+                    <div class="note-preview">
+                        {{ note.content|striptags|truncate(100) if note.content else 'Empty note' }}
+                    </div>
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+
+        <div class="options-section">
+            <h5 class="mb-3">Focus Areas (Optional)</h5>
+            <input type="text" class="form-control" name="focus_areas" placeholder="e.g., Chapter 5, Cell Division, Key Formulas">
+            <small class="text-muted">Separate topics with commas. AI will emphasize these areas.</small>
+        </div>
+
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary generate-btn" id="generateBtn">
+                <span data-feather="zap"></span>
+                Generate Study Guide
+            </button>
+            <a href="{{ url_for('study_guides.list_guides') }}" class="btn btn-outline-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+    {% else %}
+    <div class="note-selector">
+        <div class="empty-notes">
+            <span data-feather="file-text" style="width: 48px; height: 48px;"></span>
+            <h5 class="mt-3">No notes in this class</h5>
+            <p class="mb-3">Add some notes first to generate a study guide.</p>
+            <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-primary">
+                    <span data-feather="plus"></span> Create Note
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+
+    let allSelected = false;
+
+    function toggleSelectAll() {
+        const checkboxes = document.querySelectorAll('input[name="notes"]');
+        allSelected = !allSelected;
+        checkboxes.forEach(cb => cb.checked = allSelected);
+        document.querySelector('.select-all-btn').textContent = allSelected ? 'Deselect All' : 'Select All';
+    }
+
+    document.getElementById('generateForm')?.addEventListener('submit', function(e) {
+        const checkboxes = document.querySelectorAll('input[name="notes"]:checked');
+        if (checkboxes.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one note.');
+            return;
+        }
+
+        const btn = document.getElementById('generateBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+    });
+</script>
+{% endblock %}

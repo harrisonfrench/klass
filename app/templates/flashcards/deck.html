@@ -1,0 +1,400 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ deck.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .deck-header {
+        margin-bottom: 2rem;
+    }
+
+    .deck-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #37352f;
+        margin-bottom: 0.5rem;
+    }
+
+    .deck-meta {
+        color: #9b9a97;
+        font-size: 0.9rem;
+    }
+
+    .deck-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .cards-section {
+        margin-top: 2rem;
+    }
+
+    .cards-section h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #37352f;
+    }
+
+    .card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .flashcard-item {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .flashcard-content {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .flashcard-side h5 {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #9b9a97;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+    }
+
+    .flashcard-side p {
+        margin: 0;
+        color: #37352f;
+    }
+
+    .flashcard-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .flashcard-actions button {
+        background: none;
+        border: none;
+        color: #9b9a97;
+        padding: 0.25rem;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .flashcard-actions button:hover {
+        background: #f1f1ef;
+        color: #37352f;
+    }
+
+    .add-card-form {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .add-card-form h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #37352f;
+    }
+
+    .card-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .empty-cards {
+        text-align: center;
+        padding: 3rem;
+        color: #9b9a97;
+        background: #f8fafc;
+        border-radius: 12px;
+    }
+
+    .study-btn {
+        background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%);
+        border: none;
+    }
+
+    .study-btn:hover {
+        background: linear-gradient(135deg, #5b3494 0%, #7c4ae0 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="max-width: 900px;">
+    <!-- Header -->
+    <div class="deck-header">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <a href="{{ url_for('flashcards.list_decks') }}" class="text-decoration-none text-muted">
+                <span data-feather="arrow-left"></span>
+            </a>
+            <span class="text-muted">/</span>
+            <span style="color: {{ deck.class_color }};">{{ deck.class_code or deck.class_name }}</span>
+        </div>
+        <h1>{{ deck.title }}</h1>
+        <div class="deck-meta">{{ cards|length }} cards</div>
+
+        <div class="deck-actions">
+            {% if cards %}
+            <a href="{{ url_for('flashcards.study_deck', deck_id=deck.id) }}" class="btn btn-primary study-btn">
+                <span data-feather="play"></span> Study Now
+            </a>
+            {% endif %}
+            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteDeckModal">
+                <span data-feather="trash-2"></span> Delete Deck
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Card Form -->
+    <div class="add-card-form">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Add Cards</h4>
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importNoteModal">
+                <span data-feather="file-text"></span> Import from Note
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('flashcards.add_card', deck_id=deck.id) }}" id="addCardForm">
+            <div class="card-inputs">
+                <div>
+                    <label class="form-label small">Front (Question/Term)</label>
+                    <textarea class="form-control" name="front" rows="2" placeholder="Enter term or question..." required></textarea>
+                </div>
+                <div>
+                    <label class="form-label small">Back (Answer/Definition)</label>
+                    <textarea class="form-control" name="back" rows="2" placeholder="Enter answer or definition..." required></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">
+                <span data-feather="plus"></span> Add Card
+            </button>
+        </form>
+    </div>
+
+    <!-- Cards List -->
+    <div class="cards-section">
+        <h3>Cards ({{ cards|length }})</h3>
+
+        {% if cards %}
+        <div class="card-list">
+            {% for card in cards %}
+            <div class="flashcard-item" data-card-id="{{ card.id }}">
+                <div class="flashcard-content">
+                    <div class="flashcard-side">
+                        <h5>Front</h5>
+                        <p>{{ card.front }}</p>
+                    </div>
+                    <div class="flashcard-side">
+                        <h5>Back</h5>
+                        <p>{{ card.back }}</p>
+                    </div>
+                </div>
+                <div class="flashcard-actions">
+                    <button onclick="editCard({{ card.id }}, '{{ card.front|e }}', '{{ card.back|e }}')" title="Edit">
+                        <span data-feather="edit-2"></span>
+                    </button>
+                    <form method="POST" action="{{ url_for('flashcards.delete_card', card_id=card.id) }}" class="d-inline" onsubmit="return confirm('Delete this card?')">
+                        <button type="submit" title="Delete">
+                            <span data-feather="trash-2"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-cards">
+            <span data-feather="plus-square" style="width: 40px; height: 40px; stroke-width: 1;"></span>
+            <p class="mt-2 mb-0">No cards yet. Add your first card above!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Deck Modal -->
+<div class="modal fade" id="deleteDeckModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Deck</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ deck.title }}</strong>?</p>
+                <p class="text-danger small">This will delete all {{ cards|length }} cards in this deck.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('flashcards.delete_deck', deck_id=deck.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete Deck</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Card Modal -->
+<div class="modal fade" id="editCardModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editCardForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Card</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Front</label>
+                        <textarea class="form-control" name="front" id="editFront" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Back</label>
+                        <textarea class="form-control" name="back" id="editBack" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import from Note Modal -->
+<div class="modal fade" id="importNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span data-feather="file-text"></span>
+                    Import from Note
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Select a note to generate flashcards from using AI.</p>
+                <div class="mb-3">
+                    <label class="form-label">Select Note</label>
+                    <select class="form-select" id="noteSelect">
+                        <option value="">Loading notes...</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Number of cards to generate</label>
+                    <select class="form-select" id="numCardsSelect">
+                        <option value="5">5 cards</option>
+                        <option value="10" selected>10 cards</option>
+                        <option value="15">15 cards</option>
+                        <option value="20">20 cards</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="importNoteBtn" onclick="importFromNote()">
+                    <span data-feather="zap"></span> Generate Cards
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+
+    const deckId = {{ deck.id }};
+
+    function editCard(cardId, front, back) {
+        document.getElementById('editFront').value = front;
+        document.getElementById('editBack').value = back;
+        document.getElementById('editCardForm').action = `/flashcards/card/${cardId}/edit`;
+        const modal = new bootstrap.Modal(document.getElementById('editCardModal'));
+        modal.show();
+    }
+
+    // Auto-focus on front textarea after adding card
+    document.getElementById('addCardForm').addEventListener('submit', function() {
+        setTimeout(() => {
+            document.querySelector('textarea[name="front"]').focus();
+        }, 100);
+    });
+
+    // Load notes when import modal is opened
+    document.getElementById('importNoteModal').addEventListener('show.bs.modal', async function() {
+        const select = document.getElementById('noteSelect');
+        select.innerHTML = '<option value="">Loading...</option>';
+
+        try {
+            const response = await fetch(`/flashcards/deck/${deckId}/notes`);
+            const data = await response.json();
+
+            if (data.success && data.notes.length > 0) {
+                select.innerHTML = '<option value="">Select a note...</option>';
+                data.notes.forEach(note => {
+                    const option = document.createElement('option');
+                    option.value = note.id;
+                    option.textContent = note.title || 'Untitled';
+                    select.appendChild(option);
+                });
+            } else {
+                select.innerHTML = '<option value="">No notes found for this class</option>';
+            }
+        } catch (error) {
+            select.innerHTML = '<option value="">Error loading notes</option>';
+        }
+    });
+
+    async function importFromNote() {
+        const noteId = document.getElementById('noteSelect').value;
+        const numCards = document.getElementById('numCardsSelect').value;
+
+        if (!noteId) {
+            alert('Please select a note');
+            return;
+        }
+
+        const btn = document.getElementById('importNoteBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+
+        try {
+            const response = await fetch(`/flashcards/deck/${deckId}/import-note`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ note_id: noteId, num_cards: parseInt(numCards) })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('importNoteModal')).hide();
+                alert(`Generated ${data.cards_added} flashcards from "${data.note_title}"`);
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            feather.replace();
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,654 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ class_data.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('classes.list_classes') }}">Classes</a></li>
+                <li class="breadcrumb-item active">{{ class_data.name }}</li>
+            </ol>
+        </nav>
+        <h1 class="h2 mt-2">
+            <span class="badge me-2" style="background-color: {{ class_data.color }};">{{ class_data.code or '---' }}</span>
+            {{ class_data.name }}
+        </h1>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal">
+                <span data-feather="edit"></span>
+                Edit
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <span data-feather="trash-2"></span>
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Class Info -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Class Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Instructor:</strong><br>
+                        {{ class_data.instructor or 'Not specified' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Semester:</strong><br>
+                        {{ class_data.semester or 'Not specified' }}
+                    </div>
+                </div>
+                {% if class_data.description %}
+                <div class="mb-0">
+                    <strong>Description:</strong><br>
+                    {{ class_data.description }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <span data-feather="file-text" class="mb-2" style="width: 32px; height: 32px; color: #0d6efd;"></span>
+                <h5>Notes</h5>
+                <p class="text-muted small mb-2">{{ notes|length }} note{% if notes|length != 1 %}s{% endif %}</p>
+                <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                        <span data-feather="plus"></span> Add Note
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <span data-feather="file" class="mb-2" style="width: 32px; height: 32px; color: #10b981;"></span>
+                <h5>Syllabus</h5>
+                {% if class_data.syllabus_filename %}
+                <p class="text-muted small mb-2">{{ class_data.syllabus_filename.split('_', 1)[1] if '_' in class_data.syllabus_filename else class_data.syllabus_filename }}</p>
+                <div class="d-flex gap-1 justify-content-center">
+                    <a href="{{ url_for('classes.view_syllabus', class_id=class_data.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <span data-feather="eye"></span> View
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSyllabusModal">
+                        <span data-feather="trash-2"></span>
+                    </button>
+                </div>
+                {% else %}
+                <p class="text-muted small mb-2">Not uploaded</p>
+                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#uploadSyllabusModal">
+                    <span data-feather="upload"></span> Upload
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <span data-feather="layers" class="mb-2" style="width: 32px; height: 32px; color: #8b5cf6;"></span>
+                <h5>Flashcards</h5>
+                <p class="text-muted small mb-2">{{ flashcard_decks|length }} deck{% if flashcard_decks|length != 1 %}s{% endif %}</p>
+                <button type="button" class="btn btn-sm btn-outline-primary" style="border-color: #8b5cf6; color: #8b5cf6;" data-bs-toggle="modal" data-bs-target="#createDeckModal">
+                    <span data-feather="plus"></span> New Deck
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <span data-feather="check-square" class="mb-2" style="width: 32px; height: 32px; color: #f59e0b;"></span>
+                <h5>Assignments</h5>
+                <p class="text-muted small mb-2">{{ assignments|length }} assignment{% if assignments|length != 1 %}s{% endif %}</p>
+                <a href="#assignments-section" class="btn btn-sm btn-outline-warning">
+                    <span data-feather="list"></span> View
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Tools Row -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card h-100" style="border-left: 4px solid #10b981;">
+            <div class="card-body d-flex align-items-center">
+                <span data-feather="book-open" class="me-3" style="width: 32px; height: 32px; color: #10b981;"></span>
+                <div class="flex-grow-1">
+                    <h5 class="mb-1">Study Guide</h5>
+                    <p class="text-muted small mb-0">Generate an AI-powered study guide from your notes</p>
+                </div>
+                <a href="{{ url_for('study_guides.generate_guide', class_id=class_data.id) }}" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
+                    <span data-feather="zap"></span> Generate
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card h-100" style="border-left: 4px solid #8b5cf6;">
+            <div class="card-body d-flex align-items-center">
+                <span data-feather="layers" class="me-3" style="width: 32px; height: 32px; color: #8b5cf6;"></span>
+                <div class="flex-grow-1">
+                    <h5 class="mb-1">Quick Flashcards</h5>
+                    <p class="text-muted small mb-0">Generate flashcards from all notes in this class</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;" data-bs-toggle="modal" data-bs-target="#quickFlashcardsModal">
+                    <span data-feather="zap"></span> Generate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notes Section -->
+<div id="notes-section" class="mb-4">
+    <div class="section-header">
+        <h4>Notes</h4>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary">{{ notes|length }}</span>
+            <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <span data-feather="plus"></span> New
+                </button>
+            </form>
+        </div>
+    </div>
+    {% if notes %}
+    <div class="row">
+        {% for note in notes %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="text-decoration-none">
+                <div class="note-card {% if note.is_pinned %}note-pinned{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        {% if note.is_pinned %}
+                        <span data-feather="bookmark" style="width: 14px; height: 14px; color: var(--warning);"></span>
+                        {% endif %}
+                    </div>
+                    <div class="note-card-title">{{ note.title or 'Untitled' }}</div>
+                    <div class="note-card-preview">
+                        {{ note.content|striptags|truncate(100) if note.content else 'Empty note' }}
+                    </div>
+                    <div class="note-card-meta">
+                        {{ note.updated_at[:10] if note.updated_at else '' }}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 2rem;">
+        <span data-feather="file-text"></span>
+        <h5>No notes yet</h5>
+        <p class="text-muted">Create your first note to get started</p>
+        <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-primary">
+                <span data-feather="plus"></span> Create Note
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Flashcard Decks Section -->
+<div id="flashcards-section" class="mb-4">
+    <div class="section-header">
+        <h4>Flashcard Decks</h4>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary">{{ flashcard_decks|length }}</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" style="border-color: #8b5cf6; color: #8b5cf6;" data-bs-toggle="modal" data-bs-target="#createDeckModal">
+                <span data-feather="plus"></span> New
+            </button>
+        </div>
+    </div>
+    {% if flashcard_decks %}
+    <div class="row">
+        {% for deck in flashcard_decks %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('flashcards.view_deck', deck_id=deck.id) }}" class="text-decoration-none">
+                <div class="card h-100" style="border-left: 4px solid #8b5cf6;">
+                    <div class="card-body">
+                        <h6 class="card-title text-dark">{{ deck.title }}</h6>
+                        <p class="card-text text-muted small mb-2">
+                            {{ deck.card_count }} card{% if deck.card_count != 1 %}s{% endif %}
+                        </p>
+                        {% if deck.card_count > 0 %}
+                        <a href="{{ url_for('flashcards.study_deck', deck_id=deck.id) }}" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;">
+                            <span data-feather="play"></span> Study
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 2rem;">
+        <span data-feather="layers" style="color: #8b5cf6;"></span>
+        <h5>No flashcard decks yet</h5>
+        <p class="text-muted">Create a deck to start studying</p>
+        <button type="button" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;" data-bs-toggle="modal" data-bs-target="#createDeckModal">
+            <span data-feather="plus"></span> Create Deck
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Study Guides Section -->
+<div id="study-guides-section" class="mb-4">
+    <div class="section-header">
+        <h4>Study Guides</h4>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary">{{ study_guides|length }}</span>
+            <a href="{{ url_for('study_guides.generate_guide', class_id=class_data.id) }}" class="btn btn-sm btn-outline-primary" style="border-color: #10b981; color: #10b981;">
+                <span data-feather="zap"></span> Generate
+            </a>
+        </div>
+    </div>
+    {% if study_guides %}
+    <div class="row">
+        {% for guide in study_guides %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('study_guides.view_guide', guide_id=guide.id) }}" class="text-decoration-none">
+                <div class="card h-100" style="border-left: 4px solid #10b981;">
+                    <div class="card-body">
+                        <h6 class="card-title text-dark">{{ guide.title }}</h6>
+                        <p class="card-text text-muted small mb-0">
+                            Created {{ guide.created_at[:10] if guide.created_at else '' }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 2rem;">
+        <span data-feather="book-open" style="color: #10b981;"></span>
+        <h5>No study guides yet</h5>
+        <p class="text-muted">Generate a study guide from your notes</p>
+        <a href="{{ url_for('study_guides.generate_guide', class_id=class_data.id) }}" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
+            <span data-feather="zap"></span> Generate Guide
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Assignments Section -->
+<div id="assignments-section" class="mb-4">
+    <div class="section-header">
+        <h4>Assignments</h4>
+        <span class="badge bg-secondary">{{ assignments|length }}</span>
+    </div>
+    {% if assignments %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Due Date</th>
+                    <th>Points</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in assignments %}
+                <tr>
+                    <td>
+                        <strong>{{ assignment.title }}</strong>
+                        {% if assignment.description %}
+                        <br><small class="text-muted">{{ assignment.description[:100] }}{% if assignment.description|length > 100 %}...{% endif %}</small>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge bg-light text-dark">{{ assignment.type or 'other' }}</span></td>
+                    <td>{{ assignment.due_date or 'No date' }}</td>
+                    <td>{{ assignment.points or '-' }}</td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-sm dropdown-toggle
+                                {% if assignment.status == 'completed' %}btn-success
+                                {% elif assignment.status == 'reminder' %}btn-info
+                                {% else %}btn-warning{% endif %}"
+                                type="button" data-bs-toggle="dropdown">
+                                {% if assignment.status == 'completed' %}Completed
+                                {% elif assignment.status == 'reminder' %}Reminder
+                                {% else %}Pending{% endif %}
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}">
+                                        <input type="hidden" name="status" value="pending">
+                                        <button type="submit" class="dropdown-item">Pending</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}">
+                                        <input type="hidden" name="status" value="completed">
+                                        <button type="submit" class="dropdown-item">Completed</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}">
+                                        <input type="hidden" name="status" value="reminder">
+                                        <button type="submit" class="dropdown-item">Reminder</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 2rem;">
+        <span data-feather="check-square"></span>
+        <h5>No assignments yet</h5>
+        <p class="text-muted">Upload a syllabus to automatically extract assignments</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Calendar Events Section -->
+<div id="calendar-section" class="mb-4">
+    <div class="section-header">
+        <h4>Calendar Events</h4>
+        <span class="badge bg-secondary">{{ calendar_events|length }}</span>
+    </div>
+    {% if calendar_events %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in calendar_events %}
+                <tr>
+                    <td>
+                        <strong>{{ event.title }}</strong>
+                        {% if event.description %}
+                        <br><small class="text-muted">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if event.event_type == 'exam' %}
+                        <span class="badge bg-danger">Exam</span>
+                        {% elif event.event_type == 'deadline' %}
+                        <span class="badge bg-warning text-dark">Deadline</span>
+                        {% elif event.event_type == 'holiday' %}
+                        <span class="badge bg-success">Holiday</span>
+                        {% else %}
+                        <span class="badge bg-light text-dark">{{ event.event_type or 'other' }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ event.event_date or 'No date' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 2rem;">
+        <span data-feather="calendar"></span>
+        <h5>No calendar events yet</h5>
+        <p class="text-muted">Upload a syllabus to automatically extract important dates</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('classes.update_class', class_id=class_data.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Edit Class</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit-name" class="form-label">Class Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit-name" name="name" value="{{ class_data.name }}" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-code" class="form-label">Course Code</label>
+                            <input type="text" class="form-control" id="edit-code" name="code" value="{{ class_data.code or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-semester" class="form-label">Semester</label>
+                            <input type="text" class="form-control" id="edit-semester" name="semester" value="{{ class_data.semester or '' }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="edit-instructor" class="form-label">Instructor</label>
+                            <input type="text" class="form-control" id="edit-instructor" name="instructor" value="{{ class_data.instructor or '' }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="edit-color" class="form-label">Color</label>
+                            <input type="color" class="form-control form-control-color w-100" id="edit-color" name="color" value="{{ class_data.color or '#0d6efd' }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit-description" name="description" rows="3">{{ class_data.description or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Class</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ class_data.name }}</strong>?</p>
+                <p class="text-danger small">This action cannot be undone. All notes and materials in this class will be permanently deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('classes.delete_class', class_id=class_data.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete Class</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Upload Syllabus Modal -->
+<div class="modal fade" id="uploadSyllabusModal" tabindex="-1" aria-labelledby="uploadSyllabusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('classes.upload_syllabus', class_id=class_data.id) }}" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadSyllabusModalLabel">Upload Syllabus</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="syllabus" class="form-label">Select File</label>
+                        <input type="file" class="form-control" id="syllabus" name="syllabus" accept=".pdf,.doc,.docx,.txt" required>
+                        <div class="form-text">Allowed formats: PDF, DOC, DOCX, TXT (max 16MB)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Syllabus Modal -->
+<div class="modal fade" id="deleteSyllabusModal" tabindex="-1" aria-labelledby="deleteSyllabusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteSyllabusModalLabel">Delete Syllabus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the syllabus?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('classes.delete_syllabus', class_id=class_data.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Flashcard Deck Modal -->
+<div class="modal fade" id="createDeckModal" tabindex="-1" aria-labelledby="createDeckModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('flashcards.create_deck') }}">
+                <input type="hidden" name="class_id" value="{{ class_data.id }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createDeckModalLabel">
+                        <span data-feather="layers" style="color: #8b5cf6;"></span>
+                        Create Flashcard Deck
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="deckTitle" class="form-label">Deck Title</label>
+                        <input type="text" class="form-control" id="deckTitle" name="title" placeholder="e.g., Chapter 5 Vocabulary" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;">
+                        Create Deck
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Flashcards Modal -->
+<div class="modal fade" id="quickFlashcardsModal" tabindex="-1" aria-labelledby="quickFlashcardsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickFlashcardsModalLabel">
+                    <span data-feather="zap" style="color: #8b5cf6;"></span>
+                    Quick Generate Flashcards
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Generate flashcards from all notes in <strong>{{ class_data.name }}</strong>.</p>
+                <div class="mb-3">
+                    <label for="quickDeckTitle" class="form-label">Deck Title</label>
+                    <input type="text" class="form-control" id="quickDeckTitle" value="{{ class_data.name }} - All Notes" placeholder="e.g., Biology Final Review">
+                </div>
+                <div class="mb-3">
+                    <label for="quickNumCards" class="form-label">Cards to Generate</label>
+                    <select class="form-select" id="quickNumCards">
+                        <option value="10">10 cards</option>
+                        <option value="15" selected>15 cards</option>
+                        <option value="20">20 cards</option>
+                        <option value="30">30 cards</option>
+                    </select>
+                </div>
+                {% if notes %}
+                <p class="small text-muted mb-0">
+                    <span data-feather="info" style="width: 14px; height: 14px;"></span>
+                    Will use content from {{ notes|length }} note{% if notes|length != 1 %}s{% endif %}
+                </p>
+                {% else %}
+                <div class="alert alert-warning mb-0">
+                    <span data-feather="alert-triangle" style="width: 16px; height: 16px;"></span>
+                    No notes in this class. Add some notes first!
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="quickFlashcardsBtn" onclick="generateQuickFlashcards()" {% if not notes %}disabled{% endif %} style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;">
+                    <span data-feather="zap"></span> Generate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+
+    const classId = {{ class_data.id }};
+
+    async function generateQuickFlashcards() {
+        const title = document.getElementById('quickDeckTitle').value;
+        const numCards = document.getElementById('quickNumCards').value;
+        const btn = document.getElementById('quickFlashcardsBtn');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+
+        try {
+            const response = await fetch(`/flashcards/class/${classId}/generate-all`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title, num_cards: parseInt(numCards) })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('quickFlashcardsModal')).hide();
+                window.location.href = `/flashcards/deck/${data.deck_id}`;
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span data-feather="zap"></span> Generate';
+            feather.replace();
+        }
+    }
+</script>
+{% endblock %}

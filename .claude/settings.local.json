@@ -15,7 +15,11 @@
       "WebFetch(domain:www.brandcolorcode.com)",
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(python3:*)",
+      "Bash(curl:*)",
+      "Bash(./venv/bin/python3:*)",
+      "Bash(./venv/bin/python:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,231 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Review - {{ attempt.quiz_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .review-header {
+        margin-bottom: 2rem;
+    }
+
+    .review-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #37352f;
+    }
+
+    .score-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .score-big {
+        font-size: 3.5rem;
+        font-weight: 700;
+    }
+
+    .score-big.good { color: #10b981; }
+    .score-big.okay { color: #f59e0b; }
+    .score-big.poor { color: #ef4444; }
+
+    .result-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1rem;
+    }
+
+    .result-card.correct {
+        border-left: 4px solid #10b981;
+    }
+
+    .result-card.incorrect {
+        border-left: 4px solid #ef4444;
+    }
+
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .question-text {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #37352f;
+    }
+
+    .result-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .answer-section {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .answer-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #9b9a97;
+        margin-bottom: 0.25rem;
+    }
+
+    .your-answer {
+        color: #37352f;
+    }
+
+    .your-answer.wrong {
+        color: #ef4444;
+        text-decoration: line-through;
+    }
+
+    .correct-answer {
+        color: #10b981;
+        font-weight: 500;
+    }
+
+    .explanation {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #e7f3f8;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: #0b6e99;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 review-container">
+    <div class="review-header">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <a href="{{ url_for('quizzes.view_quiz', quiz_id=attempt.quiz_id) }}" class="text-decoration-none text-muted">
+                <span data-feather="arrow-left"></span>
+            </a>
+            <span class="text-muted">/</span>
+            <span style="color: {{ attempt.class_color }};">{{ attempt.class_name }}</span>
+        </div>
+        <h1>Review: {{ attempt.quiz_title }}</h1>
+        <p class="text-muted">
+            Completed {{ attempt.completed_at[:16] if attempt.completed_at else '' }}
+            {% if attempt.time_taken %}
+            | Time: {{ (attempt.time_taken // 60)|int }}m {{ attempt.time_taken % 60 }}s
+            {% endif %}
+        </p>
+    </div>
+
+    {% set percentage = ((attempt.score / attempt.total) * 100)|round|int %}
+    {% set score_class = 'good' if percentage >= 80 else ('okay' if percentage >= 60 else 'poor') %}
+
+    <div class="score-card">
+        <div class="score-big {{ score_class }}">{{ attempt.score }}/{{ attempt.total }}</div>
+        <p class="text-muted mb-0">{{ percentage }}% correct</p>
+    </div>
+
+    <h4 class="mb-3">Question Review</h4>
+
+    {% for result in results %}
+    <div class="result-card {{ 'correct' if result.is_correct else 'incorrect' }}">
+        <div class="result-header">
+            <div>
+                <span class="text-muted small">Question {{ loop.index }}</span>
+                <div class="question-text">{{ result.question }}</div>
+            </div>
+            {% if result.is_correct %}
+            <span data-feather="check-circle" class="result-icon text-success"></span>
+            {% else %}
+            <span data-feather="x-circle" class="result-icon text-danger"></span>
+            {% endif %}
+        </div>
+
+        <div class="answer-section">
+            {% if result.type == 'multiple_choice' %}
+                <div class="mb-2">
+                    <div class="answer-label">Your Answer</div>
+                    {% if result.user_answer is not none %}
+                    <div class="your-answer {{ '' if result.is_correct else 'wrong' }}">
+                        {{ result.options[result.user_answer] if result.user_answer is not none and result.user_answer < result.options|length else 'No answer' }}
+                    </div>
+                    {% else %}
+                    <div class="text-muted">No answer</div>
+                    {% endif %}
+                </div>
+                {% if not result.is_correct %}
+                <div>
+                    <div class="answer-label">Correct Answer</div>
+                    <div class="correct-answer">{{ result.options[result.correct_answer] }}</div>
+                </div>
+                {% endif %}
+
+            {% elif result.type == 'true_false' %}
+                <div class="mb-2">
+                    <div class="answer-label">Your Answer</div>
+                    <div class="your-answer {{ '' if result.is_correct else 'wrong' }}">
+                        {% if result.user_answer is not none %}
+                            {{ 'True' if result.user_answer else 'False' }}
+                        {% else %}
+                            No answer
+                        {% endif %}
+                    </div>
+                </div>
+                {% if not result.is_correct %}
+                <div>
+                    <div class="answer-label">Correct Answer</div>
+                    <div class="correct-answer">{{ 'True' if result.correct_answer else 'False' }}</div>
+                </div>
+                {% endif %}
+
+            {% elif result.type == 'short_answer' %}
+                <div class="mb-2">
+                    <div class="answer-label">Your Answer</div>
+                    <div class="your-answer {{ '' if result.is_correct else 'wrong' }}">
+                        {{ result.user_answer or 'No answer' }}
+                    </div>
+                </div>
+                <div>
+                    <div class="answer-label">Expected Answer</div>
+                    <div class="correct-answer">{{ result.correct_answer }}</div>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if result.explanation %}
+        <div class="explanation">
+            <span data-feather="info" style="width: 16px; height: 16px;"></span>
+            {{ result.explanation }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="d-flex gap-3 mt-4">
+        <a href="{{ url_for('quizzes.take_quiz', quiz_id=attempt.quiz_id) }}" class="btn btn-primary" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); border: none;">
+            <span data-feather="refresh-cw"></span> Retake Quiz
+        </a>
+        <a href="{{ url_for('quizzes.view_quiz', quiz_id=attempt.quiz_id) }}" class="btn btn-outline-secondary">
+            Back to Quiz
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+</script>
+{% endblock %}

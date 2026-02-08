@@ -1,0 +1,94 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}All Notes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">All Notes</h1>
+    {% if classes %}
+    <div class="dropdown">
+        <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <span data-feather="plus"></span>
+            New Note
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            {% for class in classes %}
+            <li>
+                <form method="POST" action="{{ url_for('notes.create_note', class_id=class.id) }}" class="d-inline w-100">
+                    <button type="submit" class="dropdown-item d-flex align-items-center">
+                        <span class="me-2" style="color: {{ class.color }};">&#9679;</span>
+                        {{ class.code or class.name }}
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+{% if notes %}
+<div class="row">
+    {% for note in notes %}
+    <div class="col-md-4 mb-3">
+        <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="text-decoration-none">
+            <div class="note-card {% if note.is_pinned %}note-pinned{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge" style="background-color: {{ note.class_color }};">
+                        {{ note.class_code or note.class_name }}
+                    </span>
+                    {% if note.is_pinned %}
+                    <span data-feather="bookmark" style="width: 14px; height: 14px; color: var(--warning);"></span>
+                    {% endif %}
+                </div>
+                <div class="note-card-title">{{ note.title or 'Untitled' }}</div>
+                <div class="note-card-preview">
+                    {{ note.content|striptags|truncate(120) if note.content else 'Empty note' }}
+                </div>
+                <div class="note-card-meta">
+                    {{ note.updated_at[:10] if note.updated_at else '' }}
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <span data-feather="file-text"></span>
+    <h5>No notes yet</h5>
+    <p class="text-muted">Create a note from a class to get started.</p>
+    {% if classes %}
+    <div class="dropdown">
+        <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <span data-feather="plus"></span>
+            New Note
+        </button>
+        <ul class="dropdown-menu">
+            {% for class in classes %}
+            <li>
+                <form method="POST" action="{{ url_for('notes.create_note', class_id=class.id) }}" class="d-inline w-100">
+                    <button type="submit" class="dropdown-item d-flex align-items-center">
+                        <span class="me-2" style="color: {{ class.color }};">&#9679;</span>
+                        {{ class.code or class.name }}
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <a href="{{ url_for('classes.create_class') }}" class="btn btn-sm btn-primary">
+        <span data-feather="plus"></span>
+        Create a Class First
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+</script>
+{% endblock %}

@@ -1,0 +1,439 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Study: {{ deck.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .study-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .study-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .study-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #37352f;
+        margin-bottom: 0.25rem;
+    }
+
+    .study-progress {
+        font-size: 0.9rem;
+        color: #9b9a97;
+    }
+
+    .progress-bar-container {
+        height: 6px;
+        background: #f1f1ef;
+        border-radius: 3px;
+        margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%);
+        transition: width 0.3s ease;
+    }
+
+    /* Flashcard */
+    .flashcard-container {
+        perspective: 1000px;
+        margin-bottom: 2rem;
+    }
+
+    .flashcard {
+        width: 100%;
+        min-height: 300px;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s;
+        cursor: pointer;
+    }
+
+    .flashcard.flipped {
+        transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+        position: absolute;
+        width: 100%;
+        min-height: 300px;
+        backface-visibility: hidden;
+        border-radius: 16px;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .flashcard-front {
+        background: white;
+        border: 2px solid #f1f1ef;
+    }
+
+    .flashcard-back {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 2px solid #e2e8f0;
+        transform: rotateY(180deg);
+    }
+
+    .flashcard-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #9b9a97;
+        margin-bottom: 1rem;
+    }
+
+    .flashcard-text {
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: #37352f;
+        line-height: 1.5;
+    }
+
+    .flip-hint {
+        position: absolute;
+        bottom: 1rem;
+        font-size: 0.8rem;
+        color: #9b9a97;
+    }
+
+    /* Rating buttons */
+    .rating-section {
+        text-align: center;
+    }
+
+    .rating-section h4 {
+        font-size: 0.9rem;
+        color: #9b9a97;
+        margin-bottom: 1rem;
+    }
+
+    .rating-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .rating-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-width: 100px;
+    }
+
+    .rating-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .rating-btn.again {
+        background: #fdebec;
+        color: #e03e3e;
+    }
+
+    .rating-btn.hard {
+        background: #fbecdd;
+        color: #d9730d;
+    }
+
+    .rating-btn.good {
+        background: #edf3ec;
+        color: #0f7b6c;
+    }
+
+    .rating-btn.easy {
+        background: #e7f3f8;
+        color: #0b6e99;
+    }
+
+    .rating-btn.again:hover { background: #fcd4d6; }
+    .rating-btn.hard:hover { background: #faddbe; }
+    .rating-btn.good:hover { background: #d8ebd5; }
+    .rating-btn.easy:hover { background: #cfe6f0; }
+
+    /* Completion */
+    .completion-screen {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .completion-screen h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #37352f;
+    }
+
+    .completion-stats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6940a5;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #9b9a97;
+    }
+
+    /* Hidden by default */
+    .rating-section {
+        display: none;
+    }
+
+    .rating-section.visible {
+        display: block;
+    }
+
+    .completion-screen {
+        display: none;
+    }
+
+    /* Keyboard shortcut hint */
+    .keyboard-hint {
+        text-align: center;
+        margin-top: 2rem;
+        font-size: 0.8rem;
+        color: #9b9a97;
+    }
+
+    .key {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        background: #f1f1ef;
+        border-radius: 4px;
+        font-family: monospace;
+        margin: 0 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="study-container">
+    <!-- Header -->
+    <div class="study-header">
+        <a href="{{ url_for('flashcards.view_deck', deck_id=deck.id) }}" class="text-decoration-none text-muted d-inline-block mb-2">
+            <span data-feather="x"></span> Exit Study
+        </a>
+        <h1>{{ deck.title }}</h1>
+        <div class="study-progress">
+            <span id="currentCard">1</span> / <span id="totalCards">{{ cards|length }}</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Flashcard -->
+    <div class="flashcard-container" id="flashcardContainer">
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+            <div class="flashcard-face flashcard-front">
+                <div class="flashcard-label">Question</div>
+                <div class="flashcard-text" id="cardFront"></div>
+                <div class="flip-hint">Click to reveal answer</div>
+            </div>
+            <div class="flashcard-face flashcard-back">
+                <div class="flashcard-label">Answer</div>
+                <div class="flashcard-text" id="cardBack"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating buttons (shown after flip) -->
+    <div class="rating-section" id="ratingSection">
+        <h4>How well did you know this?</h4>
+        <div class="rating-buttons">
+            <button class="rating-btn again" onclick="rateCard(1, false)">
+                Again
+            </button>
+            <button class="rating-btn hard" onclick="rateCard(2, true)">
+                Hard
+            </button>
+            <button class="rating-btn good" onclick="rateCard(3, true)">
+                Good
+            </button>
+            <button class="rating-btn easy" onclick="rateCard(5, true)">
+                Easy
+            </button>
+        </div>
+    </div>
+
+    <!-- Keyboard hints -->
+    <div class="keyboard-hint" id="keyboardHint">
+        Press <span class="key">Space</span> to flip &bull;
+        <span class="key">1</span> Again &bull;
+        <span class="key">2</span> Hard &bull;
+        <span class="key">3</span> Good &bull;
+        <span class="key">4</span> Easy
+    </div>
+
+    <!-- Completion screen -->
+    <div class="completion-screen" id="completionScreen">
+        <h2>Study Session Complete!</h2>
+        <div class="completion-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="cardsStudied">0</div>
+                <div class="stat-label">Cards Studied</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="accuracy">0%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('flashcards.study_deck', deck_id=deck.id) }}" class="btn btn-primary">
+                Study Again
+            </a>
+            <a href="{{ url_for('flashcards.view_deck', deck_id=deck.id) }}" class="btn btn-outline-secondary">
+                Back to Deck
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+
+    // Card data
+    const cards = {{ cards|tojson|safe }};
+    let currentIndex = 0;
+    let isFlipped = false;
+    let correctCount = 0;
+    let reviewedCount = 0;
+
+    // DOM elements
+    const flashcard = document.getElementById('flashcard');
+    const cardFront = document.getElementById('cardFront');
+    const cardBack = document.getElementById('cardBack');
+    const ratingSection = document.getElementById('ratingSection');
+    const progressBar = document.getElementById('progressBar');
+    const currentCardEl = document.getElementById('currentCard');
+    const flashcardContainer = document.getElementById('flashcardContainer');
+    const completionScreen = document.getElementById('completionScreen');
+    const keyboardHint = document.getElementById('keyboardHint');
+
+    // Initialize
+    function init() {
+        if (cards.length === 0) {
+            showCompletion();
+            return;
+        }
+        showCard(0);
+    }
+
+    function showCard(index) {
+        if (index >= cards.length) {
+            showCompletion();
+            return;
+        }
+
+        currentIndex = index;
+        const card = cards[index];
+
+        cardFront.textContent = card.front;
+        cardBack.textContent = card.back;
+
+        // Reset flip state
+        flashcard.classList.remove('flipped');
+        isFlipped = false;
+        ratingSection.classList.remove('visible');
+
+        // Update progress
+        currentCardEl.textContent = index + 1;
+        progressBar.style.width = `${(index / cards.length) * 100}%`;
+    }
+
+    function flipCard() {
+        flashcard.classList.toggle('flipped');
+        isFlipped = !isFlipped;
+
+        if (isFlipped) {
+            ratingSection.classList.add('visible');
+        }
+    }
+
+    async function rateCard(difficulty, correct) {
+        const card = cards[currentIndex];
+
+        // Send review to server
+        try {
+            await fetch(`/flashcards/card/${card.id}/review`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ difficulty, correct })
+            });
+        } catch (error) {
+            console.error('Error recording review:', error);
+        }
+
+        // Update stats
+        reviewedCount++;
+        if (correct) correctCount++;
+
+        // If "Again", add card back to end of queue
+        if (difficulty === 1) {
+            cards.push(card);
+            document.getElementById('totalCards').textContent = cards.length;
+        }
+
+        // Next card
+        showCard(currentIndex + 1);
+    }
+
+    function showCompletion() {
+        flashcardContainer.style.display = 'none';
+        ratingSection.style.display = 'none';
+        keyboardHint.style.display = 'none';
+        completionScreen.style.display = 'block';
+
+        document.getElementById('cardsStudied').textContent = reviewedCount;
+        const acc = reviewedCount > 0 ? Math.round((correctCount / reviewedCount) * 100) : 0;
+        document.getElementById('accuracy').textContent = acc + '%';
+
+        progressBar.style.width = '100%';
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        if (e.code === 'Space') {
+            e.preventDefault();
+            flipCard();
+        } else if (isFlipped) {
+            if (e.key === '1') rateCard(1, false);
+            else if (e.key === '2') rateCard(2, true);
+            else if (e.key === '3') rateCard(3, true);
+            else if (e.key === '4') rateCard(5, true);
+        }
+    });
+
+    // Start
+    init();
+</script>
+{% endblock %}

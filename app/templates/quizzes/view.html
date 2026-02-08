@@ -1,0 +1,201 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ quiz.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .quiz-header {
+        margin-bottom: 2rem;
+    }
+
+    .quiz-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #37352f;
+        margin-bottom: 0.5rem;
+    }
+
+    .quiz-meta {
+        color: #9b9a97;
+        font-size: 0.9rem;
+    }
+
+    .quiz-stats-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #37352f;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #9b9a97;
+    }
+
+    .attempt-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .attempt-score {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .attempt-score.good {
+        color: #10b981;
+    }
+
+    .attempt-score.okay {
+        color: #f59e0b;
+    }
+
+    .attempt-score.poor {
+        color: #ef4444;
+    }
+
+    .take-quiz-btn {
+        background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 500;
+    }
+
+    .take-quiz-btn:hover {
+        background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 quiz-container">
+    <div class="quiz-header">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <a href="{{ url_for('quizzes.list_quizzes') }}" class="text-decoration-none text-muted">
+                <span data-feather="arrow-left"></span>
+            </a>
+            <span class="text-muted">/</span>
+            <span style="color: {{ quiz.class_color }};">{{ quiz.class_code or quiz.class_name }}</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1>{{ quiz.title }}</h1>
+                <div class="quiz-meta">
+                    {{ question_count }} questions | Created {{ quiz.created_at[:10] if quiz.created_at else '' }}
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('quizzes.take_quiz', quiz_id=quiz.id) }}" class="btn btn-primary take-quiz-btn">
+                    <span data-feather="play"></span> Take Quiz
+                </a>
+                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <span data-feather="trash-2"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="quiz-stats-card">
+        <div class="stat-grid">
+            <div>
+                <div class="stat-value">{{ question_count }}</div>
+                <div class="stat-label">Questions</div>
+            </div>
+            <div>
+                <div class="stat-value">{{ attempts|length }}</div>
+                <div class="stat-label">Attempts</div>
+            </div>
+            <div>
+                {% if attempts %}
+                {% set best = attempts|map(attribute='score')|max %}
+                {% set total = attempts[0].total %}
+                <div class="stat-value">{{ ((best / total) * 100)|round|int }}%</div>
+                <div class="stat-label">Best Score</div>
+                {% else %}
+                <div class="stat-value">-</div>
+                <div class="stat-label">Best Score</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mb-3">Attempt History</h4>
+
+    {% if attempts %}
+    {% for attempt in attempts %}
+    <div class="attempt-card">
+        <div>
+            <span class="attempt-score {% if (attempt.score / attempt.total) >= 0.8 %}good{% elif (attempt.score / attempt.total) >= 0.6 %}okay{% else %}poor{% endif %}">
+                {{ attempt.score }}/{{ attempt.total }}
+                ({{ ((attempt.score / attempt.total) * 100)|round|int }}%)
+            </span>
+            <span class="text-muted ms-3">
+                {{ attempt.completed_at[:16] if attempt.completed_at else '' }}
+            </span>
+        </div>
+        <a href="{{ url_for('quizzes.review_attempt', attempt_id=attempt.id) }}" class="btn btn-sm btn-outline-secondary">
+            <span data-feather="eye"></span> Review
+        </a>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="text-center py-4 text-muted">
+        <span data-feather="clock" style="width: 32px; height: 32px;"></span>
+        <p class="mt-2">No attempts yet. Take the quiz to see your results here.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ quiz.title }}</strong>?</p>
+                <p class="text-muted small">This will also delete all attempt history.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('quizzes.delete_quiz', quiz_id=quiz.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+</script>
+{% endblock %}
