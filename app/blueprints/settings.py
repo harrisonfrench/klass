@@ -1,9 +1,10 @@
 """Settings Blueprint - User preferences and settings."""
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.db_connect import get_db
 from app.blueprints.auth import login_required
+from app.services.export_service import export_notes_markdown, export_flashcards_csv, export_full_backup
 
 settings = Blueprint('settings', __name__)
 
@@ -232,3 +233,51 @@ def delete_account():
     session.clear()
     flash('Your account has been deleted.', 'success')
     return redirect(url_for('auth.login'))
+
+
+@settings.route('/export/notes')
+@login_required
+def export_notes():
+    """Export all notes as Markdown."""
+    db = get_db()
+    user_id = session['user_id']
+
+    content, filename = export_notes_markdown(db, user_id)
+
+    return Response(
+        content,
+        mimetype='text/markdown',
+        headers={'Content-Disposition': f'attachment; filename={filename}'}
+    )
+
+
+@settings.route('/export/flashcards')
+@login_required
+def export_flashcards():
+    """Export all flashcards as CSV."""
+    db = get_db()
+    user_id = session['user_id']
+
+    content, filename = export_flashcards_csv(db, user_id)
+
+    return Response(
+        content,
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename={filename}'}
+    )
+
+
+@settings.route('/export/backup')
+@login_required
+def export_backup():
+    """Export full backup as JSON."""
+    db = get_db()
+    user_id = session['user_id']
+
+    content, filename = export_full_backup(db, user_id)
+
+    return Response(
+        content,
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment; filename={filename}'}
+    )

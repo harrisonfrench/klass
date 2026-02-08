@@ -4,7 +4,7 @@ import re
 import json
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app.db_connect import get_db
-from app.services.ai_service import generate_quiz
+from app.services.ai_service import generate_quiz, grade_short_answer
 from app.blueprints.auth import login_required
 
 quizzes = Blueprint('quizzes', __name__)
@@ -134,6 +134,15 @@ def submit_quiz(quiz_id):
     answers = data.get('answers', {})
     time_taken = data.get('time_taken', 0)
 
+    # Server-side time limit validation
+    time_limit = quiz.get('time_limit')
+    if time_limit and time_limit > 0:
+        # Allow 10 second grace period for network latency
+        max_time = (time_limit * 60) + 10
+        if time_taken > max_time:
+            # Still accept the submission but note it was over time
+            time_taken = time_limit * 60  # Cap at the limit
+
     # Grade the quiz
     score = 0
     results = []
@@ -143,20 +152,33 @@ def submit_quiz(quiz_id):
         user_answer = answers.get(q_id)
         correct_answer = question.get('correct_answer')
         is_correct = False
+        ai_feedback = None
+        ai_score = None
 
         if question['type'] == 'multiple_choice':
             is_correct = user_answer == correct_answer
         elif question['type'] == 'true_false':
             is_correct = user_answer == correct_answer
         elif question['type'] == 'short_answer':
-            # For short answer, we'll do basic matching
-            if user_answer and correct_answer:
-                is_correct = user_answer.lower().strip() in correct_answer.lower()
+            # Use AI grading for short answer questions
+            try:
+                grading_result = grade_short_answer(
+                    question['question'],
+                    correct_answer,
+                    user_answer
+                )
+                ai_score = grading_result.get('score', 0)
+                ai_feedback = grading_result.get('feedback', '')
+                is_correct = grading_result.get('is_correct', False)
+            except Exception:
+                # Fallback to basic matching if AI fails
+                if user_answer and correct_answer:
+                    is_correct = user_answer.lower().strip() in correct_answer.lower()
 
         if is_correct:
             score += 1
 
-        results.append({
+        result_entry = {
             'question': question['question'],
             'type': question['type'],
             'user_answer': user_answer,
@@ -164,7 +186,15 @@ def submit_quiz(quiz_id):
             'is_correct': is_correct,
             'explanation': question.get('explanation', ''),
             'options': question.get('options', [])
-        })
+        }
+
+        # Add AI feedback for short answer questions
+        if ai_feedback:
+            result_entry['ai_feedback'] = ai_feedback
+        if ai_score is not None:
+            result_entry['ai_score'] = ai_score
+
+        results.append(result_entry)
 
     # Save attempt
     cursor = db.execute('''
@@ -209,6 +239,7 @@ def generate_quiz_page(class_id):
         selected_notes = request.form.getlist('notes')
         num_questions = int(request.form.get('num_questions', 10))
         question_types = request.form.getlist('question_types')
+        time_limit = int(request.form.get('time_limit', 0))
 
         if not selected_notes:
             flash('Please select at least one note.', 'error')
@@ -239,9 +270,9 @@ def generate_quiz_page(class_id):
             questions = generate_quiz(combined_content, num_questions, question_types)
 
             cursor = db.execute('''
-                INSERT INTO quizzes (user_id, class_id, title, questions)
-                VALUES (?, ?, ?, ?)
-            ''', (session['user_id'], class_id, title, json.dumps(questions)))
+                INSERT INTO quizzes (user_id, class_id, title, questions, time_limit)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (session['user_id'], class_id, title, json.dumps(questions), time_limit if time_limit > 0 else None))
             db.commit()
 
             quiz_id = cursor.lastrowid

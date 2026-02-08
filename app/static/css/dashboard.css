@@ -140,6 +140,19 @@ body {
   color: var(--primary);
 }
 
+/* Sidebar Collapse Icons */
+.sidebar-heading .collapse-icon {
+  transition: transform 0.2s ease;
+}
+
+.sidebar-heading a[aria-expanded="false"] .collapse-icon {
+  transform: rotate(-90deg);
+}
+
+.sidebar-heading a[aria-expanded="true"] .collapse-icon {
+  transform: rotate(0deg);
+}
+
 /* Main Content */
 main {
   background: var(--bg-main);

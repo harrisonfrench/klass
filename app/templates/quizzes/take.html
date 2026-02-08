@@ -32,6 +32,25 @@
         font-size: 1.1rem;
         font-weight: 600;
         color: #9b9a97;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        background: #f1f1ef;
+    }
+
+    .timer.countdown {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .timer.warning {
+        background: #fee2e2;
+        color: #dc2626;
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
     }
 
     .question-card {
@@ -273,18 +292,55 @@
 
     const quizId = {{ quiz.id }};
     const totalQuestions = {{ questions|length }};
+    const timeLimit = {{ quiz.time_limit or 0 }};  // Time limit in minutes, 0 = no limit
     let answers = {};
     let startTime = Date.now();
     let timerInterval;
+    let isSubmitting = false;
 
     // Start timer
     timerInterval = setInterval(updateTimer, 1000);
 
     function updateTimer() {
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-        const seconds = (elapsed % 60).toString().padStart(2, '0');
-        document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+        const timerEl = document.getElementById('timer');
+
+        if (timeLimit > 0) {
+            // Countdown mode
+            const totalSeconds = timeLimit * 60;
+            const remaining = totalSeconds - elapsed;
+
+            if (remaining <= 0) {
+                // Time's up - auto submit
+                clearInterval(timerInterval);
+                timerEl.textContent = '00:00';
+                timerEl.classList.add('warning');
+                if (!isSubmitting) {
+                    isSubmitting = true;
+                    alert("Time's up! Your quiz will be submitted now.");
+                    submitQuiz(true);  // Force submit
+                }
+                return;
+            }
+
+            const minutes = Math.floor(remaining / 60).toString().padStart(2, '0');
+            const seconds = (remaining % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${minutes}:${seconds}`;
+            timerEl.classList.add('countdown');
+
+            // Warning when less than 1 minute left
+            if (remaining <= 60) {
+                timerEl.classList.add('warning');
+            } else if (remaining <= 300) {
+                // 5 minutes warning - yellow background
+                timerEl.classList.remove('warning');
+            }
+        } else {
+            // Count up mode (no time limit)
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${minutes}:${seconds}`;
+        }
     }
 
     function updateAnsweredCount() {
@@ -341,13 +397,16 @@
         });
     });
 
-    async function submitQuiz() {
-        if (Object.keys(answers).length < totalQuestions) {
+    async function submitQuiz(forceSubmit = false) {
+        if (isSubmitting && !forceSubmit) return;
+
+        if (!forceSubmit && Object.keys(answers).length < totalQuestions) {
             if (!confirm(`You've only answered ${Object.keys(answers).length} of ${totalQuestions} questions. Submit anyway?`)) {
                 return;
             }
         }
 
+        isSubmitting = true;
         clearInterval(timerInterval);
         const timeTaken = Math.floor((Date.now() - startTime) / 1000);
 
@@ -387,13 +446,21 @@
                 '<span class="text-success"><span data-feather="check-circle"></span></span>' :
                 '<span class="text-danger"><span data-feather="x-circle"></span></span>';
 
+            // Handle AI score for short answer questions
+            let scoreDisplay = '';
+            if (result.type === 'short_answer' && result.ai_score !== undefined) {
+                scoreDisplay = `<span class="badge ${result.ai_score >= 70 ? 'bg-success' : result.ai_score >= 50 ? 'bg-warning' : 'bg-danger'} ms-2">${result.ai_score}%</span>`;
+            }
+
             resultsHTML += `
                 <div class="mb-3 p-3 rounded" style="background: ${result.is_correct ? '#d1fae5' : '#fee2e2'};">
                     <div class="d-flex align-items-start gap-2">
                         ${icon}
-                        <div>
-                            <strong>Q${i + 1}:</strong> ${result.question}
+                        <div style="flex: 1;">
+                            <strong>Q${i + 1}:</strong> ${result.question}${scoreDisplay}
+                            ${result.type === 'short_answer' && result.user_answer ? `<div class="mt-2 p-2 rounded" style="background: rgba(0,0,0,0.05);"><strong>Your answer:</strong> ${result.user_answer}</div>` : ''}
                             ${!result.is_correct ? `<div class="text-muted small mt-1">Correct answer: ${formatAnswer(result)}</div>` : ''}
+                            ${result.ai_feedback ? `<div class="mt-2 p-2 rounded" style="background: rgba(99, 102, 241, 0.1);"><span data-feather="cpu" style="width: 14px; height: 14px;"></span> <strong>AI Feedback:</strong> ${result.ai_feedback}</div>` : ''}
                             ${result.explanation ? `<div class="text-muted small mt-1"><em>${result.explanation}</em></div>` : ''}
                         </div>
                     </div>

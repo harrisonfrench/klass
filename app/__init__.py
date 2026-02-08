@@ -24,10 +24,12 @@ from app.blueprints.quizzes import quizzes
 from app.blueprints.auth import auth
 from app.blueprints.ai_chat import ai_chat
 from app.blueprints.settings import settings
+from app.blueprints.analytics import analytics
 
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(ai_chat, url_prefix='/ai-tutor')
 app.register_blueprint(settings, url_prefix='/settings')
+app.register_blueprint(analytics, url_prefix='/analytics')
 app.register_blueprint(examples, url_prefix='/example')
 app.register_blueprint(classes, url_prefix='/classes')
 app.register_blueprint(notes, url_prefix='/notes')

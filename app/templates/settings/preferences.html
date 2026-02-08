@@ -260,6 +260,26 @@
             </div>
         </div>
 
+        <!-- Export Data -->
+        <div class="settings-card">
+            <h5><span data-feather="download" class="me-2"></span>Export Data</h5>
+            <p class="text-muted mb-3">Download your data in various formats.</p>
+            <div class="d-flex flex-column gap-2">
+                <a href="{{ url_for('settings.export_notes') }}" class="btn btn-outline-primary">
+                    <span data-feather="file-text" class="me-2"></span>
+                    Export Notes (Markdown)
+                </a>
+                <a href="{{ url_for('settings.export_flashcards') }}" class="btn btn-outline-primary">
+                    <span data-feather="layers" class="me-2"></span>
+                    Export Flashcards (CSV)
+                </a>
+                <a href="{{ url_for('settings.export_backup') }}" class="btn btn-outline-secondary">
+                    <span data-feather="download-cloud" class="me-2"></span>
+                    Full Backup (JSON)
+                </a>
+            </div>
+        </div>
+
         <!-- Danger Zone -->
         <div class="settings-card danger-zone">
             <h5><span data-feather="alert-triangle" class="me-2"></span>Danger Zone</h5>
