@@ -1,11 +1,29 @@
 """Analytics Blueprint - Progress tracking and study insights."""
 
-from flask import Blueprint, render_template, jsonify, session
+from flask import Blueprint, render_template, jsonify, session, request
 from app.db_connect import get_db
 from app.blueprints.auth import login_required
 from datetime import datetime, timedelta
 
 analytics = Blueprint('analytics', __name__)
+
+# Achievement definitions
+ACHIEVEMENTS = {
+    'streak_3': {'name': '3 Day Streak', 'description': 'Study 3 days in a row', 'icon': 'flame', 'color': '#f59e0b'},
+    'streak_7': {'name': 'Week Warrior', 'description': 'Study 7 days in a row', 'icon': 'flame', 'color': '#f97316'},
+    'streak_30': {'name': 'Monthly Master', 'description': 'Study 30 days in a row', 'icon': 'flame', 'color': '#ef4444'},
+    'cards_50': {'name': 'Card Collector', 'description': 'Review 50 flashcards', 'icon': 'layers', 'color': '#8b5cf6'},
+    'cards_100': {'name': 'Card Master', 'description': 'Review 100 flashcards', 'icon': 'layers', 'color': '#7c3aed'},
+    'cards_500': {'name': 'Card Legend', 'description': 'Review 500 flashcards', 'icon': 'layers', 'color': '#6d28d9'},
+    'quiz_perfect': {'name': 'Perfect Score', 'description': 'Score 100% on a quiz', 'icon': 'check-circle', 'color': '#22c55e'},
+    'quiz_10': {'name': 'Quiz Taker', 'description': 'Complete 10 quizzes', 'icon': 'check-circle', 'color': '#10b981'},
+    'pomodoro_10': {'name': 'Focus Starter', 'description': 'Complete 10 Pomodoro sessions', 'icon': 'clock', 'color': '#0ea5e9'},
+    'pomodoro_50': {'name': 'Focus Pro', 'description': 'Complete 50 Pomodoro sessions', 'icon': 'clock', 'color': '#0284c7'},
+    'pomodoro_100': {'name': 'Focus Master', 'description': 'Complete 100 Pomodoro sessions', 'icon': 'clock', 'color': '#0369a1'},
+    'pomodoro_500': {'name': 'Focus Legend', 'description': 'Complete 500 Pomodoro sessions', 'icon': 'clock', 'color': '#075985'},
+    'notes_10': {'name': 'Note Taker', 'description': 'Create 10 notes', 'icon': 'file-text', 'color': '#ec4899'},
+    'first_class': {'name': 'Getting Started', 'description': 'Create your first class', 'icon': 'book', 'color': '#6366f1'},
+}
 
 
 @analytics.route('/')
@@ -14,6 +32,9 @@ def dashboard():
     """Main analytics dashboard."""
     db = get_db()
     user_id = session['user_id']
+
+    # Update streak
+    update_user_streak(db, user_id)
 
     # Get overall stats
     stats = get_overall_stats(db, user_id)
@@ -30,13 +51,29 @@ def dashboard():
     # Get study activity (last 30 days)
     activity_data = get_study_activity(db, user_id)
 
+    # Get streak data
+    streak_data = get_user_streak(db, user_id)
+
+    # Get goals
+    goals = get_user_goals(db, user_id)
+
+    # Get achievements
+    achievements = get_user_achievements(db, user_id)
+
+    # Check for new achievements
+    check_achievements(db, user_id)
+
     return render_template(
         'analytics/dashboard.html',
         stats=stats,
         quiz_data=quiz_data,
         flashcard_data=flashcard_data,
         class_performance=class_performance,
-        activity_data=activity_data
+        activity_data=activity_data,
+        streak_data=streak_data,
+        goals=goals,
+        achievements=achievements,
+        achievement_defs=ACHIEVEMENTS
     )
 
 
@@ -65,6 +102,46 @@ def api_activity():
     db = get_db()
     user_id = session['user_id']
     return jsonify(get_study_activity(db, user_id))
+
+
+@analytics.route('/goals', methods=['POST'])
+@login_required
+def create_goal():
+    """Create a new study goal."""
+    db = get_db()
+    user_id = session['user_id']
+
+    data = request.get_json()
+    goal_type = data.get('goal_type')
+    target_value = data.get('target_value', 0)
+
+    if goal_type not in ['daily_minutes', 'weekly_quizzes', 'cards_reviewed', 'pomodoro_sessions']:
+        return jsonify({'success': False, 'error': 'Invalid goal type'}), 400
+
+    # Delete existing goal of same type
+    db.execute('DELETE FROM study_goals WHERE user_id = ? AND goal_type = ?', (user_id, goal_type))
+
+    # Create new goal
+    db.execute('''
+        INSERT INTO study_goals (user_id, goal_type, target_value, period_start)
+        VALUES (?, ?, ?, DATE('now'))
+    ''', (user_id, goal_type, target_value))
+    db.commit()
+
+    return jsonify({'success': True})
+
+
+@analytics.route('/goals/<int:goal_id>', methods=['DELETE'])
+@login_required
+def delete_goal(goal_id):
+    """Delete a study goal."""
+    db = get_db()
+    user_id = session['user_id']
+
+    db.execute('DELETE FROM study_goals WHERE id = ? AND user_id = ?', (goal_id, user_id))
+    db.commit()
+
+    return jsonify({'success': True})
 
 
 def get_overall_stats(db, user_id):
@@ -270,3 +347,236 @@ def get_study_activity(db, user_id):
         })
 
     return activity
+
+
+def get_user_streak(db, user_id):
+    """Get user's streak data."""
+    cursor = db.execute('''
+        SELECT current_streak, longest_streak, last_study_date
+        FROM user_streaks WHERE user_id = ?
+    ''', (user_id,))
+    streak = cursor.fetchone()
+
+    if streak:
+        return {
+            'current': streak['current_streak'],
+            'longest': streak['longest_streak'],
+            'last_date': streak['last_study_date']
+        }
+    return {'current': 0, 'longest': 0, 'last_date': None}
+
+
+def update_user_streak(db, user_id):
+    """Update user's streak based on activity."""
+    today = datetime.now().date().isoformat()
+    yesterday = (datetime.now().date() - timedelta(days=1)).isoformat()
+
+    # Check if there was activity today
+    cursor = db.execute('''
+        SELECT COUNT(*) as count FROM (
+            SELECT created_at FROM study_sessions WHERE user_id = ? AND DATE(created_at) = DATE('now')
+            UNION ALL
+            SELECT completed_at FROM quiz_attempts WHERE user_id = ? AND DATE(completed_at) = DATE('now')
+            UNION ALL
+            SELECT completed_at FROM pomodoro_sessions WHERE user_id = ? AND completed = 1 AND DATE(completed_at) = DATE('now')
+        )
+    ''', (user_id, user_id, user_id))
+    has_activity_today = cursor.fetchone()['count'] > 0
+
+    if not has_activity_today:
+        return
+
+    # Get current streak data
+    cursor = db.execute('''
+        SELECT current_streak, longest_streak, last_study_date
+        FROM user_streaks WHERE user_id = ?
+    ''', (user_id,))
+    streak = cursor.fetchone()
+
+    if streak:
+        last_date = streak['last_study_date']
+        current = streak['current_streak']
+        longest = streak['longest_streak']
+
+        if last_date == today:
+            return  # Already updated today
+        elif last_date == yesterday:
+            current += 1
+        else:
+            current = 1  # Streak broken, start new
+
+        longest = max(longest, current)
+
+        db.execute('''
+            UPDATE user_streaks
+            SET current_streak = ?, longest_streak = ?, last_study_date = ?
+            WHERE user_id = ?
+        ''', (current, longest, today, user_id))
+    else:
+        db.execute('''
+            INSERT INTO user_streaks (user_id, current_streak, longest_streak, last_study_date)
+            VALUES (?, 1, 1, ?)
+        ''', (user_id, today))
+
+    db.commit()
+
+
+def get_user_goals(db, user_id):
+    """Get user's study goals with progress."""
+    cursor = db.execute('''
+        SELECT id, goal_type, target_value, period_start
+        FROM study_goals WHERE user_id = ?
+    ''', (user_id,))
+    goals = []
+
+    for row in cursor.fetchall():
+        goal_type = row['goal_type']
+        target = row['target_value']
+        period_start = row['period_start']
+
+        # Calculate current value based on goal type
+        if goal_type == 'daily_minutes':
+            cursor2 = db.execute('''
+                SELECT COALESCE(SUM(duration), 0) as total FROM study_sessions
+                WHERE user_id = ? AND DATE(created_at) = DATE('now')
+            ''', (user_id,))
+            current = cursor2.fetchone()['total']
+        elif goal_type == 'weekly_quizzes':
+            cursor2 = db.execute('''
+                SELECT COUNT(*) as count FROM quiz_attempts
+                WHERE user_id = ? AND DATE(completed_at) >= DATE('now', '-7 days')
+            ''', (user_id,))
+            current = cursor2.fetchone()['count']
+        elif goal_type == 'cards_reviewed':
+            cursor2 = db.execute('''
+                SELECT COUNT(*) as count FROM flashcards f
+                JOIN flashcard_decks d ON f.deck_id = d.id
+                WHERE d.user_id = ? AND DATE(f.last_reviewed) = DATE('now')
+            ''', (user_id,))
+            current = cursor2.fetchone()['count']
+        elif goal_type == 'pomodoro_sessions':
+            cursor2 = db.execute('''
+                SELECT COUNT(*) as count FROM pomodoro_sessions
+                WHERE user_id = ? AND completed = 1 AND DATE(completed_at) = DATE('now')
+                AND session_type = 'work'
+            ''', (user_id,))
+            current = cursor2.fetchone()['count']
+        else:
+            current = 0
+
+        progress = min(100, int((current / target * 100) if target > 0 else 0))
+
+        goals.append({
+            'id': row['id'],
+            'type': goal_type,
+            'target': target,
+            'current': current,
+            'progress': progress,
+            'label': get_goal_label(goal_type)
+        })
+
+    return goals
+
+
+def get_goal_label(goal_type):
+    """Get human-readable label for goal type."""
+    labels = {
+        'daily_minutes': 'Daily Study Minutes',
+        'weekly_quizzes': 'Weekly Quizzes',
+        'cards_reviewed': 'Cards Today',
+        'pomodoro_sessions': 'Pomodoros Today'
+    }
+    return labels.get(goal_type, goal_type)
+
+
+def get_user_achievements(db, user_id):
+    """Get user's earned achievements."""
+    cursor = db.execute('''
+        SELECT achievement_type, earned_at
+        FROM achievements WHERE user_id = ?
+        ORDER BY earned_at DESC
+    ''', (user_id,))
+
+    achievements = []
+    for row in cursor.fetchall():
+        ach_type = row['achievement_type']
+        if ach_type in ACHIEVEMENTS:
+            achievements.append({
+                'type': ach_type,
+                'earned_at': row['earned_at'],
+                **ACHIEVEMENTS[ach_type]
+            })
+
+    return achievements
+
+
+def check_achievements(db, user_id):
+    """Check and award any new achievements."""
+    earned = set()
+    cursor = db.execute('SELECT achievement_type FROM achievements WHERE user_id = ?', (user_id,))
+    for row in cursor.fetchall():
+        earned.add(row['achievement_type'])
+
+    new_achievements = []
+
+    # Check streak achievements
+    cursor = db.execute('SELECT current_streak FROM user_streaks WHERE user_id = ?', (user_id,))
+    streak = cursor.fetchone()
+    if streak:
+        if streak['current_streak'] >= 3 and 'streak_3' not in earned:
+            new_achievements.append('streak_3')
+        if streak['current_streak'] >= 7 and 'streak_7' not in earned:
+            new_achievements.append('streak_7')
+        if streak['current_streak'] >= 30 and 'streak_30' not in earned:
+            new_achievements.append('streak_30')
+
+    # Check flashcard achievements
+    cursor = db.execute('''
+        SELECT SUM(f.times_reviewed) as total FROM flashcards f
+        JOIN flashcard_decks d ON f.deck_id = d.id
+        WHERE d.user_id = ?
+    ''', (user_id,))
+    result = cursor.fetchone()
+    total_reviews = result['total'] or 0
+    if total_reviews >= 50 and 'cards_50' not in earned:
+        new_achievements.append('cards_50')
+    if total_reviews >= 100 and 'cards_100' not in earned:
+        new_achievements.append('cards_100')
+    if total_reviews >= 500 and 'cards_500' not in earned:
+        new_achievements.append('cards_500')
+
+    # Check quiz achievements
+    cursor = db.execute('SELECT COUNT(*) as count FROM quiz_attempts WHERE user_id = ?', (user_id,))
+    quiz_count = cursor.fetchone()['count']
+    if quiz_count >= 10 and 'quiz_10' not in earned:
+        new_achievements.append('quiz_10')
+
+    cursor = db.execute('SELECT score FROM quiz_attempts WHERE user_id = ? AND score = 100', (user_id,))
+    if cursor.fetchone() and 'quiz_perfect' not in earned:
+        new_achievements.append('quiz_perfect')
+
+    # Check notes achievement
+    cursor = db.execute('''
+        SELECT COUNT(*) as count FROM notes
+        WHERE class_id IN (SELECT id FROM classes WHERE user_id = ?)
+    ''', (user_id,))
+    note_count = cursor.fetchone()['count']
+    if note_count >= 10 and 'notes_10' not in earned:
+        new_achievements.append('notes_10')
+
+    # Check first class
+    cursor = db.execute('SELECT COUNT(*) as count FROM classes WHERE user_id = ?', (user_id,))
+    if cursor.fetchone()['count'] >= 1 and 'first_class' not in earned:
+        new_achievements.append('first_class')
+
+    # Award new achievements
+    for ach_type in new_achievements:
+        db.execute('''
+            INSERT INTO achievements (user_id, achievement_type)
+            VALUES (?, ?)
+        ''', (user_id, ach_type))
+
+    if new_achievements:
+        db.commit()
+
+    return new_achievements

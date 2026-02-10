@@ -10,10 +10,10 @@
     }
 
     .quiz-header {
-        background: white;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 1.25rem 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         margin-bottom: 1.5rem;
         display: flex;
         justify-content: space-between;
@@ -25,26 +25,26 @@
 
     .progress-info {
         font-weight: 500;
-        color: #37352f;
+        color: var(--text);
     }
 
     .timer {
         font-size: 1.1rem;
         font-weight: 600;
-        color: #9b9a97;
+        color: var(--text-muted);
         padding: 0.5rem 1rem;
         border-radius: 8px;
-        background: #f1f1ef;
+        background: var(--bg-hover);
     }
 
     .timer.countdown {
-        background: #fef3c7;
-        color: #92400e;
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
     }
 
     .timer.warning {
-        background: #fee2e2;
-        color: #dc2626;
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
         animation: pulse 1s infinite;
     }
 
@@ -54,16 +54,16 @@
     }
 
     .question-card {
-        background: white;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         margin-bottom: 1.5rem;
     }
 
     .question-number {
         font-size: 0.85rem;
-        color: #9b9a97;
+        color: var(--text-muted);
         margin-bottom: 0.5rem;
     }
 
@@ -72,14 +72,14 @@
         text-transform: uppercase;
         padding: 0.25rem 0.5rem;
         border-radius: 4px;
-        background: #f1f1ef;
-        color: #9b9a97;
+        background: var(--bg-hover);
+        color: var(--text-muted);
     }
 
     .question-text {
         font-size: 1.15rem;
         font-weight: 500;
-        color: #37352f;
+        color: var(--text);
         margin-bottom: 1rem;
     }
 
@@ -88,9 +88,10 @@
         width: 100%;
         text-align: left;
         padding: 1rem 1.25rem;
-        border: 2px solid #e9ecef;
+        border: 2px solid var(--border);
         border-radius: 8px;
-        background: white;
+        background: var(--bg);
+        color: var(--text);
         margin-bottom: 0.5rem;
         cursor: pointer;
         transition: all 0.2s;
@@ -98,12 +99,12 @@
 
     .option-btn:hover {
         border-color: #f59e0b;
-        background: #fffbeb;
+        background: rgba(245, 158, 11, 0.1);
     }
 
     .option-btn.selected {
         border-color: #f59e0b;
-        background: #fef3c7;
+        background: rgba(245, 158, 11, 0.2);
     }
 
     .option-letter {
@@ -113,7 +114,8 @@
         line-height: 28px;
         text-align: center;
         border-radius: 50%;
-        background: #f1f1ef;
+        background: var(--bg-hover);
+        color: var(--text);
         margin-right: 12px;
         font-weight: 600;
         font-size: 0.85rem;
@@ -121,7 +123,7 @@
 
     .option-btn.selected .option-letter {
         background: #f59e0b;
-        color: white;
+        color: #18181b;
     }
 
     .tf-options {
@@ -132,9 +134,10 @@
     .tf-btn {
         flex: 1;
         padding: 1rem;
-        border: 2px solid #e9ecef;
+        border: 2px solid var(--border);
         border-radius: 8px;
-        background: white;
+        background: var(--bg);
+        color: var(--text);
         cursor: pointer;
         font-weight: 500;
         transition: all 0.2s;
@@ -146,25 +149,27 @@
 
     .tf-btn.selected {
         border-color: #f59e0b;
-        background: #fef3c7;
+        background: rgba(245, 158, 11, 0.2);
     }
 
     .tf-btn.true-btn.selected {
         border-color: #10b981;
-        background: #d1fae5;
+        background: rgba(16, 185, 129, 0.2);
     }
 
     .tf-btn.false-btn.selected {
         border-color: #ef4444;
-        background: #fee2e2;
+        background: rgba(239, 68, 68, 0.2);
     }
 
     .short-answer-input {
         width: 100%;
         padding: 1rem;
-        border: 2px solid #e9ecef;
+        border: 2px solid var(--border);
         border-radius: 8px;
         font-size: 1rem;
+        background: var(--bg);
+        color: var(--text);
         transition: border-color 0.2s;
     }
 
@@ -174,10 +179,10 @@
     }
 
     .submit-section {
-        background: white;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         text-align: center;
     }
 
@@ -232,9 +237,10 @@
             <div class="question-text">{{ question.question }}</div>
 
             {% if question.type == 'multiple_choice' %}
+            {% set question_idx = loop.index0 %}
             <div class="options">
                 {% for option in question.options %}
-                <button type="button" class="option-btn" data-question="{{ loop.parent.loop.index0 }}" data-answer="{{ loop.index0 }}">
+                <button type="button" class="option-btn" data-question="{{ question_idx }}" data-answer="{{ loop.index0 }}">
                     <span class="option-letter">{{ ['A', 'B', 'C', 'D'][loop.index0] }}</span>
                     {{ option }}
                 </button>

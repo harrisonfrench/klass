@@ -1,7 +1,29 @@
 """AI Service - Groq API integration for note enhancement."""
 
 import os
+import re
 from groq import Groq
+
+
+def strip_emojis(text):
+    """Remove emojis from text."""
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F600-\U0001F64F"  # emoticons
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F680-\U0001F6FF"  # transport & map symbols
+        "\U0001F700-\U0001F77F"  # alchemical symbols
+        "\U0001F780-\U0001F7FF"  # geometric shapes
+        "\U0001F800-\U0001F8FF"  # supplemental arrows
+        "\U0001F900-\U0001F9FF"  # supplemental symbols
+        "\U0001FA00-\U0001FA6F"  # chess symbols
+        "\U0001FA70-\U0001FAFF"  # symbols extended
+        "\U00002702-\U000027B0"  # dingbats
+        "\U000024C2-\U0001F251"
+        "]+",
+        flags=re.UNICODE
+    )
+    return emoji_pattern.sub('', text).strip()
 
 
 def get_groq_client():
@@ -487,17 +509,20 @@ def chat_with_tutor(message, context_notes=None, conversation_history=None, clas
 
     class_context = f" for {class_name}" if class_name else ""
 
-    system_prompt = f"""You are an expert AI study tutor{class_context}. Your role is to help students understand their study materials, answer questions, explain concepts, and assist with learning.
+    system_prompt = f"""You are a knowledgeable study assistant{class_context}. Help students understand their study materials and answer questions clearly.
 
 Guidelines:
-1. Be encouraging and supportive
-2. Explain concepts clearly and at the right level
-3. Use examples and analogies when helpful
-4. If the student's question relates to their notes, reference them
-5. Ask clarifying questions if needed
-6. Suggest study strategies when appropriate
-7. Be concise but thorough
-8. If you don't know something, admit it honestly{context_prompt}"""
+- Explain concepts clearly and directly
+- Use examples when helpful
+- Reference the student's notes when relevant
+- Be concise but thorough
+- If you don't know something, say so
+
+Important formatting rules:
+- Do NOT use emojis
+- Keep responses professional and clean
+- Use plain text formatting (bullet points with - or *)
+- Avoid excessive enthusiasm or filler phrases{context_prompt}"""
 
     # Build messages
     messages = [{"role": "system", "content": system_prompt}]
@@ -520,7 +545,8 @@ Guidelines:
         max_tokens=1500
     )
 
-    return response.choices[0].message.content
+    # Strip any emojis from the response
+    return strip_emojis(response.choices[0].message.content)
 
 
 def grade_short_answer(question, expected_answer, user_answer):

@@ -12,15 +12,15 @@
 
     .chat-sidebar {
         width: 280px;
-        border-right: 1px solid #e5e7eb;
-        background: #f9fafb;
+        border-right: 1px solid var(--border);
+        background: var(--bg-secondary);
         display: flex;
         flex-direction: column;
     }
 
     .chat-sidebar-header {
         padding: 1rem;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border);
     }
 
     .chat-sessions {
@@ -37,17 +37,17 @@
         margin-bottom: 0.25rem;
         cursor: pointer;
         text-decoration: none;
-        color: #374151;
+        color: var(--text);
         transition: background-color 0.15s;
     }
 
     .session-item:hover {
-        background: #e5e7eb;
+        background: var(--bg-hover);
     }
 
     .session-item.active {
-        background: #e0e7ff;
-        color: #4f46e5;
+        background: rgba(99, 102, 241, 0.2);
+        color: var(--primary);
     }
 
     .session-dot {
@@ -70,12 +70,12 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        background: white;
+        background: var(--bg);
     }
 
     .chat-header {
         padding: 1rem;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -135,8 +135,8 @@
     }
 
     .message.assistant .message-content {
-        background: #f3f4f6;
-        color: #1f2937;
+        background: var(--bg-secondary);
+        color: var(--text);
         border-bottom-left-radius: 4px;
     }
 
@@ -166,8 +166,8 @@
 
     .chat-input-area {
         padding: 1rem;
-        border-top: 1px solid #e5e7eb;
-        background: #f9fafb;
+        border-top: 1px solid var(--border);
+        background: var(--bg-secondary);
     }
 
     .chat-input-container {
@@ -178,19 +178,21 @@
 
     .chat-input {
         flex: 1;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 0.75rem 1rem;
         font-size: 0.95rem;
         resize: none;
         max-height: 120px;
         min-height: 44px;
+        background: var(--bg);
+        color: var(--text);
     }
 
     .chat-input:focus {
         outline: none;
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     }
 
     .send-btn {
@@ -219,7 +221,7 @@
         align-items: center;
         justify-content: center;
         height: 100%;
-        color: #6b7280;
+        color: var(--text-muted);
         text-align: center;
         padding: 2rem;
     }
@@ -227,7 +229,7 @@
     .empty-state-icon {
         width: 64px;
         height: 64px;
-        background: #e0e7ff;
+        background: rgba(99, 102, 241, 0.2);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -238,22 +240,23 @@
     .empty-state-icon svg {
         width: 32px;
         height: 32px;
-        color: #6366f1;
+        color: var(--primary);
     }
 
     .context-selector {
         padding: 0.5rem 1rem;
         border-radius: 8px;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--border);
         font-size: 0.9rem;
-        background: white;
+        background: var(--bg);
+        color: var(--text);
     }
 
     .typing-indicator {
         display: flex;
         gap: 4px;
         padding: 0.75rem 1rem;
-        background: #f3f4f6;
+        background: var(--bg-secondary);
         border-radius: 12px;
         width: fit-content;
     }
@@ -261,7 +264,7 @@
     .typing-dot {
         width: 8px;
         height: 8px;
-        background: #9ca3af;
+        background: var(--text-muted);
         border-radius: 50%;
         animation: typing 1.4s infinite ease-in-out;
     }
@@ -298,7 +301,7 @@
         padding: 0.25rem;
         background: none;
         border: none;
-        color: #9ca3af;
+        color: var(--text-muted);
         cursor: pointer;
         transition: opacity 0.15s, color 0.15s;
     }
@@ -308,7 +311,11 @@
     }
 
     .delete-session-btn:hover {
-        color: #ef4444;
+        color: var(--danger);
+    }
+
+    .chat-header h5 {
+        color: var(--text);
     }
 </style>
 {% endblock %}
@@ -376,8 +383,7 @@
                     <div class="empty-state-icon">
                         <span data-feather="message-circle"></span>
                     </div>
-                    <h5>Start a Conversation</h5>
-                    <p class="text-muted mb-0">Ask me anything about your study materials!</p>
+                    <p class="text-muted mb-0">Ask a question to start.</p>
                 </div>
             {% endif %}
         </div>
@@ -401,24 +407,23 @@
         <div class="chat-messages">
             <div class="empty-state">
                 <div class="empty-state-icon">
-                    <span data-feather="book-open"></span>
+                    <span data-feather="message-circle"></span>
                 </div>
-                <h4>AI Study Tutor</h4>
-                <p class="text-muted mb-4">Your personal AI tutor to help you understand your study materials, answer questions, and explain concepts.</p>
+                <h4>Study Assistant</h4>
+                <p class="text-muted mb-4">Ask questions about your study materials.</p>
 
                 <div class="mb-4">
-                    <label class="form-label">Start a new chat with context from:</label>
+                    <label class="form-label">Select a class for context (optional):</label>
                     <select id="classSelect" class="context-selector">
-                        <option value="">General (no specific class)</option>
+                        <option value="">No specific class</option>
                         {% for cls in classes %}
                         <option value="{{ cls.id }}">{{ cls.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <button class="btn btn-primary btn-lg" onclick="createNewSession()">
-                    <span data-feather="message-circle" style="width: 18px; height: 18px;"></span>
-                    Start New Chat
+                <button class="btn btn-primary" onclick="createNewSession()">
+                    Start Chat
                 </button>
             </div>
         </div>

@@ -3,30 +3,25 @@
 {% block title %}{{ class_data.name }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ url_for('classes.list_classes') }}">Classes</a></li>
-                <li class="breadcrumb-item active">{{ class_data.name }}</li>
-            </ol>
-        </nav>
-        <h1 class="h2 mt-2">
-            <span class="badge me-2" style="background-color: {{ class_data.color }};">{{ class_data.code or '---' }}</span>
-            {{ class_data.name }}
-        </h1>
+<nav class="breadcrumb" style="margin-bottom: 0.5rem;">
+    <a href="{{ url_for('classes.list_classes') }}">Classes</a>
+    <span class="separator">/</span>
+    <span>{{ class_data.name }}</span>
+</nav>
+<div class="page-header">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span class="badge" style="background-color: {{ class_data.color }}; color: #fff;">{{ class_data.code or '---' }}</span>
+        <h1>{{ class_data.name }}</h1>
     </div>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal">
-                <span data-feather="edit"></span>
-                Edit
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                <span data-feather="trash-2"></span>
-                Delete
-            </button>
-        </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editModal">
+            <span data-feather="edit"></span>
+            Edit
+        </button>
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <span data-feather="trash-2"></span>
+            Delete
+        </button>
     </div>
 </div>
 

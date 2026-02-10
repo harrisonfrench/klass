@@ -14,34 +14,36 @@
         overflow: hidden;
     }
     .calendar-header {
-        background: var(--dark);
-        color: white;
+        background: var(--bg-secondary);
+        color: var(--text);
         padding: 0.75rem;
         text-align: center;
         font-weight: 600;
         font-size: 0.8rem;
     }
     .calendar-day {
-        background: white;
+        background: var(--bg);
         min-height: 100px;
         padding: 0.5rem;
         vertical-align: top;
+        color: var(--text);
     }
     .calendar-day.other-month {
-        background: #f8fafc;
-        color: #94a3b8;
+        background: var(--bg-secondary);
+        color: var(--text-muted);
     }
     .calendar-day.today {
-        background: rgba(99, 102, 241, 0.05);
+        background: rgba(99, 102, 241, 0.15);
     }
     .day-number {
         font-weight: 600;
         font-size: 0.85rem;
         margin-bottom: 0.25rem;
+        color: var(--text);
     }
     .today .day-number {
         background: var(--primary);
-        color: white;
+        color: #fff;
         width: 24px;
         height: 24px;
         border-radius: 50%;
@@ -80,17 +82,17 @@
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Calendar</h1>
+<div class="page-header">
+    <h1>Calendar</h1>
     <div class="calendar-nav">
-        <a href="{{ url_for('calendar', year=prev_year, month=prev_month) }}" class="btn btn-sm btn-outline-secondary">
+        <a href="{{ url_for('calendar', year=prev_year, month=prev_month) }}" class="btn btn-sm btn-secondary">
             <span data-feather="chevron-left"></span>
         </a>
-        <h2 class="h4">{{ month_name }} {{ year }}</h2>
-        <a href="{{ url_for('calendar', year=next_year, month=next_month) }}" class="btn btn-sm btn-outline-secondary">
+        <h2 class="h4" style="margin: 0;">{{ month_name }} {{ year }}</h2>
+        <a href="{{ url_for('calendar', year=next_year, month=next_month) }}" class="btn btn-sm btn-secondary">
             <span data-feather="chevron-right"></span>
         </a>
-        <a href="{{ url_for('calendar') }}" class="btn btn-sm btn-outline-primary ms-2">Today</a>
+        <a href="{{ url_for('calendar') }}" class="btn btn-sm btn-primary" style="margin-left: 0.5rem;">Today</a>
     </div>
 </div>
 

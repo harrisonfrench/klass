@@ -2,159 +2,25 @@
 
 {% block title %}Settings{% endblock %}
 
-{% block extra_css %}
-<style>
-    .settings-card {
-        background: var(--bg-card, #fff);
-        border-radius: 12px;
-        border: 1px solid var(--border, #e2e8f0);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .settings-card h5 {
-        color: var(--text, #1e293b);
-        font-weight: 600;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border, #e2e8f0);
-    }
-
-    .settings-card .form-label {
-        color: var(--text, #1e293b);
-        font-weight: 500;
-        font-size: 0.875rem;
-    }
-
-    .settings-card .form-control {
-        background: var(--bg-main, #f8fafc);
-        border: 1px solid var(--border, #e2e8f0);
-        color: var(--text, #1e293b);
-    }
-
-    .settings-card .form-control:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 1rem;
-    }
-
-    .stat-item {
-        text-align: center;
-        padding: 1rem;
-        background: var(--bg-main, #f8fafc);
-        border-radius: 8px;
-    }
-
-    .stat-value {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #6366f1;
-    }
-
-    .stat-label {
-        font-size: 0.75rem;
-        color: var(--text-muted, #64748b);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .color-picker-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .color-picker-wrapper input[type="color"] {
-        width: 50px;
-        height: 40px;
-        padding: 0;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-    }
-
-    .form-check-input:checked {
-        background-color: #6366f1;
-        border-color: #6366f1;
-    }
-
-    .danger-zone {
-        border-color: #ef4444;
-    }
-
-    .danger-zone h5 {
-        color: #ef4444;
-        border-bottom-color: #fecaca;
-    }
-
-    .btn-danger-outline {
-        color: #ef4444;
-        border: 1px solid #ef4444;
-        background: transparent;
-    }
-
-    .btn-danger-outline:hover {
-        background: #ef4444;
-        color: white;
-    }
-
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .user-avatar {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        font-weight: 600;
-    }
-
-    .user-details h4 {
-        margin: 0;
-        color: var(--text, #1e293b);
-    }
-
-    .user-details p {
-        margin: 0;
-        color: var(--text-muted, #64748b);
-        font-size: 0.875rem;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Settings</h1>
+<div class="page-header">
+    <h1>Settings</h1>
 </div>
 
 <div class="row">
     <!-- Left Column - Profile & Security -->
     <div class="col-lg-6">
         <!-- Profile Section -->
-        <div class="settings-card">
-            <h5><span data-feather="user" class="me-2"></span>Profile</h5>
+        <div class="settings-section">
+            <h3>Profile</h3>
 
             <div class="user-info">
                 <div class="user-avatar">
                     {{ user['username'][0]|upper if user['username'] else 'U' }}
                 </div>
                 <div class="user-details">
-                    <h4>{{ user['username'] }}</h4>
-                    <p>Member since {{ user['created_at'][:10] if user['created_at'] else 'Unknown' }}</p>
+                    <div class="user-name-display">{{ user['username'] }}</div>
+                    <div class="user-joined">Member since {{ user['created_at'][:10] if user['created_at'] else 'Unknown' }}</div>
                 </div>
             </div>
 
@@ -174,8 +40,8 @@
         </div>
 
         <!-- Change Password -->
-        <div class="settings-card">
-            <h5><span data-feather="lock" class="me-2"></span>Change Password</h5>
+        <div class="settings-section">
+            <h3>Change Password</h3>
             <form action="{{ url_for('settings.change_password') }}" method="POST">
                 <div class="mb-3">
                     <label for="current_password" class="form-label">Current Password</label>
@@ -198,12 +64,12 @@
     <!-- Right Column - Preferences & Stats -->
     <div class="col-lg-6">
         <!-- Preferences -->
-        <div class="settings-card">
-            <h5><span data-feather="sliders" class="me-2"></span>Preferences</h5>
+        <div class="settings-section">
+            <h3>Preferences</h3>
             <form action="{{ url_for('settings.update_preferences') }}" method="POST">
                 <div class="mb-3">
                     <label for="default_class_color" class="form-label">Default Class Color</label>
-                    <div class="color-picker-wrapper">
+                    <div class="color-picker-row">
                         <input type="color" id="default_class_color" name="default_class_color"
                                value="{{ settings['default_class_color'] or '#6366f1' }}">
                         <span class="text-muted">Used when creating new classes</span>
@@ -224,8 +90,8 @@
         </div>
 
         <!-- Stats -->
-        <div class="settings-card">
-            <h5><span data-feather="bar-chart-2" class="me-2"></span>Your Stats</h5>
+        <div class="settings-section">
+            <h3>Your Stats</h3>
             <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-value">{{ stats.classes }}</div>
@@ -246,45 +112,31 @@
             </div>
         </div>
 
-        <!-- Theme -->
-        <div class="settings-card">
-            <h5><span data-feather="moon" class="me-2"></span>Appearance</h5>
-            <p class="text-muted mb-3">Choose your preferred theme. This is saved locally in your browser.</p>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-secondary" onclick="setTheme('light')">
-                    <span data-feather="sun" class="me-1"></span> Light
-                </button>
-                <button type="button" class="btn btn-outline-secondary" onclick="setTheme('dark')">
-                    <span data-feather="moon" class="me-1"></span> Dark
-                </button>
-            </div>
-        </div>
-
         <!-- Export Data -->
-        <div class="settings-card">
-            <h5><span data-feather="download" class="me-2"></span>Export Data</h5>
+        <div class="settings-section">
+            <h3>Export Data</h3>
             <p class="text-muted mb-3">Download your data in various formats.</p>
-            <div class="d-flex flex-column gap-2">
+            <div class="export-buttons">
                 <a href="{{ url_for('settings.export_notes') }}" class="btn btn-outline-primary">
-                    <span data-feather="file-text" class="me-2"></span>
-                    Export Notes (Markdown)
+                    <span data-feather="file-text"></span>
+                    Export Notes
                 </a>
                 <a href="{{ url_for('settings.export_flashcards') }}" class="btn btn-outline-primary">
-                    <span data-feather="layers" class="me-2"></span>
-                    Export Flashcards (CSV)
+                    <span data-feather="layers"></span>
+                    Export Flashcards
                 </a>
                 <a href="{{ url_for('settings.export_backup') }}" class="btn btn-outline-secondary">
-                    <span data-feather="download-cloud" class="me-2"></span>
-                    Full Backup (JSON)
+                    <span data-feather="download-cloud"></span>
+                    Full Backup
                 </a>
             </div>
         </div>
 
         <!-- Danger Zone -->
-        <div class="settings-card danger-zone">
-            <h5><span data-feather="alert-triangle" class="me-2"></span>Danger Zone</h5>
-            <p class="text-muted">Once you delete your account, there is no going back. Please be certain.</p>
-            <button type="button" class="btn btn-danger-outline" data-bs-toggle="modal" data-bs-target="#deleteModal">
+        <div class="settings-section danger-zone">
+            <h3>Danger Zone</h3>
+            <p class="text-muted">Once you delete your account, there is no going back.</p>
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                 Delete Account
             </button>
         </div>
@@ -292,17 +144,17 @@
 </div>
 
 <!-- Delete Account Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Delete Account</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Delete Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ url_for('settings.delete_account') }}" method="POST">
                 <div class="modal-body">
                     <div class="alert alert-danger">
-                        <strong>Warning!</strong> This action cannot be undone. All your classes, notes, flashcards, quizzes, and study materials will be permanently deleted.
+                        <strong>Warning!</strong> This action cannot be undone. All your data will be permanently deleted.
                     </div>
                     <p>To confirm, please enter your password:</p>
                     <div class="mb-3">
@@ -317,6 +169,110 @@
         </div>
     </div>
 </div>
+
+<style>
+.settings-section {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.settings-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.user-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.user-name-display {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.user-joined {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.color-picker-row input[type="color"] {
+    width: 40px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.stat-item .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-item .stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.export-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.danger-zone {
+    border-color: var(--danger);
+}
+
+.danger-zone h3 {
+    color: var(--danger);
+    border-bottom-color: rgba(224, 62, 62, 0.2);
+}
+</style>
 {% endblock %}
 
 {% block scripts %}

@@ -1,0 +1,679 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Pomodoro Timer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timer-container {
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .timer-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .timer-display {
+        position: relative;
+        width: 280px;
+        height: 280px;
+        margin: 0 auto 2rem;
+    }
+
+    .timer-ring {
+        transform: rotate(-90deg);
+    }
+
+    .timer-ring-bg {
+        fill: none;
+        stroke: var(--border);
+        stroke-width: 8;
+    }
+
+    .timer-ring-progress {
+        fill: none;
+        stroke: var(--primary);
+        stroke-width: 8;
+        stroke-linecap: round;
+        stroke-dasharray: 754;
+        stroke-dashoffset: 0;
+        transition: stroke-dashoffset 1s linear, stroke 0.3s;
+    }
+
+    .timer-ring-progress.break {
+        stroke: #10b981;
+    }
+
+    .timer-ring-progress.long-break {
+        stroke: #8b5cf6;
+    }
+
+    .timer-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    .timer-time {
+        font-size: 4rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .timer-label {
+        font-size: 1rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .timer-controls {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .timer-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .timer-btn-primary {
+        background: var(--primary);
+        color: white;
+        width: 80px;
+        height: 80px;
+    }
+
+    .timer-btn-primary:hover {
+        background: var(--primary-hover);
+        transform: scale(1.05);
+    }
+
+    .timer-btn-secondary {
+        background: var(--bg-hover);
+        color: var(--text);
+    }
+
+    .timer-btn-secondary:hover {
+        background: var(--border);
+    }
+
+    .timer-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .timer-btn-primary svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .session-type-tabs {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+
+    .session-tab {
+        padding: 0.5rem 1.25rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .session-tab:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+    }
+
+    .session-tab.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .session-tab.active.break {
+        background: #10b981;
+        border-color: #10b981;
+    }
+
+    .session-tab.active.long-break {
+        background: #8b5cf6;
+        border-color: #8b5cf6;
+    }
+
+    .class-select {
+        max-width: 250px;
+        margin: 0 auto 1rem;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        flex: 1;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .sessions-indicator {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .session-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--border);
+        transition: background 0.3s;
+    }
+
+    .session-dot.completed {
+        background: var(--primary);
+    }
+
+    .settings-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .setting-item {
+        text-align: left;
+    }
+
+    .setting-item label {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .setting-item input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 1rem;
+    }
+
+    .setting-item input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    @media (max-width: 576px) {
+        .timer-display {
+            width: 220px;
+            height: 220px;
+        }
+
+        .timer-time {
+            font-size: 3rem;
+        }
+
+        .stats-row {
+            flex-direction: column;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="timer-container">
+    <h2 class="mb-4">Pomodoro Timer</h2>
+
+    <!-- Today's Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value" id="sessions-today">{{ today_stats.sessions_today or 0 }}</div>
+            <div class="stat-label">Sessions Today</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="minutes-today">{{ today_stats.minutes_today or 0 }}</div>
+            <div class="stat-label">Minutes Focused</div>
+        </div>
+    </div>
+
+    <!-- Timer Card -->
+    <div class="timer-card">
+        <!-- Session Type Tabs -->
+        <div class="session-type-tabs">
+            <button class="session-tab active" data-type="work">Focus</button>
+            <button class="session-tab" data-type="short_break">Short Break</button>
+            <button class="session-tab" data-type="long_break">Long Break</button>
+        </div>
+
+        <!-- Class Selector -->
+        <div class="class-select">
+            <select class="form-select form-select-sm" id="class-select">
+                <option value="">No class selected</option>
+                {% for cls in classes %}
+                <option value="{{ cls.id }}">{{ cls.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Timer Display -->
+        <div class="timer-display">
+            <svg class="timer-ring" viewBox="0 0 280 280">
+                <circle class="timer-ring-bg" cx="140" cy="140" r="120"/>
+                <circle class="timer-ring-progress" cx="140" cy="140" r="120" id="timer-progress"/>
+            </svg>
+            <div class="timer-text">
+                <div class="timer-time" id="timer-time">25:00</div>
+                <div class="timer-label" id="timer-label">Focus</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="timer-controls">
+            <button class="timer-btn timer-btn-secondary" id="btn-reset" title="Reset">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                    <path d="M3 3v5h5"/>
+                </svg>
+            </button>
+            <button class="timer-btn timer-btn-primary" id="btn-start">
+                <svg viewBox="0 0 24 24" fill="currentColor" id="icon-play">
+                    <polygon points="5,3 19,12 5,21"/>
+                </svg>
+                <svg viewBox="0 0 24 24" fill="currentColor" id="icon-pause" style="display: none;">
+                    <rect x="6" y="4" width="4" height="16"/>
+                    <rect x="14" y="4" width="4" height="16"/>
+                </svg>
+            </button>
+            <button class="timer-btn timer-btn-secondary" id="btn-skip" title="Skip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="5,4 15,12 5,20" fill="currentColor"/>
+                    <line x1="19" y1="5" x2="19" y2="19"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Session Progress -->
+        <div class="sessions-indicator" id="sessions-indicator">
+            {% for i in range(settings.pomodoro_sessions_until_long or 4) %}
+            <div class="session-dot"></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-card">
+        <h5 class="mb-3">Timer Settings</h5>
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label>Focus Duration (min)</label>
+                <input type="number" id="setting-work" value="{{ settings.pomodoro_work_duration or 25 }}" min="1" max="60">
+            </div>
+            <div class="setting-item">
+                <label>Short Break (min)</label>
+                <input type="number" id="setting-short" value="{{ settings.pomodoro_short_break or 5 }}" min="1" max="30">
+            </div>
+            <div class="setting-item">
+                <label>Long Break (min)</label>
+                <input type="number" id="setting-long" value="{{ settings.pomodoro_long_break or 15 }}" min="1" max="60">
+            </div>
+            <div class="setting-item">
+                <label>Sessions until Long Break</label>
+                <input type="number" id="setting-sessions" value="{{ settings.pomodoro_sessions_until_long or 4 }}" min="2" max="10">
+            </div>
+        </div>
+        <button class="btn btn-sm btn-outline-primary mt-3" id="btn-save-settings">Save Settings</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    // Settings
+    let settings = {
+        work: {{ settings.pomodoro_work_duration or 25 }},
+        short_break: {{ settings.pomodoro_short_break or 5 }},
+        long_break: {{ settings.pomodoro_long_break or 15 }},
+        sessions_until_long: {{ settings.pomodoro_sessions_until_long or 4 }}
+    };
+
+    // State
+    let currentType = 'work';
+    let timeRemaining = settings.work * 60;
+    let totalTime = settings.work * 60;
+    let isRunning = false;
+    let timerInterval = null;
+    let currentSessionId = null;
+    let completedSessions = 0;
+    let sessionsToday = {{ today_stats.sessions_today or 0 }};
+    let minutesToday = {{ today_stats.minutes_today or 0 }};
+
+    // DOM elements
+    const timerTime = document.getElementById('timer-time');
+    const timerLabel = document.getElementById('timer-label');
+    const timerProgress = document.getElementById('timer-progress');
+    const btnStart = document.getElementById('btn-start');
+    const btnReset = document.getElementById('btn-reset');
+    const btnSkip = document.getElementById('btn-skip');
+    const iconPlay = document.getElementById('icon-play');
+    const iconPause = document.getElementById('icon-pause');
+    const classSelect = document.getElementById('class-select');
+    const sessionTabs = document.querySelectorAll('.session-tab');
+    const sessionsIndicator = document.getElementById('sessions-indicator');
+
+    // Audio notification
+    const notificationSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBhiR3euMGgAAVLjQmj8OBjWb89KZMgAAQKHl5ZAbAAAfruHkfwYAABy46+FuAAAAIML26mIAAAAiyPfoUwAAAC3V/fJDAAAAP+X/+C8AAABW9f/7GwAAAHD///8FAAAA');
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateDisplay() {
+        timerTime.textContent = formatTime(timeRemaining);
+
+        // Update progress ring
+        const circumference = 2 * Math.PI * 120;
+        const progress = timeRemaining / totalTime;
+        timerProgress.style.strokeDashoffset = circumference * (1 - progress);
+
+        // Update button icons
+        iconPlay.style.display = isRunning ? 'none' : 'block';
+        iconPause.style.display = isRunning ? 'block' : 'none';
+    }
+
+    function updateSessionIndicator() {
+        const dots = sessionsIndicator.querySelectorAll('.session-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('completed', index < completedSessions);
+        });
+    }
+
+    function setSessionType(type) {
+        currentType = type;
+
+        // Update tabs
+        sessionTabs.forEach(tab => {
+            tab.classList.remove('active', 'break', 'long-break');
+            if (tab.dataset.type === type) {
+                tab.classList.add('active');
+                if (type === 'short_break') tab.classList.add('break');
+                if (type === 'long_break') tab.classList.add('long-break');
+            }
+        });
+
+        // Update timer
+        if (type === 'work') {
+            timeRemaining = settings.work * 60;
+            totalTime = settings.work * 60;
+            timerLabel.textContent = 'Focus';
+            timerProgress.classList.remove('break', 'long-break');
+        } else if (type === 'short_break') {
+            timeRemaining = settings.short_break * 60;
+            totalTime = settings.short_break * 60;
+            timerLabel.textContent = 'Short Break';
+            timerProgress.classList.remove('long-break');
+            timerProgress.classList.add('break');
+        } else {
+            timeRemaining = settings.long_break * 60;
+            totalTime = settings.long_break * 60;
+            timerLabel.textContent = 'Long Break';
+            timerProgress.classList.remove('break');
+            timerProgress.classList.add('long-break');
+        }
+
+        updateDisplay();
+    }
+
+    async function startTimer() {
+        if (isRunning) {
+            // Pause
+            isRunning = false;
+            clearInterval(timerInterval);
+            updateDisplay();
+            return;
+        }
+
+        // Start session in database
+        try {
+            const response = await fetch('/pomodoro/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: currentType,
+                    duration: Math.ceil(totalTime / 60),
+                    class_id: classSelect.value || null
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                currentSessionId = data.session_id;
+            }
+        } catch (e) {
+            console.error('Failed to start session:', e);
+        }
+
+        isRunning = true;
+        updateDisplay();
+
+        timerInterval = setInterval(() => {
+            timeRemaining--;
+
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                completeSession();
+            }
+
+            updateDisplay();
+        }, 1000);
+    }
+
+    async function completeSession() {
+        // Play notification
+        notificationSound.play().catch(() => {});
+
+        // Show notification if permitted
+        if (Notification.permission === 'granted') {
+            new Notification('Pomodoro Complete!', {
+                body: currentType === 'work' ? 'Time for a break!' : 'Ready to focus?',
+                icon: '/static/images/logo.png'
+            });
+        }
+
+        // Mark session complete in database
+        if (currentSessionId) {
+            try {
+                await fetch(`/pomodoro/complete/${currentSessionId}`, {
+                    method: 'POST'
+                });
+            } catch (e) {
+                console.error('Failed to complete session:', e);
+            }
+        }
+
+        // Update stats if work session
+        if (currentType === 'work') {
+            completedSessions++;
+            sessionsToday++;
+            minutesToday += settings.work;
+            document.getElementById('sessions-today').textContent = sessionsToday;
+            document.getElementById('minutes-today').textContent = minutesToday;
+            updateSessionIndicator();
+
+            // Switch to break
+            if (completedSessions >= settings.sessions_until_long) {
+                completedSessions = 0;
+                setSessionType('long_break');
+            } else {
+                setSessionType('short_break');
+            }
+        } else {
+            // Switch back to work
+            setSessionType('work');
+        }
+
+        currentSessionId = null;
+    }
+
+    function resetTimer() {
+        if (currentSessionId) {
+            fetch(`/pomodoro/cancel/${currentSessionId}`, { method: 'POST' }).catch(() => {});
+        }
+
+        clearInterval(timerInterval);
+        isRunning = false;
+        currentSessionId = null;
+        setSessionType(currentType);
+    }
+
+    function skipSession() {
+        if (currentSessionId) {
+            fetch(`/pomodoro/cancel/${currentSessionId}`, { method: 'POST' }).catch(() => {});
+        }
+
+        clearInterval(timerInterval);
+        isRunning = false;
+        currentSessionId = null;
+
+        // Move to next session type
+        if (currentType === 'work') {
+            if (completedSessions >= settings.sessions_until_long - 1) {
+                completedSessions = 0;
+                setSessionType('long_break');
+            } else {
+                setSessionType('short_break');
+            }
+        } else {
+            setSessionType('work');
+        }
+    }
+
+    async function saveSettings() {
+        const newSettings = {
+            work_duration: parseInt(document.getElementById('setting-work').value),
+            short_break: parseInt(document.getElementById('setting-short').value),
+            long_break: parseInt(document.getElementById('setting-long').value),
+            sessions_until_long: parseInt(document.getElementById('setting-sessions').value)
+        };
+
+        try {
+            const response = await fetch('/pomodoro/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newSettings)
+            });
+
+            if (response.ok) {
+                settings.work = newSettings.work_duration;
+                settings.short_break = newSettings.short_break;
+                settings.long_break = newSettings.long_break;
+                settings.sessions_until_long = newSettings.sessions_until_long;
+
+                // Update session indicators
+                sessionsIndicator.innerHTML = '';
+                for (let i = 0; i < settings.sessions_until_long; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'session-dot';
+                    if (i < completedSessions) dot.classList.add('completed');
+                    sessionsIndicator.appendChild(dot);
+                }
+
+                // Reset timer with new duration if not running
+                if (!isRunning) {
+                    setSessionType(currentType);
+                }
+
+                alert('Settings saved!');
+            }
+        } catch (e) {
+            console.error('Failed to save settings:', e);
+            alert('Failed to save settings');
+        }
+    }
+
+    // Event listeners
+    btnStart.addEventListener('click', startTimer);
+    btnReset.addEventListener('click', resetTimer);
+    btnSkip.addEventListener('click', skipSession);
+    document.getElementById('btn-save-settings').addEventListener('click', saveSettings);
+
+    sessionTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (!isRunning) {
+                setSessionType(tab.dataset.type);
+            }
+        });
+    });
+
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    // Initialize
+    updateDisplay();
+    updateSessionIndicator();
+})();
+</script>
+{% endblock %}

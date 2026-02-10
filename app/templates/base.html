@@ -2,137 +2,144 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>GCSU MIS Starter Kit</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klass - Study Smarter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --gcsu-blue: #003399;
-            --gcsu-green: #006633;
-            --gcsu-light-blue: #e6f2ff;
-            --gcsu-light-green: #e6f7e6;
+            --text: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --bg: #18181b;
+            --bg-secondary: #27272a;
+            --bg-hover: #3f3f46;
+            --border: #3f3f46;
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
         }
-        
+
         body {
-            background: linear-gradient(135deg, var(--gcsu-light-blue) 0%, #ffffff 50%, var(--gcsu-light-green) 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
             min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
         }
-        
-        .navbar-gcsu {
-            background: linear-gradient(90deg, var(--gcsu-blue) 0%, var(--gcsu-green) 100%);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 1rem 0;
+
+        .navbar-klass {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0;
         }
-        
+
         .navbar-brand {
-            font-weight: bold;
-            font-size: 1.4rem;
-            color: white !important;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text) !important;
         }
-        
+
         .navbar-brand:hover {
-            color: #f8f9fa !important;
-            transform: scale(1.05);
-            transition: all 0.3s ease;
+            color: var(--primary) !important;
         }
-        
+
         .navbar-nav .nav-link {
-            color: rgba(255, 255, 255, 0.9) !important;
+            color: var(--text-muted) !important;
             font-weight: 500;
-            margin: 0 0.5rem;
+            margin: 0 0.25rem;
             padding: 0.5rem 1rem !important;
-            border-radius: 25px;
-            transition: all 0.3s ease;
+            border-radius: 6px;
+            transition: all 0.15s ease;
         }
-        
+
         .navbar-nav .nav-link:hover {
-            color: white !important;
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
+            color: var(--text) !important;
+            background: var(--bg-hover);
         }
-        
+
         .container {
             margin-top: 2rem;
         }
-        
+
         .alert {
             border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text);
         }
-        
+
         .alert-danger {
-            background: linear-gradient(45deg, #dc3545, #c82333);
-            color: white;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
         }
-        
+
         .alert-success {
-            background: linear-gradient(45deg, var(--gcsu-green), #28a745);
-            color: white;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
         }
-        
+
         .btn-primary {
-            background: linear-gradient(45deg, var(--gcsu-blue), var(--gcsu-green));
+            background: var(--primary);
             border: none;
-            border-radius: 25px;
-            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            padding: 0.5rem 1.25rem;
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: all 0.15s ease;
         }
-        
+
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 51, 153, 0.3);
+            background: var(--primary-hover);
         }
-        
+
         .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        
-        h1, h2, h3 {
-            color: var(--gcsu-blue);
-        }
-        
-        .table {
-            border-radius: 10px;
-            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-secondary);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
-        .table thead th {
-            background: linear-gradient(90deg, var(--gcsu-blue), var(--gcsu-green));
-            color: white;
-            border: none;
-            font-weight: 600;
+
+        .card:hover {
+            border-color: var(--text-muted);
+        }
+
+        h1, h2, h3 {
+            color: var(--text);
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        a {
+            color: var(--primary);
+        }
+
+        a:hover {
+            color: var(--primary-hover);
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-gcsu">
-        <a class="navbar-brand" href="{{ url_for('index') }}">
-            <i class="fas fa-home me-2"></i>GCSU MIS Starter Kit
-        </a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('about') }}">
-                        <i class="fas fa-info-circle me-1"></i>About
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('examples.show_examples') }}">
-                        <i class="fas fa-database me-1"></i>Examples
-                    </a>
-                </li>
-            </ul>
+    <nav class="navbar navbar-expand-lg navbar-klass">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                Klass
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">
+                            Sign In
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary text-white ms-2" href="{{ url_for('auth.register') }}">
+                            Get Started
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -148,7 +155,7 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
+
         {% block content %}{% endblock %}
     </div>
 
@@ -158,4 +165,3 @@
     {% block scripts %}{% endblock %}
 </body>
 </html>
-

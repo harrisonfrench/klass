@@ -2,122 +2,38 @@
 
 {% block title %}Flashcards{% endblock %}
 
-{% block extra_css %}
-<style>
-    .deck-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1.25rem;
-    }
-
-    .deck-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s;
-        border-left: 4px solid var(--deck-color, #6940a5);
-        cursor: pointer;
-        text-decoration: none;
-        color: inherit;
-        display: block;
-    }
-
-    .deck-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        color: inherit;
-    }
-
-    .deck-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #37352f;
-    }
-
-    .deck-class {
-        font-size: 0.85rem;
-        color: #9b9a97;
-        margin-bottom: 0.75rem;
-    }
-
-    .deck-stats {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.85rem;
-        color: #6b7280;
-    }
-
-    .deck-stat {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: #9b9a97;
-    }
-
-    .empty-state h3 {
-        color: #37352f;
-        margin-bottom: 0.5rem;
-    }
-
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-
-    .page-header h1 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #37352f;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="page-header">
-        <h1>Flashcards</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDeckModal">
-            <span data-feather="plus"></span> New Deck
-        </button>
-    </div>
-
-    {% if decks %}
-    <div class="deck-grid">
-        {% for deck in decks %}
-        <a href="{{ url_for('flashcards.view_deck', deck_id=deck.id) }}" class="deck-card" style="--deck-color: {{ deck.class_color }};">
-            <div class="deck-title">{{ deck.title }}</div>
-            <div class="deck-class">
-                <span style="color: {{ deck.class_color }};">{{ deck.class_code or deck.class_name }}</span>
-            </div>
-            <div class="deck-stats">
-                <span class="deck-stat">
-                    <span data-feather="layers" style="width: 16px; height: 16px;"></span>
-                    {{ deck.card_count }} cards
-                </span>
-            </div>
-        </a>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state">
-        <span data-feather="layers" style="width: 48px; height: 48px; stroke-width: 1;"></span>
-        <h3>No flashcard decks yet</h3>
-        <p>Create your first deck to start studying</p>
-        <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#createDeckModal">
-            <span data-feather="plus"></span> Create Deck
-        </button>
-    </div>
-    {% endif %}
+<div class="page-header">
+    <h1>Flashcards</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDeckModal">
+        <span data-feather="plus"></span>
+        New Deck
+    </button>
 </div>
+
+{% if decks %}
+<div class="grid-auto">
+    {% for deck in decks %}
+    <a href="{{ url_for('flashcards.view_deck', deck_id=deck.id) }}" class="item-card" style="border-left: 3px solid {{ deck.class_color }};">
+        <div class="item-content">
+            <div class="item-title">{{ deck.title }}</div>
+            <div class="item-subtitle">{{ deck.class_code or deck.class_name }}</div>
+        </div>
+        <div class="item-meta">{{ deck.card_count }} cards</div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <span data-feather="layers"></span>
+    <h5>No flashcard decks yet</h5>
+    <p>Create your first deck to start studying.</p>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDeckModal">
+        <span data-feather="plus"></span>
+        Create Deck
+    </button>
+</div>
+{% endif %}
 
 <!-- Create Deck Modal -->
 <div class="modal fade" id="createDeckModal" tabindex="-1">

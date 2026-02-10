@@ -1,7 +1,7 @@
 import re
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app.db_connect import get_db
-from app.services.ai_service import summarize_text, expand_text, cleanup_text, transform_text, generate_flashcards
+from app.services.ai_service import summarize_text, expand_text, cleanup_text, transform_text, generate_flashcards, chat_with_tutor
 from app.blueprints.auth import login_required
 
 notes = Blueprint('notes', __name__)
@@ -57,7 +57,7 @@ def view_note(note_id):
 @notes.route('/<int:note_id>/update', methods=['POST'])
 @login_required
 def update_note(note_id):
-    """Update note title and content (supports AJAX)."""
+    """Update note title, content, and/or class (supports AJAX)."""
     db = get_db()
 
     # Check if note exists and belongs to user
@@ -79,16 +79,38 @@ def update_note(note_id):
         data = request.get_json()
         title = data.get('title', note['title'])
         content = data.get('content', note['content'])
+        new_class_id = data.get('class_id')
     else:
         title = request.form.get('title', note['title'])
         content = request.form.get('content', note['content'])
+        new_class_id = request.form.get('class_id')
 
-    # Update note
-    db.execute('''
-        UPDATE notes
-        SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    ''', (title, content, note_id))
+    # If changing class, verify new class belongs to user
+    if new_class_id and int(new_class_id) != note['class_id']:
+        cursor = db.execute(
+            'SELECT id FROM classes WHERE id = ? AND user_id = ?',
+            (new_class_id, session['user_id'])
+        )
+        if not cursor.fetchone():
+            if request.is_json:
+                return jsonify({'success': False, 'error': 'Invalid class'}), 400
+            flash('Invalid class.', 'error')
+            return redirect(url_for('notes.view_note', note_id=note_id))
+
+        # Update note with new class
+        db.execute('''
+            UPDATE notes
+            SET title = ?, content = ?, class_id = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (title, content, new_class_id, note_id))
+    else:
+        # Update note without changing class
+        db.execute('''
+            UPDATE notes
+            SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (title, content, note_id))
+
     db.commit()
 
     if request.is_json:
@@ -364,6 +386,59 @@ def generate_flashcards_from_note(note_id):
             'cards': cards,
             'class_id': note['class_id'],
             'note_title': note['title']
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'AI service error: {str(e)}'}), 500
+
+
+@notes.route('/<int:note_id>/ask-ai', methods=['POST'])
+@login_required
+def ask_ai_about_note(note_id):
+    """Ask AI a question about the current note."""
+    db = get_db()
+
+    # Get the note and verify ownership
+    cursor = db.execute('''
+        SELECT n.*, c.name as class_name
+        FROM notes n
+        JOIN classes c ON n.class_id = c.id
+        WHERE n.id = ? AND c.user_id = ?
+    ''', (note_id, session['user_id']))
+    note = cursor.fetchone()
+
+    if not note:
+        return jsonify({'success': False, 'error': 'Note not found'}), 404
+
+    data = request.get_json()
+    if not data or not data.get('message'):
+        return jsonify({'success': False, 'error': 'No message provided'}), 400
+
+    message = data.get('message', '').strip()
+    conversation_history = data.get('history', [])
+
+    # Clean note content for context
+    content = note['content'] or ''
+    if content:
+        clean_content = re.sub(r'<[^>]+>', '', content).strip()
+    else:
+        clean_content = ''
+
+    # Prepare note context
+    context_notes = [{
+        'title': note['title'] or 'Untitled Note',
+        'content': clean_content[:3000]
+    }] if clean_content else None
+
+    try:
+        response = chat_with_tutor(
+            message=message,
+            context_notes=context_notes,
+            conversation_history=conversation_history,
+            class_name=note['class_name']
+        )
+        return jsonify({
+            'success': True,
+            'response': response
         })
     except Exception as e:
         return jsonify({'success': False, 'error': f'AI service error: {str(e)}'}), 500

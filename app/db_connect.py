@@ -266,11 +266,128 @@ def init_db():
             theme TEXT DEFAULT 'light',
             default_class_color TEXT DEFAULT '#6366f1',
             ai_features_enabled INTEGER DEFAULT 1,
+            pomodoro_work_duration INTEGER DEFAULT 25,
+            pomodoro_short_break INTEGER DEFAULT 5,
+            pomodoro_long_break INTEGER DEFAULT 15,
+            pomodoro_sessions_until_long INTEGER DEFAULT 4,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
+
+    # Add pomodoro settings columns if they don't exist
+    try:
+        db.execute('ALTER TABLE user_settings ADD COLUMN pomodoro_work_duration INTEGER DEFAULT 25')
+    except Exception:
+        pass
+    try:
+        db.execute('ALTER TABLE user_settings ADD COLUMN pomodoro_short_break INTEGER DEFAULT 5')
+    except Exception:
+        pass
+    try:
+        db.execute('ALTER TABLE user_settings ADD COLUMN pomodoro_long_break INTEGER DEFAULT 15')
+    except Exception:
+        pass
+    try:
+        db.execute('ALTER TABLE user_settings ADD COLUMN pomodoro_sessions_until_long INTEGER DEFAULT 4')
+    except Exception:
+        pass
+
+    # Create pomodoro sessions table
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS pomodoro_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            class_id INTEGER,
+            session_type TEXT NOT NULL,
+            duration INTEGER NOT NULL,
+            completed INTEGER DEFAULT 0,
+            started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            completed_at TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+            FOREIGN KEY (class_id) REFERENCES classes (id) ON DELETE SET NULL
+        )
+    ''')
+
+    # Create user streaks table
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS user_streaks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE NOT NULL,
+            current_streak INTEGER DEFAULT 0,
+            longest_streak INTEGER DEFAULT 0,
+            last_study_date DATE,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Create study goals table
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS study_goals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            goal_type TEXT NOT NULL,
+            target_value INTEGER NOT NULL,
+            current_value INTEGER DEFAULT 0,
+            period_start DATE,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Create achievements table
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS achievements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            achievement_type TEXT NOT NULL,
+            earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Create shared resources table
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS shared_resources (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            resource_type TEXT NOT NULL,
+            resource_id INTEGER NOT NULL,
+            owner_id INTEGER NOT NULL,
+            share_code TEXT UNIQUE NOT NULL,
+            is_public INTEGER DEFAULT 0,
+            allow_copy INTEGER DEFAULT 1,
+            view_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (owner_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Create shared access log table
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS shared_access (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            shared_resource_id INTEGER NOT NULL,
+            user_id INTEGER,
+            access_type TEXT NOT NULL,
+            accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (shared_resource_id) REFERENCES shared_resources (id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+        )
+    ''')
+
+    # Add spaced repetition columns to flashcards if they don't exist
+    try:
+        db.execute('ALTER TABLE flashcards ADD COLUMN ease_factor REAL DEFAULT 2.5')
+    except Exception:
+        pass
+    try:
+        db.execute('ALTER TABLE flashcards ADD COLUMN interval INTEGER DEFAULT 0')
+    except Exception:
+        pass
+    try:
+        db.execute('ALTER TABLE flashcards ADD COLUMN repetitions INTEGER DEFAULT 0')
+    except Exception:
+        pass
 
     db.commit()
     db.close()

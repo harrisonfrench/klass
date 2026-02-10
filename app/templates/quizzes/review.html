@@ -16,14 +16,14 @@
     .review-header h1 {
         font-size: 1.75rem;
         font-weight: 700;
-        color: #37352f;
+        color: var(--text);
     }
 
     .score-card {
-        background: white;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 2rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         margin-bottom: 2rem;
         text-align: center;
     }
@@ -38,10 +38,10 @@
     .score-big.poor { color: #ef4444; }
 
     .result-card {
-        background: white;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         margin-bottom: 1rem;
     }
 
@@ -63,7 +63,7 @@
     .question-text {
         font-size: 1.1rem;
         font-weight: 500;
-        color: #37352f;
+        color: var(--text);
     }
 
     .result-icon {
@@ -72,7 +72,7 @@
     }
 
     .answer-section {
-        background: #f8fafc;
+        background: var(--bg-hover);
         border-radius: 8px;
         padding: 1rem;
         margin-top: 1rem;
@@ -81,12 +81,12 @@
     .answer-label {
         font-size: 0.75rem;
         text-transform: uppercase;
-        color: #9b9a97;
+        color: var(--text-muted);
         margin-bottom: 0.25rem;
     }
 
     .your-answer {
-        color: #37352f;
+        color: var(--text);
     }
 
     .your-answer.wrong {
@@ -102,10 +102,10 @@
     .explanation {
         margin-top: 1rem;
         padding: 1rem;
-        background: #e7f3f8;
+        background: rgba(99, 102, 241, 0.15);
         border-radius: 8px;
         font-size: 0.9rem;
-        color: #0b6e99;
+        color: var(--primary);
     }
 </style>
 {% endblock %}

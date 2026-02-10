@@ -18,18 +18,18 @@
     .study-header h1 {
         font-size: 1.5rem;
         font-weight: 600;
-        color: #37352f;
+        color: var(--text);
         margin-bottom: 0.25rem;
     }
 
     .study-progress {
         font-size: 0.9rem;
-        color: #9b9a97;
+        color: var(--text-muted);
     }
 
     .progress-bar-container {
         height: 6px;
-        background: #f1f1ef;
+        background: var(--bg-secondary);
         border-radius: 3px;
         margin-top: 1rem;
         overflow: hidden;
@@ -76,13 +76,13 @@
     }
 
     .flashcard-front {
-        background: white;
-        border: 2px solid #f1f1ef;
+        background: var(--bg-secondary);
+        border: 2px solid var(--border);
     }
 
     .flashcard-back {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        border: 2px solid #e2e8f0;
+        background: var(--bg-hover);
+        border: 2px solid var(--border);
         transform: rotateY(180deg);
     }
 
@@ -90,14 +90,14 @@
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: #9b9a97;
+        color: var(--text-muted);
         margin-bottom: 1rem;
     }
 
     .flashcard-text {
         font-size: 1.5rem;
         font-weight: 500;
-        color: #37352f;
+        color: var(--text);
         line-height: 1.5;
     }
 
@@ -105,7 +105,7 @@
         position: absolute;
         bottom: 1rem;
         font-size: 0.8rem;
-        color: #9b9a97;
+        color: var(--text-muted);
     }
 
     /* Rating buttons */
@@ -115,7 +115,7 @@
 
     .rating-section h4 {
         font-size: 0.9rem;
-        color: #9b9a97;
+        color: var(--text-muted);
         margin-bottom: 1rem;
     }
 
@@ -174,7 +174,7 @@
     .completion-screen h2 {
         font-size: 2rem;
         margin-bottom: 1rem;
-        color: #37352f;
+        color: var(--text);
     }
 
     .completion-stats {
@@ -196,7 +196,7 @@
 
     .stat-label {
         font-size: 0.85rem;
-        color: #9b9a97;
+        color: var(--text-muted);
     }
 
     /* Hidden by default */
@@ -217,16 +217,18 @@
         text-align: center;
         margin-top: 2rem;
         font-size: 0.8rem;
-        color: #9b9a97;
+        color: var(--text-muted);
     }
 
     .key {
         display: inline-block;
         padding: 0.2rem 0.5rem;
-        background: #f1f1ef;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
         border-radius: 4px;
         font-family: monospace;
         margin: 0 0.25rem;
+        color: var(--text);
     }
 </style>
 {% endblock %}

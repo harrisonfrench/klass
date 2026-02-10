@@ -20,7 +20,7 @@
     }
 
     .note-breadcrumb a {
-        color: #666;
+        color: var(--text-muted);
         text-decoration: none;
     }
 
@@ -29,7 +29,7 @@
     }
 
     .note-breadcrumb .separator {
-        color: #ccc;
+        color: var(--text-light);
         margin: 0 0.5rem;
     }
 
@@ -42,18 +42,18 @@
         width: 100%;
         padding: 0;
         margin-bottom: 0.5rem;
-        color: var(--dark);
+        color: var(--text);
         background: transparent;
     }
 
     .note-title-input::placeholder {
-        color: #ccc;
+        color: var(--text-light);
     }
 
     /* Meta info */
     .note-meta {
         font-size: 0.8rem;
-        color: #999;
+        color: var(--text-muted);
         margin-bottom: 1.5rem;
         display: flex;
         align-items: center;
@@ -128,25 +128,27 @@
     .ql-editor blockquote {
         border-left: 3px solid var(--primary);
         padding-left: 1rem;
-        color: #666;
+        color: var(--text-muted);
         margin: 1rem 0;
     }
 
     .ql-editor pre {
-        background: #f8f9fa;
+        background: var(--bg-secondary);
         border-radius: 6px;
         padding: 1rem;
         font-family: 'Monaco', 'Menlo', monospace;
         font-size: 0.9rem;
         overflow-x: auto;
+        color: var(--text);
     }
 
     .ql-editor code {
-        background: #f1f3f5;
+        background: var(--bg-hover);
         padding: 0.2rem 0.4rem;
         border-radius: 3px;
         font-family: 'Monaco', 'Menlo', monospace;
         font-size: 0.9em;
+        color: var(--text);
     }
 
     .ql-editor a {
@@ -202,7 +204,7 @@
         margin-bottom: 1.5rem;
         position: sticky;
         top: 56px;
-        background: white;
+        background: var(--bg);
         z-index: 10;
     }
 
@@ -224,7 +226,7 @@
 
     /* Pin button styling */
     .btn-pin {
-        color: #666;
+        color: var(--text-muted);
     }
 
     .btn-pin.pinned {
@@ -263,13 +265,14 @@
 
     /* Summary modal content */
     .summary-content {
-        background: #f8fafc;
+        background: var(--bg);
         border-radius: 8px;
         padding: 1rem;
         max-height: 400px;
         overflow-y: auto;
         white-space: pre-wrap;
         line-height: 1.6;
+        color: var(--text);
     }
 
     .summary-content ul {
@@ -365,9 +368,10 @@
         bottom: 100%;
         left: 50%;
         transform: translateX(-50%);
-        background: white;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
         border-radius: 8px;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
         padding: 6px;
         margin-bottom: 8px;
         min-width: 200px;
@@ -382,7 +386,7 @@
         font-size: 11px;
         font-weight: 500;
         text-transform: uppercase;
-        color: #9b9a97;
+        color: var(--text-muted);
         padding: 8px 10px 4px;
         letter-spacing: 0.5px;
     }
@@ -397,7 +401,7 @@
     }
 
     .ai-menu-section + .ai-menu-section {
-        border-top: 1px solid #f1f1ef;
+        border-top: 1px solid var(--border);
         padding-top: 4px;
     }
 
@@ -413,11 +417,11 @@
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
-        color: #37352f;
+        color: var(--text);
     }
 
     .ai-option:hover {
-        background: #f1f1ef;
+        background: var(--bg-hover);
     }
 
     .ai-option span {
@@ -442,11 +446,11 @@
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
-        color: #37352f;
+        color: var(--text);
     }
 
     .color-option:hover {
-        background: #f1f1ef;
+        background: var(--bg-hover);
     }
 
     .color-dot {
@@ -471,11 +475,11 @@
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
-        color: #37352f;
+        color: var(--text);
     }
 
     .turn-into-option:hover {
-        background: #f1f1ef;
+        background: var(--bg-hover);
     }
 
     /* Color picker styling in toolbar */
@@ -499,10 +503,11 @@
     }
 
     .ai-processing-box {
-        background: white;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 24px 32px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
         gap: 16px;
@@ -511,8 +516,8 @@
     .ai-processing-spinner {
         width: 24px;
         height: 24px;
-        border: 3px solid #f1f1ef;
-        border-top-color: #6940a5;
+        border: 3px solid var(--border);
+        border-top-color: var(--primary);
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
     }
@@ -523,7 +528,7 @@
 
     .ai-processing-text {
         font-size: 15px;
-        color: #37352f;
+        color: var(--text);
     }
 </style>
 {% endblock %}
@@ -537,7 +542,7 @@
             {{ note.class_code or note.class_name }}
         </a>
         <span class="separator">/</span>
-        <span class="text-dark">{{ note.title or 'Untitled' }}</span>
+        <span style="color: var(--text);">{{ note.title or 'Untitled' }}</span>
 
         <div class="note-actions">
             <form method="POST" action="{{ url_for('notes.toggle_pin', note_id=note.id) }}" class="d-inline">
@@ -586,6 +591,10 @@
             <span data-feather="layers"></span>
             Generate Flashcards
         </button>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="askAiBtn" onclick="toggleAiChat()">
+            <span data-feather="message-circle"></span>
+            Ask AI
+        </button>
     </div>
 
     <!-- Quill Editor Toolbar -->
@@ -629,27 +638,27 @@
     <div id="selection-toolbar" class="selection-toolbar">
         <!-- AI Features -->
         <button class="sel-btn sel-btn-ai" id="improveWritingBtn" title="Improve writing">
-            <span class="ai-sparkle">✨</span> Improve writing
+            <span data-feather="zap" style="width:14px;height:14px;"></span> Improve
         </button>
 
         <!-- Ask AI dropdown -->
         <div class="sel-dropdown">
             <button class="sel-btn sel-btn-ai sel-dropdown-toggle" id="askAiToggle" title="Ask AI">
-                <span>🔑</span> Ask AI
+                <span data-feather="cpu" style="width:14px;height:14px;"></span> AI
             </button>
             <div class="sel-dropdown-menu ai-menu" id="askAiMenu">
                 <div class="ai-menu-section">
                     <div class="color-menu-title">Suggested</div>
-                    <button class="ai-option" data-action="improve"><span>✨</span> Improve writing</button>
-                    <button class="ai-option" data-action="proofread"><span>✓</span> Proofread</button>
-                    <button class="ai-option" data-action="simplify"><span>💡</span> Simplify language</button>
+                    <button class="ai-option" data-action="improve"><span data-feather="zap" style="width:14px;height:14px;"></span> Improve writing</button>
+                    <button class="ai-option" data-action="proofread"><span data-feather="check" style="width:14px;height:14px;"></span> Proofread</button>
+                    <button class="ai-option" data-action="simplify"><span data-feather="feather" style="width:14px;height:14px;"></span> Simplify language</button>
                 </div>
                 <div class="ai-menu-section">
                     <div class="color-menu-title">Edit</div>
-                    <button class="ai-option" data-action="shorter"><span>📝</span> Make shorter</button>
-                    <button class="ai-option" data-action="longer"><span>📄</span> Make longer</button>
-                    <button class="ai-option" data-action="formal"><span>👔</span> More formal</button>
-                    <button class="ai-option" data-action="casual"><span>😊</span> More casual</button>
+                    <button class="ai-option" data-action="shorter"><span data-feather="minus" style="width:14px;height:14px;"></span> Make shorter</button>
+                    <button class="ai-option" data-action="longer"><span data-feather="plus" style="width:14px;height:14px;"></span> Make longer</button>
+                    <button class="ai-option" data-action="formal"><span data-feather="briefcase" style="width:14px;height:14px;"></span> More formal</button>
+                    <button class="ai-option" data-action="casual"><span data-feather="smile" style="width:14px;height:14px;"></span> More casual</button>
                 </div>
             </div>
         </div>
@@ -681,7 +690,7 @@
         <button class="sel-btn" data-format="underline" title="Underline"><u>U</u></button>
         <button class="sel-btn" data-format="strike" title="Strikethrough"><s>S</s></button>
         <button class="sel-btn" data-format="code" title="Code"><span class="code-icon">&lt;/&gt;</span></button>
-        <button class="sel-btn" data-format="link" title="Add Link"><span>🔗</span></button>
+        <button class="sel-btn" data-format="link" title="Add Link"><span data-feather="link" style="width:14px;height:14px;"></span></button>
 
         <!-- Color dropdown -->
         <div class="sel-dropdown">
@@ -838,6 +847,172 @@
         </div>
     </div>
 </div>
+
+<!-- AI Chat Panel -->
+<div id="aiChatPanel" class="ai-chat-panel">
+    <div class="ai-chat-header">
+        <span>Ask AI about this note</span>
+        <button type="button" class="ai-chat-close" onclick="toggleAiChat()">
+            <span data-feather="x"></span>
+        </button>
+    </div>
+    <div class="ai-chat-messages" id="aiChatMessages">
+        <div class="ai-chat-empty">
+            Ask questions about the content in this note.
+        </div>
+    </div>
+    <div class="ai-chat-input-area">
+        <textarea id="aiChatInput" placeholder="Ask a question..." rows="1"></textarea>
+        <button type="button" class="ai-chat-send" onclick="sendAiMessage()">
+            <span data-feather="send"></span>
+        </button>
+    </div>
+</div>
+
+<style>
+/* AI Chat Panel */
+.ai-chat-panel {
+    position: fixed;
+    right: -400px;
+    top: 0;
+    width: 380px;
+    height: 100vh;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: right 0.3s ease;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+}
+
+.ai-chat-panel.open {
+    right: 0;
+}
+
+.ai-chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    color: var(--text);
+}
+
+.ai-chat-close {
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+}
+
+.ai-chat-close:hover {
+    color: var(--text);
+}
+
+.ai-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ai-chat-empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 0.9rem;
+}
+
+.ai-message {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    max-width: 90%;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.ai-message.user {
+    background: var(--primary);
+    color: #fff;
+    align-self: flex-end;
+}
+
+.ai-message.assistant {
+    background: var(--bg-hover);
+    color: var(--text);
+    align-self: flex-start;
+}
+
+.ai-message.assistant p {
+    margin: 0 0 0.5rem 0;
+}
+
+.ai-message.assistant p:last-child {
+    margin-bottom: 0;
+}
+
+.ai-message.assistant ul, .ai-message.assistant ol {
+    margin: 0.5rem 0;
+    padding-left: 1.25rem;
+}
+
+.ai-message.typing {
+    background: var(--bg-hover);
+    color: var(--text-muted);
+}
+
+.ai-chat-input-area {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+}
+
+#aiChatInput {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    background: var(--bg-secondary);
+    color: var(--text);
+}
+
+#aiChatInput:focus {
+    border-color: var(--primary);
+}
+
+.ai-chat-send {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.ai-chat-send:hover {
+    background: var(--primary-hover);
+}
+
+.ai-chat-send:disabled {
+    background: var(--bg-hover);
+    cursor: not-allowed;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -1172,6 +1347,9 @@
         selectionToolbar.classList.add('visible');
         toolbarVisible = true;
 
+        // Initialize feather icons in toolbar
+        feather.replace();
+
         // Update active states
         updateToolbarActiveStates(range);
     }
@@ -1340,9 +1518,19 @@
             hideAiOverlay(overlay);
 
             if (data.success) {
+                // Preserve formatting before replacing text
+                const formats = quill.getFormat(range);
+
                 // Replace selected text with transformed text
                 quill.deleteText(range.index, range.length);
                 quill.insertText(range.index, data.result);
+
+                // Reapply formatting to the new text
+                const newLength = data.result.length;
+                Object.keys(formats).forEach(format => {
+                    quill.formatText(range.index, newLength, format, formats[format]);
+                });
+
                 debouncedSave();
             } else {
                 alert('AI Error: ' + data.error);
@@ -1467,7 +1655,7 @@
 
         generatedFlashcards.forEach((card, index) => {
             html += `
-                <div class="flashcard-preview-item" style="background: #f8fafc; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+                <div class="flashcard-preview-item" style="background: var(--bg-hover); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div>
                             <div style="font-size: 11px; text-transform: uppercase; color: #9b9a97; margin-bottom: 4px;">Front</div>
@@ -1560,5 +1748,127 @@
             alert('Error creating deck: ' + error.message);
         }
     }
+
+    // ===== AI CHAT IN NOTES =====
+    let aiChatHistory = [];
+    const aiChatPanel = document.getElementById('aiChatPanel');
+    const aiChatMessages = document.getElementById('aiChatMessages');
+    const aiChatInput = document.getElementById('aiChatInput');
+
+    function toggleAiChat() {
+        aiChatPanel.classList.toggle('open');
+        if (aiChatPanel.classList.contains('open')) {
+            aiChatInput.focus();
+            feather.replace();
+        }
+    }
+
+    function formatAiResponse(text) {
+        // Convert markdown-like formatting to HTML
+        let html = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+
+        // Handle bullet points
+        html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+        return '<p>' + html + '</p>';
+    }
+
+    function addMessage(content, role) {
+        // Remove empty state if present
+        const emptyState = aiChatMessages.querySelector('.ai-chat-empty');
+        if (emptyState) emptyState.remove();
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `ai-message ${role}`;
+
+        if (role === 'assistant') {
+            messageDiv.innerHTML = formatAiResponse(content);
+        } else {
+            messageDiv.textContent = content;
+        }
+
+        aiChatMessages.appendChild(messageDiv);
+        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'ai-message typing';
+        typingDiv.id = 'typingIndicator';
+        typingDiv.textContent = 'Thinking...';
+        aiChatMessages.appendChild(typingDiv);
+        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const typing = document.getElementById('typingIndicator');
+        if (typing) typing.remove();
+    }
+
+    async function sendAiMessage() {
+        const message = aiChatInput.value.trim();
+        if (!message) return;
+
+        // Clear input and disable
+        aiChatInput.value = '';
+        aiChatInput.disabled = true;
+        document.querySelector('.ai-chat-send').disabled = true;
+
+        // Add user message
+        addMessage(message, 'user');
+        aiChatHistory.push({ role: 'user', content: message });
+
+        // Show typing indicator
+        showTypingIndicator();
+
+        try {
+            const response = await fetch(`/notes/${noteId}/ask-ai`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    history: aiChatHistory.slice(-10) // Last 10 messages for context
+                })
+            });
+
+            const data = await response.json();
+            removeTypingIndicator();
+
+            if (data.success) {
+                addMessage(data.response, 'assistant');
+                aiChatHistory.push({ role: 'assistant', content: data.response });
+            } else {
+                addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+            }
+        } catch (error) {
+            removeTypingIndicator();
+            addMessage('Sorry, something went wrong. Please try again.', 'assistant');
+        }
+
+        // Re-enable input
+        aiChatInput.disabled = false;
+        document.querySelector('.ai-chat-send').disabled = false;
+        aiChatInput.focus();
+    }
+
+    // Handle Enter key in chat input
+    aiChatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendAiMessage();
+        }
+    });
+
+    // Auto-resize textarea
+    aiChatInput.addEventListener('input', () => {
+        aiChatInput.style.height = 'auto';
+        aiChatInput.style.height = Math.min(aiChatInput.scrollHeight, 100) + 'px';
+    });
 </script>
 {% endblock %}

@@ -25,8 +25,10 @@ from app.blueprints.auth import auth
 from app.blueprints.ai_chat import ai_chat
 from app.blueprints.settings import settings
 from app.blueprints.analytics import analytics
+from app.blueprints.pomodoro import pomodoro
 
 app.register_blueprint(auth, url_prefix='/auth')
+app.register_blueprint(pomodoro, url_prefix='/pomodoro')
 app.register_blueprint(ai_chat, url_prefix='/ai-tutor')
 app.register_blueprint(settings, url_prefix='/settings')
 app.register_blueprint(analytics, url_prefix='/analytics')

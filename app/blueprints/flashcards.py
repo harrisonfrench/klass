@@ -264,15 +264,55 @@ def study_deck(deck_id):
     return render_template('flashcards/study.html', deck=deck, cards=cards)
 
 
+def calculate_sm2(card, quality):
+    """
+    SM-2 Spaced Repetition Algorithm.
+    quality: 0-5 (0=complete blackout, 5=perfect response)
+    Returns updated card values: ease_factor, interval, repetitions, next_review
+    """
+    ease_factor = card.get('ease_factor') or 2.5
+    interval = card.get('interval') or 0
+    repetitions = card.get('repetitions') or 0
+
+    if quality < 3:
+        # Failed - reset
+        repetitions = 0
+        interval = 1
+    else:
+        # Passed
+        if repetitions == 0:
+            interval = 1
+        elif repetitions == 1:
+            interval = 6
+        else:
+            interval = round(interval * ease_factor)
+
+        # Update ease factor
+        ease_factor = ease_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+        ease_factor = max(1.3, ease_factor)  # Minimum ease factor
+        repetitions += 1
+
+    # Cap interval at 365 days
+    interval = min(interval, 365)
+    next_review = datetime.now() + timedelta(days=interval)
+
+    return {
+        'ease_factor': ease_factor,
+        'interval': interval,
+        'repetitions': repetitions,
+        'next_review': next_review
+    }
+
+
 @flashcards.route('/card/<int:card_id>/review', methods=['POST'])
 @login_required
 def review_card(card_id):
-    """Record a review for a card (spaced repetition)."""
+    """Record a review for a card using SM-2 spaced repetition algorithm."""
     db = get_db()
 
     data = request.get_json()
-    difficulty = data.get('difficulty', 3)  # 1-5 scale (1=hard, 5=easy)
-    correct = data.get('correct', True)
+    # quality: 0=Again, 2=Hard, 4=Good, 5=Easy
+    quality = data.get('quality', 4)
 
     # Verify card belongs to user
     cursor = db.execute('''
@@ -286,37 +326,62 @@ def review_card(card_id):
     if not card:
         return jsonify({'success': False, 'error': 'Card not found'}), 404
 
-    # Simple spaced repetition: multiply interval based on difficulty
+    # Calculate SM-2 values
+    sm2_result = calculate_sm2(card, quality)
+
+    # Update review stats
     times_reviewed = card['times_reviewed'] + 1
-    times_correct = card['times_correct'] + (1 if correct else 0)
+    times_correct = card['times_correct'] + (1 if quality >= 3 else 0)
 
-    # Calculate next review (simple algorithm)
-    if correct:
-        if difficulty >= 4:
-            days = min(times_reviewed * 2, 30)  # Easy: double interval, max 30 days
-        elif difficulty >= 3:
-            days = min(times_reviewed, 14)  # Medium: add 1 day per review, max 14
-        else:
-            days = 1  # Hard: review again tomorrow
-    else:
-        days = 0  # Wrong: review again in same session (or next time)
-
-    next_review = datetime.now() + timedelta(days=days)
+    # Map quality to difficulty for backward compatibility
+    difficulty = quality
 
     db.execute('''
         UPDATE flashcards
         SET times_reviewed = ?, times_correct = ?, difficulty = ?,
+            ease_factor = ?, interval = ?, repetitions = ?,
             last_reviewed = CURRENT_TIMESTAMP, next_review = ?
         WHERE id = ?
-    ''', (times_reviewed, times_correct, difficulty, next_review, card_id))
+    ''', (times_reviewed, times_correct, difficulty,
+          sm2_result['ease_factor'], sm2_result['interval'], sm2_result['repetitions'],
+          sm2_result['next_review'], card_id))
     db.commit()
+
+    # Record study session for streak tracking
+    cursor = db.execute('''
+        SELECT d.class_id FROM flashcard_decks d WHERE d.id = ?
+    ''', (card['deck_id'],))
+    deck = cursor.fetchone()
+    if deck:
+        db.execute('''
+            INSERT INTO study_sessions (user_id, class_id, activity_type, duration)
+            VALUES (?, ?, 'flashcards', 1)
+        ''', (session['user_id'], deck['class_id']))
+        db.commit()
 
     return jsonify({
         'success': True,
         'times_reviewed': times_reviewed,
         'times_correct': times_correct,
-        'next_review': next_review.isoformat()
+        'ease_factor': round(sm2_result['ease_factor'], 2),
+        'interval': sm2_result['interval'],
+        'next_review': sm2_result['next_review'].isoformat()
     })
+
+
+@flashcards.route('/deck/<int:deck_id>/due-count')
+@login_required
+def get_due_count(deck_id):
+    """Get count of cards due for review."""
+    db = get_db()
+
+    cursor = db.execute('''
+        SELECT COUNT(*) as count FROM flashcards
+        WHERE deck_id = ? AND (next_review IS NULL OR next_review <= datetime('now'))
+    ''', (deck_id,))
+    result = cursor.fetchone()
+
+    return jsonify({'success': True, 'due_count': result['count'] if result else 0})
 
 
 @flashcards.route('/deck/<int:deck_id>/import-note', methods=['POST'])

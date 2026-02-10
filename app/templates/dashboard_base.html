@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Dashboard{% endblock %} - Class Manager</title>
+    <title>{% block title %}Dashboard{% endblock %} - Klass</title>
 
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,170 +16,497 @@
     <!-- Dashboard CSS -->
     <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
 
+    <!-- Pomodoro Widget CSS -->
+    <style>
+        .pomodoro-widget {
+            position: relative;
+            font-family: 'Inter', sans-serif;
+            margin-right: 16px;
+        }
+
+        .pomo-collapsed {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pomo-collapsed:hover {
+            background: var(--bg-hover);
+        }
+
+        .pomo-collapsed.hidden {
+            display: none;
+        }
+
+        .pomo-time {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text, #cdd6f4);
+            font-variant-numeric: tabular-nums;
+            min-width: 50px;
+        }
+
+        .pomo-play-btn, .pomo-expand-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary, #6366f1);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .pomo-play-btn:hover, .pomo-expand-btn:hover {
+            background: var(--primary-hover, #4f46e5);
+            transform: scale(1.05);
+        }
+
+        .pomo-play-btn svg, .pomo-expand-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .pomo-expand-btn {
+            background: transparent;
+            color: var(--text-muted, #6c7086);
+        }
+
+        .pomo-expand-btn:hover {
+            background: var(--bg-hover, #313244);
+            color: var(--text, #cdd6f4);
+        }
+
+        /* Expanded Panel */
+        .pomo-expanded {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            width: 280px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            z-index: 1100;
+        }
+
+        .pomo-expanded-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .pomo-type-label {
+            font-weight: 600;
+            color: var(--text, #cdd6f4);
+        }
+
+        .pomo-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted, #6c7086);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .pomo-close-btn:hover {
+            color: var(--text, #cdd6f4);
+        }
+
+        .pomo-progress-bar {
+            height: 4px;
+            background: var(--border, #313244);
+            border-radius: 2px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .pomo-progress-fill {
+            height: 100%;
+            background: var(--primary, #6366f1);
+            border-radius: 2px;
+            transition: width 1s linear;
+        }
+
+        .pomodoro-widget.break .pomo-progress-fill,
+        .pomodoro-widget.break .pomo-play-btn {
+            background: #10b981;
+        }
+
+        .pomodoro-widget.long-break .pomo-progress-fill,
+        .pomodoro-widget.long-break .pomo-play-btn {
+            background: #8b5cf6;
+        }
+
+        .pomo-time-large {
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text, #cdd6f4);
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 16px;
+        }
+
+        .pomo-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .pomo-ctrl-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-hover, #313244);
+            color: var(--text, #cdd6f4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pomo-ctrl-btn:hover {
+            background: var(--border, #45475a);
+        }
+
+        .pomo-ctrl-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .pomo-ctrl-btn.pomo-ctrl-primary {
+            width: 56px;
+            height: 56px;
+            background: var(--primary, #6366f1);
+            color: white;
+        }
+
+        .pomo-ctrl-btn.pomo-ctrl-primary:hover {
+            background: var(--primary-hover, #4f46e5);
+            transform: scale(1.05);
+        }
+
+        .pomo-ctrl-btn.pomo-ctrl-primary svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .pomo-type-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .pomo-type-tab {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border, #313244);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-muted, #6c7086);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pomo-type-tab:hover {
+            background: var(--bg-hover, #313244);
+            color: var(--text, #cdd6f4);
+        }
+
+        .pomo-type-tab.active {
+            background: var(--primary, #6366f1);
+            border-color: var(--primary, #6366f1);
+            color: white;
+        }
+
+        .pomodoro-widget.break .pomo-type-tab.active {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .pomodoro-widget.long-break .pomo-type-tab.active {
+            background: #8b5cf6;
+            border-color: #8b5cf6;
+        }
+
+        .pomo-class-select select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border, #313244);
+            border-radius: 8px;
+            background: var(--bg, #11111b);
+            color: var(--text, #cdd6f4);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .pomo-class-select select:focus {
+            outline: none;
+            border-color: var(--primary, #6366f1);
+        }
+
+        .pomo-sessions {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .pomo-session-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border, #313244);
+            transition: background 0.3s;
+        }
+
+        .pomo-session-dot.completed {
+            background: var(--primary);
+        }
+
+        /* Settings Section */
+        .pomo-settings-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .pomo-settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .pomo-settings-row label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .pomo-duration-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pomo-duration-input span {
+            width: 28px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .pomo-dur-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .pomo-dur-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text);
+            border-color: var(--text-muted);
+        }
+
+        .pomo-stats-link {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .pomo-stats-link span {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Running animation */
+        .pomodoro-widget.running .pomo-collapsed {
+            border-color: var(--primary, #6366f1);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .pomodoro-widget.running .pomo-time {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Top Navbar -->
-    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="{{ url_for('dashboard') }}">Class Manager</a>
-        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <form class="w-100" action="{{ url_for('search') }}" method="GET">
-            <input class="form-control form-control-dark w-100" type="text" name="q" placeholder="Search classes, assignments..." aria-label="Search" style="color: #fff;">
+    <header class="top-navbar">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">Klass</a>
+        <form class="search-form" action="{{ url_for('search') }}" method="GET">
+            <span data-feather="search" class="search-icon"></span>
+            <input type="text" name="q" placeholder="Search..." class="search-input">
         </form>
-        <div class="navbar-nav">
-            <div class="nav-item text-nowrap d-flex align-items-center">
-                <button class="btn btn-link nav-link px-2" onclick="toggleTheme()" title="Toggle dark mode" style="font-size: 1.1rem;">
-                    <span id="themeIcon" data-feather="moon"></span>
-                </button>
-                {% if g.user %}
-                <span class="text-light px-2">{{ g.user.username }}</span>
-                <a class="nav-link px-3" href="{{ url_for('auth.logout') }}">Sign out</a>
-                {% else %}
-                <a class="nav-link px-3" href="{{ url_for('auth.login') }}">Sign in</a>
-                {% endif %}
-            </div>
+        <div class="navbar-end">
+            {% if g.user %}
+            <span class="user-name">{{ g.user.username }}</span>
+            <a class="nav-link-minimal" href="{{ url_for('auth.logout') }}">Sign out</a>
+            {% else %}
+            <a class="nav-link-minimal" href="{{ url_for('auth.login') }}">Sign in</a>
+            {% endif %}
         </div>
     </header>
 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                <div class="position-sticky pt-3 sidebar-sticky">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                                <span data-feather="home"></span>
-                                Dashboard
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-content">
+                <ul class="nav-list">
+                    <li>
+                        <a class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                            <span data-feather="home"></span>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-item {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">
+                            <span data-feather="calendar"></span>
+                            Calendar
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-item {% if 'ai_chat' in request.endpoint %}active{% endif %}" href="{{ url_for('ai_chat.chat_home') }}">
+                            <span data-feather="message-circle"></span>
+                            AI Tutor
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Study Tools -->
+                <div class="nav-section">
+                    <div class="nav-section-title" onclick="toggleSection(this)">
+                        <span>Study Tools</span>
+                        <span data-feather="chevron-down" class="section-chevron"></span>
+                    </div>
+                    <ul class="nav-list nav-collapsible">
+                        <li>
+                            <a class="nav-item {% if request.endpoint == 'notes.list_notes' %}active{% endif %}" href="{{ url_for('notes.list_notes') }}">
+                                <span data-feather="file-text"></span>
+                                All Notes
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'analytics' in request.endpoint %}active{% endif %}" href="{{ url_for('analytics.dashboard') }}">
-                                <span data-feather="bar-chart-2"></span>
-                                Analytics
+                        <li>
+                            <a class="nav-item {% if 'flashcards' in request.endpoint %}active{% endif %}" href="{{ url_for('flashcards.list_decks') }}">
+                                <span data-feather="layers"></span>
+                                Flashcards
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">
-                                <span data-feather="calendar"></span>
-                                Calendar
+                        <li>
+                            <a class="nav-item {% if 'study_guides' in request.endpoint %}active{% endif %}" href="{{ url_for('study_guides.list_guides') }}">
+                                <span data-feather="book-open"></span>
+                                Study Guides
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'ai_chat' in request.endpoint %}active{% endif %}" href="{{ url_for('ai_chat.chat_home') }}">
-                                <span data-feather="message-circle"></span>
-                                AI Tutor
+                        <li>
+                            <a class="nav-item {% if 'quizzes' in request.endpoint %}active{% endif %}" href="{{ url_for('quizzes.list_quizzes') }}">
+                                <span data-feather="check-circle"></span>
+                                Quizzes
                             </a>
                         </li>
                     </ul>
+                </div>
 
-                    <!-- Study Tools Dropdown -->
-                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                        <a class="text-muted text-decoration-none d-flex align-items-center w-100" data-bs-toggle="collapse" href="#studyToolsCollapse" role="button" aria-expanded="true" aria-controls="studyToolsCollapse">
-                            <span>Study Tools</span>
-                            <span data-feather="chevron-down" class="ms-auto collapse-icon" style="width: 16px; height: 16px;"></span>
-                        </a>
-                    </h6>
-                    <div class="collapse show" id="studyToolsCollapse">
-                        <ul class="nav flex-column mb-2">
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.endpoint == 'notes.list_notes' %}active{% endif %}" href="{{ url_for('notes.list_notes') }}">
-                                    <span data-feather="file-text"></span>
-                                    All Notes
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if 'flashcards' in request.endpoint %}active{% endif %}" href="{{ url_for('flashcards.list_decks') }}">
-                                    <span data-feather="layers"></span>
-                                    Flashcards
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if 'study_guides' in request.endpoint %}active{% endif %}" href="{{ url_for('study_guides.list_guides') }}">
-                                    <span data-feather="book-open"></span>
-                                    Study Guides
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if 'quizzes' in request.endpoint %}active{% endif %}" href="{{ url_for('quizzes.list_quizzes') }}">
-                                    <span data-feather="check-circle"></span>
-                                    Quizzes
-                                </a>
-                            </li>
-                        </ul>
+                <!-- My Classes -->
+                <div class="nav-section">
+                    <div class="nav-section-title" onclick="toggleSection(this)">
+                        <span>My Classes</span>
+                        <div class="section-actions">
+                            <a href="{{ url_for('classes.create_class') }}" class="add-btn" title="Add class" onclick="event.stopPropagation()">
+                                <span data-feather="plus"></span>
+                            </a>
+                            <span data-feather="chevron-down" class="section-chevron"></span>
+                        </div>
                     </div>
-
-                    <!-- My Classes Dropdown -->
-                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-muted">
-                        <a class="text-muted text-decoration-none d-flex align-items-center flex-grow-1" data-bs-toggle="collapse" href="#classesCollapse" role="button" aria-expanded="true" aria-controls="classesCollapse">
-                            <span>My Classes</span>
-                            <span data-feather="chevron-down" class="ms-auto collapse-icon" style="width: 16px; height: 16px;"></span>
-                        </a>
-                        <a class="link-secondary ms-2" href="{{ url_for('classes.create_class') }}" aria-label="Add a new class">
-                            <span data-feather="plus-circle"></span>
-                        </a>
-                    </h6>
-                    <div class="collapse show" id="classesCollapse">
-                        <ul class="nav flex-column mb-2">
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.endpoint == 'classes.list_classes' %}active{% endif %}" href="{{ url_for('classes.list_classes') }}">
-                                    <span data-feather="grid"></span>
-                                    All Classes
+                    <ul class="nav-list nav-collapsible">
+                        <li>
+                            <a class="nav-item {% if request.endpoint == 'classes.list_classes' %}active{% endif %}" href="{{ url_for('classes.list_classes') }}">
+                                <span data-feather="grid"></span>
+                                All Classes
+                            </a>
+                        </li>
+                        {% if sidebar_classes %}
+                            {% for class in sidebar_classes %}
+                            <li>
+                                <a class="nav-item {% if request.endpoint == 'classes.view_class' and request.view_args.get('class_id') == class.id %}active{% endif %}" href="{{ url_for('classes.view_class', class_id=class.id) }}">
+                                    <span class="class-dot" style="background: {{ class.color }};"></span>
+                                    {{ class.code or class.name }}
                                 </a>
                             </li>
-                            {% if sidebar_classes %}
-                                {% for class in sidebar_classes %}
-                                <li class="nav-item">
-                                    <a class="nav-link {% if request.endpoint == 'classes.view_class' and request.view_args.get('class_id') == class.id %}active{% endif %}" href="{{ url_for('classes.view_class', class_id=class.id) }}">
-                                        <span class="me-1" style="color: {{ class.color }};">&#9679;</span>
-                                        {{ class.code or class.name }}
-                                    </a>
-                                </li>
-                                {% endfor %}
-                            {% else %}
-                            <li class="nav-item">
-                                <a class="nav-link text-muted" href="{{ url_for('classes.create_class') }}">
-                                    <span data-feather="folder"></span>
-                                    No classes yet
-                                </a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </div>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
 
-                    <!-- Settings -->
-                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-muted">
-                        <span>Account</span>
-                    </h6>
-                    <ul class="nav flex-column mb-2">
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'settings' in request.endpoint %}active{% endif %}" href="{{ url_for('settings.preferences') }}">
+                <!-- Settings -->
+                <div class="nav-section">
+                    <ul class="nav-list">
+                        <li>
+                            <a class="nav-item {% if 'settings' in request.endpoint %}active{% endif %}" href="{{ url_for('settings.preferences') }}">
                                 <span data-feather="settings"></span>
                                 Settings
                             </a>
                         </li>
                     </ul>
                 </div>
-            </nav>
+            </div>
+        </nav>
 
-            <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <!-- Flash Messages -->
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show mt-3" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                {% block content %}{% endblock %}
-            </main>
-        </div>
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
     </div>
 
     <!-- Bootstrap 5 JS Bundle -->
@@ -192,43 +519,47 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <script>
-        // Theme Toggle
-        function getStoredTheme() {
-            return localStorage.getItem('theme') || 'light';
-        }
-
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            updateThemeIcon(theme);
-        }
-
-        function updateThemeIcon(theme) {
-            const iconSpan = document.getElementById('themeIcon');
-            if (iconSpan) {
-                iconSpan.setAttribute('data-feather', theme === 'dark' ? 'sun' : 'moon');
-                feather.replace();
-            }
-        }
-
-        function toggleTheme() {
-            const currentTheme = getStoredTheme();
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-        }
-
-        // Apply theme on page load
-        (function() {
-            const theme = getStoredTheme();
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-
         // Initialize Feather Icons
         feather.replace();
 
-        // Update icon after feather replaces
-        updateThemeIcon(getStoredTheme());
+        // Toggle sidebar sections
+        function toggleSection(titleElement) {
+            const section = titleElement.closest('.nav-section');
+            section.classList.toggle('collapsed');
+
+            // Save state to localStorage
+            const sectionName = titleElement.querySelector('span').textContent.trim();
+            const collapsedSections = JSON.parse(localStorage.getItem('collapsedSections') || '[]');
+
+            if (section.classList.contains('collapsed')) {
+                if (!collapsedSections.includes(sectionName)) {
+                    collapsedSections.push(sectionName);
+                }
+            } else {
+                const index = collapsedSections.indexOf(sectionName);
+                if (index > -1) {
+                    collapsedSections.splice(index, 1);
+                }
+            }
+            localStorage.setItem('collapsedSections', JSON.stringify(collapsedSections));
+        }
+
+        // Restore collapsed state on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const collapsedSections = JSON.parse(localStorage.getItem('collapsedSections') || '[]');
+            document.querySelectorAll('.nav-section-title').forEach(title => {
+                const sectionName = title.querySelector('span').textContent.trim();
+                if (collapsedSections.includes(sectionName)) {
+                    title.closest('.nav-section').classList.add('collapsed');
+                }
+            });
+        });
     </script>
+
+    {% if g.user %}
+    <!-- Pomodoro Widget -->
+    <script src="{{ url_for('static', filename='js/pomodoro-widget.js') }}"></script>
+    {% endif %}
 
     {% block scripts %}{% endblock %}
 </body>
