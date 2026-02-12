@@ -69,6 +69,7 @@ def create_class():
         semester = request.form.get('semester')
         color = request.form.get('color', '#0d6efd')
         description = request.form.get('description')
+        d2l_course_url = request.form.get('d2l_course_url', '').strip() or None
 
         if not name:
             flash('Class name is required.', 'error')
@@ -76,9 +77,9 @@ def create_class():
 
         db = get_db()
         db.execute(
-            '''INSERT INTO classes (user_id, name, code, instructor, semester, color, description)
-               VALUES (?, ?, ?, ?, ?, ?, ?)''',
-            (session['user_id'], name, code, instructor, semester, color, description)
+            '''INSERT INTO classes (user_id, name, code, instructor, semester, color, description, d2l_course_url)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+            (session['user_id'], name, code, instructor, semester, color, description, d2l_course_url)
         )
         db.commit()
 
@@ -177,6 +178,7 @@ def update_class(class_id):
     semester = request.form.get('semester')
     color = request.form.get('color', '#0d6efd')
     description = request.form.get('description')
+    d2l_course_url = request.form.get('d2l_course_url', '').strip() or None
 
     if not name:
         flash('Class name is required.', 'error')
@@ -186,9 +188,9 @@ def update_class(class_id):
     db.execute(
         '''UPDATE classes
            SET name = ?, code = ?, instructor = ?, semester = ?, color = ?, description = ?,
-               updated_at = CURRENT_TIMESTAMP
+               d2l_course_url = ?, updated_at = CURRENT_TIMESTAMP
            WHERE id = ? AND user_id = ?''',
-        (name, code, instructor, semester, color, description, class_id, session['user_id'])
+        (name, code, instructor, semester, color, description, d2l_course_url, class_id, session['user_id'])
     )
     db.commit()
 

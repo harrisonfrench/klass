@@ -92,6 +92,12 @@ def init_db():
     except Exception:
         pass  # Column already exists
 
+    # Add D2L course URL column if it doesn't exist
+    try:
+        db.execute('ALTER TABLE classes ADD COLUMN d2l_course_url TEXT')
+    except Exception:
+        pass  # Column already exists
+
     # Create assignments table
     db.execute('''
         CREATE TABLE IF NOT EXISTS assignments (
