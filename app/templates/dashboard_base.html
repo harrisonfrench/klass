@@ -508,6 +508,82 @@
             display: flex;
         }
 
+        /* Confirm Modal */
+        .confirm-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirm-modal-backdrop.open {
+            display: flex;
+        }
+
+        .confirm-modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 360px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .confirm-modal h5 {
+            margin: 0 0 8px 0;
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .confirm-modal p {
+            margin: 0 0 20px 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .confirm-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .confirm-modal-btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .confirm-modal-btn.cancel {
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .confirm-modal-btn.cancel:hover {
+            background: var(--border);
+        }
+
+        .confirm-modal-btn.confirm {
+            background: #ef4444;
+            border: none;
+            color: white;
+        }
+
+        .confirm-modal-btn.confirm:hover {
+            background: #dc2626;
+        }
+
         .ai-chat-header {
             display: flex;
             align-items: center;
@@ -983,6 +1059,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <div class="confirm-modal-backdrop" id="confirmModalBackdrop">
+        <div class="confirm-modal">
+            <h5>Clear Chat</h5>
+            <p>Are you sure you want to clear all messages?</p>
+            <div class="confirm-modal-actions">
+                <button class="confirm-modal-btn cancel" onclick="hideConfirmModal()">Cancel</button>
+                <button class="confirm-modal-btn confirm" onclick="confirmClearChat()">Clear</button>
+            </div>
+        </div>
+    </div>
     {% endif %}
 
     <!-- Utility Functions -->
@@ -1190,7 +1278,15 @@
         }
 
         function clearAiChat() {
-            if (!confirm('Clear all messages?')) return;
+            document.getElementById('confirmModalBackdrop').classList.add('open');
+        }
+
+        function hideConfirmModal() {
+            document.getElementById('confirmModalBackdrop').classList.remove('open');
+        }
+
+        function confirmClearChat() {
+            hideConfirmModal();
 
             fetchWithCsrf('/ai-tutor/clear', { method: 'POST' })
                 .then(r => r.json())
