@@ -631,6 +631,28 @@
             height: 16px;
         }
 
+        .ai-chat-context {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .ai-chat-class-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .ai-chat-class-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
         .ai-chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -1036,6 +1058,11 @@
                 </button>
             </div>
         </div>
+        <div class="ai-chat-context">
+            <select id="aiChatClassSelect" class="ai-chat-class-select">
+                <option value="">No class context</option>
+            </select>
+        </div>
         <div class="ai-chat-messages" id="aiChatMessages">
             <div class="ai-chat-empty" id="aiChatEmpty">
                 <div class="ai-chat-empty-icon">
@@ -1128,6 +1155,7 @@
         // AI Chat Widget Functions
         let aiChatOpen = false;
         let aiChatLoaded = false;
+        let aiChatClassesLoaded = false;
 
         function toggleAiChat() {
             const panel = document.getElementById('aiChatPanel');
@@ -1139,11 +1167,32 @@
                     loadAiChatMessages();
                     aiChatLoaded = true;
                 }
+                if (!aiChatClassesLoaded) {
+                    loadAiChatClasses();
+                    aiChatClassesLoaded = true;
+                }
                 document.getElementById('aiChatInput').focus();
                 feather.replace();
             } else {
                 panel.classList.remove('open');
             }
+        }
+
+        function loadAiChatClasses() {
+            fetchWithCsrf('/ai-tutor/classes')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.classes) {
+                        const select = document.getElementById('aiChatClassSelect');
+                        data.classes.forEach(cls => {
+                            const option = document.createElement('option');
+                            option.value = cls.id;
+                            option.textContent = cls.code ? `${cls.code} - ${cls.name}` : cls.name;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(err => console.error('Failed to load classes:', err));
         }
 
         function loadAiChatMessages() {
@@ -1225,7 +1274,9 @@
         function sendAiChatMessage() {
             const input = document.getElementById('aiChatInput');
             const sendBtn = document.getElementById('aiChatSendBtn');
+            const classSelect = document.getElementById('aiChatClassSelect');
             const message = input.value.trim();
+            const classId = classSelect.value || null;
 
             if (!message) return;
 
@@ -1243,10 +1294,10 @@
             // Show typing indicator
             showAiTypingIndicator();
 
-            // Send message
+            // Send message with class context
             fetchWithCsrf('/ai-tutor/message', {
                 method: 'POST',
-                body: { message: message }
+                body: { message: message, class_id: classId }
             })
             .then(r => r.json())
             .then(data => {

@@ -33,6 +33,22 @@ def get_or_create_session(user_id):
     return cursor.lastrowid
 
 
+@ai_chat.route('/classes')
+@login_required
+def get_classes():
+    """Get user's classes for context selection."""
+    db = get_db()
+    user_id = session['user_id']
+
+    cursor = db.execute(
+        'SELECT id, name, code, color FROM classes WHERE user_id = ? ORDER BY name',
+        (user_id,)
+    )
+    classes = [dict(row) for row in cursor.fetchall()]
+
+    return jsonify({'success': True, 'classes': classes})
+
+
 @ai_chat.route('/messages')
 @login_required
 def get_messages():
@@ -64,6 +80,7 @@ def send_message():
 
     data = request.get_json()
     message = data.get('message', '').strip() if data else ''
+    class_id = data.get('class_id') if data else None
 
     if not message:
         return jsonify({'success': False, 'error': 'No message provided'}), 400
@@ -86,13 +103,46 @@ def send_message():
     ''', (session_id,))
     history = [dict(row) for row in reversed(cursor.fetchall())]
 
+    # Get context notes and class name if class is selected
+    context_notes = None
+    class_name = None
+
+    if class_id:
+        # Verify class belongs to user and get name
+        cursor = db.execute(
+            'SELECT id, name FROM classes WHERE id = ? AND user_id = ?',
+            (class_id, user_id)
+        )
+        class_data = cursor.fetchone()
+
+        if class_data:
+            class_name = class_data['name']
+
+            # Get notes from this class for context
+            cursor = db.execute('''
+                SELECT title, content FROM notes
+                WHERE class_id = ?
+                ORDER BY updated_at DESC
+                LIMIT 5
+            ''', (class_id,))
+            notes = cursor.fetchall()
+
+            if notes:
+                context_notes = []
+                for note in notes:
+                    note_dict = dict(note)
+                    # Strip HTML from content
+                    if note_dict.get('content'):
+                        note_dict['content'] = re.sub(r'<[^>]+>', '', note_dict['content'])[:2000]
+                    context_notes.append(note_dict)
+
     try:
         # Get AI response
         ai_response = chat_with_tutor(
             message=message,
-            context_notes=None,
+            context_notes=context_notes,
             conversation_history=history[:-1],  # Exclude the message we just added
-            class_name=None
+            class_name=class_name
         )
 
         # Save AI response
