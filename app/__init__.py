@@ -1,15 +1,46 @@
 import os
+from datetime import timedelta
 from flask import Flask, g
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from cachetools import TTLCache
 from .app_factory import create_app
 from .db_connect import close_db, get_db, init_db
 
 app = create_app()
-app.secret_key = 'your-secret'  # Replace with an environment variable
+
+# Security: Secret key from environment variable
+app.secret_key = os.environ.get('SECRET_KEY')
+if not app.secret_key:
+    raise RuntimeError("SECRET_KEY environment variable is required. Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\"")
+
+# Security: CSRF protection
+csrf = CSRFProtect(app)
+
+# Security: Rate limiting
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+)
+
+# Security: Secure session configuration
+app.config.update(
+    SESSION_COOKIE_SECURE=os.environ.get('FLASK_ENV') == 'production',  # HTTPS only in production
+    SESSION_COOKIE_HTTPONLY=True,  # Prevent JavaScript access
+    SESSION_COOKIE_SAMESITE='Lax',  # CSRF protection
+    PERMANENT_SESSION_LIFETIME=timedelta(days=7),
+)
 
 # Configure uploads
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads', 'syllabi')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Performance: Simple in-memory cache for sidebar classes (5-minute TTL)
+sidebar_cache = TTLCache(maxsize=1000, ttl=300)
 
 # Initialize database
 init_db()
@@ -47,19 +78,40 @@ def teardown_db(exception=None):
     close_db(exception)
 
 
-# Context processor to inject sidebar classes into all templates
+# Security: Add security headers to all responses
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    return response
+
+
+# Context processor to inject sidebar classes into all templates (with caching)
 @app.context_processor
 def inject_sidebar_classes():
     from flask import session
     try:
         if 'user_id' not in session:
             return {'sidebar_classes': []}
+
+        user_id = session['user_id']
+        cache_key = f"sidebar_{user_id}"
+
+        # Check cache first
+        if cache_key in sidebar_cache:
+            return {'sidebar_classes': sidebar_cache[cache_key]}
+
         db = get_db()
         cursor = db.execute(
             'SELECT id, name, code, color FROM classes WHERE user_id = ? ORDER BY name',
-            (session['user_id'],)
+            (user_id,)
         )
         sidebar_classes = cursor.fetchall()
+
+        # Cache the result
+        sidebar_cache[cache_key] = sidebar_classes
         return {'sidebar_classes': sidebar_classes}
     except Exception:
         return {'sidebar_classes': []}

@@ -10,17 +10,31 @@ notes = Blueprint('notes', __name__)
 @notes.route('/')
 @login_required
 def list_notes():
-    """List all notes across all classes for the current user."""
+    """List all notes across all classes for the current user with pagination."""
     db = get_db()
 
-    # Get all notes with class info, pinned first, then by updated_at
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+
+    # Get total count for pagination
+    total_result = db.execute('''
+        SELECT COUNT(*) as count FROM notes n
+        JOIN classes c ON n.class_id = c.id
+        WHERE c.user_id = ?
+    ''', (session['user_id'],)).fetchone()
+    total = total_result['count'] if total_result else 0
+
+    # Get paginated notes with class info, pinned first, then by updated_at
     cursor = db.execute('''
         SELECT n.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM notes n
         JOIN classes c ON n.class_id = c.id
         WHERE c.user_id = ?
         ORDER BY n.is_pinned DESC, n.updated_at DESC
-    ''', (session['user_id'],))
+        LIMIT ? OFFSET ?
+    ''', (session['user_id'], per_page, offset))
     all_notes = cursor.fetchall()
 
     # Get all classes for the "new note" dropdown
@@ -30,7 +44,17 @@ def list_notes():
     )
     classes = cursor.fetchall()
 
-    return render_template('notes/list.html', notes=all_notes, classes=classes)
+    # Calculate pagination info
+    total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+
+    return render_template(
+        'notes/list.html',
+        notes=all_notes,
+        classes=classes,
+        page=page,
+        total_pages=total_pages,
+        total=total
+    )
 
 
 @notes.route('/<int:note_id>')

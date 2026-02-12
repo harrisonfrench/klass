@@ -1,18 +1,48 @@
 import os
+import secrets
 from datetime import datetime, date
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_from_directory, session
 from werkzeug.utils import secure_filename
 from app.db_connect import get_db
 from app.syllabus_analyzer import analyze_and_save
 from app.blueprints.auth import login_required
+from app import sidebar_cache
 
 classes = Blueprint('classes', __name__)
 
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt'}
+ALLOWED_MIME_TYPES = {
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+}
 
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def validate_file_content(file):
+    """Validate that file content matches allowed types by checking magic bytes."""
+    try:
+        import magic
+        file.seek(0)
+        header = file.read(2048)
+        file.seek(0)
+        mime = magic.from_buffer(header, mime=True)
+        return mime in ALLOWED_MIME_TYPES
+    except ImportError:
+        # If python-magic not available, skip content validation
+        return True
+    except Exception:
+        return False
+
+
+def invalidate_sidebar_cache(user_id):
+    """Invalidate the sidebar cache for a user after class changes."""
+    cache_key = f"sidebar_{user_id}"
+    sidebar_cache.pop(cache_key, None)
 
 
 @classes.route('/')
@@ -51,6 +81,9 @@ def create_class():
             (session['user_id'], name, code, instructor, semester, color, description)
         )
         db.commit()
+
+        # Invalidate sidebar cache
+        invalidate_sidebar_cache(session['user_id'])
 
         flash(f'Class "{name}" created successfully!', 'success')
         return redirect(url_for('classes.list_classes'))
@@ -159,6 +192,9 @@ def update_class(class_id):
     )
     db.commit()
 
+    # Invalidate sidebar cache
+    invalidate_sidebar_cache(session['user_id'])
+
     flash(f'Class "{name}" updated successfully!', 'success')
     return redirect(url_for('classes.view_class', class_id=class_id))
 
@@ -188,6 +224,10 @@ def delete_class(class_id):
 
         db.execute('DELETE FROM classes WHERE id = ? AND user_id = ?', (class_id, session['user_id']))
         db.commit()
+
+        # Invalidate sidebar cache
+        invalidate_sidebar_cache(session['user_id'])
+
         flash(f'Class "{class_data["name"]}" deleted.', 'success')
     else:
         flash('Class not found.', 'error')
@@ -221,6 +261,11 @@ def upload_syllabus(class_id):
         return redirect(url_for('classes.view_class', class_id=class_id))
 
     if file and allowed_file(file.filename):
+        # Validate file content matches extension
+        if not validate_file_content(file):
+            flash('Invalid file content. File type does not match extension.', 'error')
+            return redirect(url_for('classes.view_class', class_id=class_id))
+
         # Delete old syllabus if exists
         if class_data.get('syllabus_filename'):
             try:
@@ -230,9 +275,9 @@ def upload_syllabus(class_id):
             except Exception:
                 pass
 
-        # Save new file with unique name
-        filename = secure_filename(file.filename)
-        unique_filename = f"{class_id}_{filename}"
+        # Save new file with cryptographic random filename
+        ext = secure_filename(file.filename).rsplit('.', 1)[1].lower()
+        unique_filename = f"{class_id}_{secrets.token_hex(16)}.{ext}"
         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(filepath)
 

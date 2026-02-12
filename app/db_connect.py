@@ -1,8 +1,28 @@
 import sqlite3
+from contextlib import contextmanager
 from flask import g
 import os
 
 DATABASE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'database', 'app.db')
+
+
+@contextmanager
+def transaction(db):
+    """
+    Context manager for database transactions with automatic rollback on error.
+
+    Usage:
+        with transaction(db):
+            db.execute('INSERT INTO ...')
+            db.execute('UPDATE ...')
+        # Commits automatically on success, rolls back on exception
+    """
+    try:
+        yield db
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
 
 
 def dict_factory(cursor, row):
@@ -388,6 +408,22 @@ def init_db():
         db.execute('ALTER TABLE flashcards ADD COLUMN repetitions INTEGER DEFAULT 0')
     except Exception:
         pass
+
+    # Create indexes for frequently queried columns (Performance optimization)
+    db.execute('CREATE INDEX IF NOT EXISTS idx_classes_user_id ON classes(user_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_notes_class_id ON notes(class_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_notes_updated_at ON notes(updated_at)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_flashcard_decks_class_id ON flashcard_decks(class_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_flashcards_deck_id ON flashcards(deck_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON flashcards(next_review)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_quizzes_class_id ON quizzes(class_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz_id ON quiz_attempts(quiz_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user_id ON quiz_attempts(user_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_assignments_class_id ON assignments(class_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_study_sessions_user_id ON study_sessions(user_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_study_sessions_created_at ON study_sessions(created_at)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_id ON chat_sessions(user_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id)')
 
     db.commit()
     db.close()

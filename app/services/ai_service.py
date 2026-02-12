@@ -2,7 +2,41 @@
 
 import os
 import re
+import time
+from functools import wraps
 from groq import Groq
+
+
+class AIServiceError(Exception):
+    """Custom exception for AI service failures."""
+    pass
+
+
+def with_retry(max_retries=3, base_delay=1):
+    """
+    Decorator for retry logic with exponential backoff on AI calls.
+
+    Args:
+        max_retries: Maximum number of retry attempts
+        base_delay: Base delay in seconds (doubles each retry)
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_error = None
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except AIServiceError:
+                    raise  # Don't retry our own errors (like missing API key)
+                except Exception as e:
+                    last_error = e
+                    if attempt < max_retries - 1:
+                        delay = base_delay * (2 ** attempt)
+                        time.sleep(delay)
+            raise AIServiceError(f"AI service unavailable after {max_retries} attempts: {last_error}")
+        return wrapper
+    return decorator
 
 
 def strip_emojis(text):
@@ -30,10 +64,11 @@ def get_groq_client():
     """Get Groq client with API key from environment."""
     api_key = os.environ.get('GROQ_API_KEY')
     if not api_key:
-        raise ValueError("GROQ_API_KEY not set in environment")
+        raise AIServiceError("GROQ_API_KEY not set. AI features are disabled.")
     return Groq(api_key=api_key)
 
 
+@with_retry(max_retries=3, base_delay=1)
 def summarize_text(text):
     """
     Summarize text into bullet points using Groq AI.
@@ -78,6 +113,7 @@ Group related points together if applicable."""
     return response.choices[0].message.content
 
 
+@with_retry(max_retries=3, base_delay=1)
 def expand_text(text, context=""):
     """
     Expand brief text into detailed explanations.
@@ -123,6 +159,7 @@ Write in a clear, educational style suitable for study notes."""
     return response.choices[0].message.content
 
 
+@with_retry(max_retries=3, base_delay=1)
 def cleanup_text(text):
     """
     Clean up text and apply smart formatting (headers, bullets, bold, colors).
@@ -200,6 +237,7 @@ Return ONLY the formatted HTML, no explanations or markdown."""
     return response.choices[0].message.content
 
 
+@with_retry(max_retries=3, base_delay=1)
 def generate_flashcards(text, num_cards=10):
     """
     Generate flashcards from text content.
@@ -264,6 +302,7 @@ No explanations, no markdown, just the JSON array."""
         raise ValueError("Failed to parse AI response as flashcards")
 
 
+@with_retry(max_retries=3, base_delay=1)
 def transform_text(text, action):
     """
     Transform text based on the specified action.
@@ -312,6 +351,7 @@ def transform_text(text, action):
     return response.choices[0].message.content
 
 
+@with_retry(max_retries=3, base_delay=1)
 def generate_study_guide(notes_content, class_name="", focus_areas=None):
     """
     Generate a comprehensive study guide from multiple notes.
@@ -389,6 +429,7 @@ Make the study guide scannable, organized, and exam-ready."""
     return response.choices[0].message.content
 
 
+@with_retry(max_retries=3, base_delay=1)
 def generate_quiz(text, num_questions=10, question_types=None):
     """
     Generate quiz questions from text content.
@@ -480,6 +521,7 @@ Return ONLY the JSON array, no explanations."""
         raise ValueError("Failed to parse AI response as quiz questions")
 
 
+@with_retry(max_retries=3, base_delay=1)
 def chat_with_tutor(message, context_notes=None, conversation_history=None, class_name=None):
     """
     Chat with an AI tutor about study materials.
@@ -549,6 +591,7 @@ Important formatting rules:
     return strip_emojis(response.choices[0].message.content)
 
 
+@with_retry(max_retries=3, base_delay=1)
 def grade_short_answer(question, expected_answer, user_answer):
     """
     Grade a short answer question using AI.

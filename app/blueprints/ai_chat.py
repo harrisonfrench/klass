@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from app.db_connect import get_db
 from app.services.ai_service import chat_with_tutor
 from app.blueprints.auth import login_required
+from app import limiter
 
 ai_chat = Blueprint('ai_chat', __name__)
 
@@ -128,6 +129,7 @@ def new_session():
 
 
 @ai_chat.route('/session/<int:session_id>/message', methods=['POST'])
+@limiter.limit("20 per minute")  # Prevent API abuse
 @login_required
 def send_message(session_id):
     """Send a message and get AI response."""

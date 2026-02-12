@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from app.db_connect import get_db
+from app import limiter
 
 auth = Blueprint('auth', __name__)
 
@@ -39,6 +40,7 @@ def load_logged_in_user():
 
 
 @auth.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")  # Prevent brute force attacks
 def login():
     """Handle user login."""
     if 'user_id' in session:
@@ -87,6 +89,7 @@ def login():
 
 
 @auth.route('/register', methods=['GET', 'POST'])
+@limiter.limit("3 per minute")  # Prevent spam registrations
 def register():
     """Handle user registration."""
     if 'user_id' in session:
@@ -177,6 +180,7 @@ def logout():
 
 
 @auth.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit("3 per minute")  # Prevent abuse
 def forgot_password():
     """Handle password reset request."""
     if request.method == 'POST':
