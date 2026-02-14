@@ -1076,6 +1076,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
                 },
                 body: JSON.stringify({
                     title: titleInput.value || 'Untitled',
@@ -1157,7 +1158,8 @@
 
         try {
             const response = await fetch(`/notes/${noteId}/summarize`, {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken() }
             });
             const data = await response.json();
 
@@ -1232,7 +1234,10 @@
         try {
             const response = await fetch(`/notes/${noteId}/expand`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({ text: selectedText })
             });
             const data = await response.json();
@@ -1270,7 +1275,8 @@
 
         try {
             const response = await fetch(`/notes/${noteId}/cleanup`, {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken() }
             });
             const data = await response.json();
 
@@ -1510,7 +1516,10 @@
         try {
             const response = await fetch(`/notes/${noteId}/ai-transform`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({ text: selectedText, action: action })
             });
             const data = await response.json();
@@ -1616,7 +1625,10 @@
         try {
             const response = await fetch(`/notes/${noteId}/generate-flashcards`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({ num_cards: 10 })
             });
             const data = await response.json();
@@ -1712,6 +1724,7 @@
 
             const deckResponse = await fetch('/flashcards/deck/create', {
                 method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken() },
                 body: formData
             });
 
@@ -1730,6 +1743,7 @@
 
                     await fetch(`/flashcards/deck/${deckId}/card/add`, {
                         method: 'POST',
+                        headers: { 'X-CSRFToken': getCsrfToken() },
                         body: cardForm
                     });
                 }
@@ -1830,7 +1844,10 @@
         try {
             const response = await fetch(`/notes/${noteId}/ask-ai`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({
                     message: message,
                     history: aiChatHistory.slice(-10) // Last 10 messages for context

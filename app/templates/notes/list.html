@@ -395,7 +395,10 @@
         try {
             const response = await fetch('/notes/' + noteId + '/update', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({ title: title })
             });
 
@@ -415,7 +418,10 @@
         try {
             const response = await fetch('/notes/' + noteId + '/update', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({ class_id: classId })
             });
 

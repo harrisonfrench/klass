@@ -419,7 +419,10 @@
         try {
             const response = await fetch(`/quizzes/${quizId}/submit`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({ answers: answers, time_taken: timeTaken })
             });
 

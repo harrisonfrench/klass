@@ -63,6 +63,7 @@
                 <h5>Notes</h5>
                 <p class="text-muted small mb-2">{{ notes|length }} note{% if notes|length != 1 %}s{% endif %}</p>
                 <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="btn btn-sm btn-outline-primary">
                         <span data-feather="plus"></span> Add Note
                     </button>
@@ -179,6 +180,7 @@
         <div class="d-flex align-items-center gap-2">
             <span class="badge bg-secondary">{{ notes|length }}</span>
             <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <button type="submit" class="btn btn-sm btn-outline-primary">
                     <span data-feather="plus"></span> New
                 </button>
@@ -214,6 +216,7 @@
         <h5>No notes yet</h5>
         <p class="text-muted">Create your first note to get started</p>
         <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <button type="submit" class="btn btn-sm btn-primary">
                 <span data-feather="plus"></span> Create Note
             </button>
@@ -351,18 +354,21 @@
                             <ul class="dropdown-menu">
                                 <li>
                                     <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                         <input type="hidden" name="status" value="pending">
                                         <button type="submit" class="dropdown-item">Pending</button>
                                     </form>
                                 </li>
                                 <li>
                                     <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                         <input type="hidden" name="status" value="completed">
                                         <button type="submit" class="dropdown-item">Completed</button>
                                     </form>
                                 </li>
                                 <li>
                                     <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                         <input type="hidden" name="status" value="reminder">
                                         <button type="submit" class="dropdown-item">Reminder</button>
                                     </form>
@@ -440,6 +446,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('classes.update_class', class_id=class_data.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-header">
                     <h5 class="modal-title" id="editModalLabel">Edit Class</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -503,6 +510,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form method="POST" action="{{ url_for('classes.delete_class', class_id=class_data.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="btn btn-danger">Delete Class</button>
                 </form>
             </div>
@@ -514,6 +522,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('classes.upload_syllabus', class_id=class_data.id) }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-header">
                     <h5 class="modal-title" id="uploadSyllabusModalLabel">Upload Syllabus</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -548,6 +557,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form method="POST" action="{{ url_for('classes.delete_syllabus', class_id=class_data.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
             </div>
@@ -560,6 +570,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('flashcards.create_deck') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="class_id" value="{{ class_data.id }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="createDeckModalLabel">
@@ -651,7 +662,10 @@
         try {
             const response = await fetch(`/flashcards/class/${classId}/generate-all`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({ title: title, num_cards: parseInt(numCards) })
             });
             const data = await response.json();

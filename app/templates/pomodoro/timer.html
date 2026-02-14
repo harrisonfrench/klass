@@ -498,7 +498,10 @@
         try {
             const response = await fetch('/pomodoro/start', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({
                     type: currentType,
                     duration: Math.ceil(totalTime / 60),
@@ -545,7 +548,8 @@
         if (currentSessionId) {
             try {
                 await fetch(`/pomodoro/complete/${currentSessionId}`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCsrfToken() }
                 });
             } catch (e) {
                 console.error('Failed to complete session:', e);
@@ -578,7 +582,7 @@
 
     function resetTimer() {
         if (currentSessionId) {
-            fetch(`/pomodoro/cancel/${currentSessionId}`, { method: 'POST' }).catch(() => {});
+            fetch(`/pomodoro/cancel/${currentSessionId}`, { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() } }).catch(() => {});
         }
 
         clearInterval(timerInterval);
@@ -589,7 +593,7 @@
 
     function skipSession() {
         if (currentSessionId) {
-            fetch(`/pomodoro/cancel/${currentSessionId}`, { method: 'POST' }).catch(() => {});
+            fetch(`/pomodoro/cancel/${currentSessionId}`, { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() } }).catch(() => {});
         }
 
         clearInterval(timerInterval);
@@ -620,7 +624,10 @@
         try {
             const response = await fetch('/pomodoro/settings', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify(newSettings)
             });
 

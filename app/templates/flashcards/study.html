@@ -386,7 +386,10 @@
         try {
             await fetch(`/flashcards/card/${card.id}/review`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
                 body: JSON.stringify({ difficulty, correct })
             });
         } catch (error) {
