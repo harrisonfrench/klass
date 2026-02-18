@@ -47,7 +47,7 @@
     }
 
     .note-title-input::placeholder {
-        color: var(--text-light);
+        color: var(--text-muted);
     }
 
     /* Meta info */
@@ -85,6 +85,11 @@
         padding: 0;
         min-height: 400px;
         line-height: 1.8;
+    }
+
+    .ql-editor.ql-blank::before {
+        color: var(--text-muted);
+        font-style: normal;
     }
 
     .ql-editor:focus {
