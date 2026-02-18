@@ -605,6 +605,7 @@
         border: 1px solid var(--border);
         border-radius: 6px;
         background: var(--bg);
+        color: var(--text);
         cursor: pointer;
         font-size: 0.9rem;
         transition: all 0.15s;
@@ -1093,6 +1094,10 @@
     border-color: var(--primary);
 }
 
+#aiChatInput::placeholder {
+    color: var(--text-muted);
+}
+
 .ai-chat-send {
     background: var(--primary);
     color: #fff;
@@ -1142,27 +1147,40 @@
                     <img id="imagePreview" src="" alt="Uploaded image">
                 </div>
 
-                <!-- Extraction Type Options -->
-                <div class="mb-3">
-                    <label class="form-label">What would you like to extract?</label>
-                    <div class="extraction-options" id="extractionOptions">
-                        <button class="extraction-option selected" data-type="notes">
-                            <span data-feather="file-text" style="width:14px;height:14px;"></span> Study Notes
+                <!-- Action Choice (shown first) -->
+                <div class="mb-3" id="actionChoiceContainer">
+                    <label class="form-label">What would you like to do?</label>
+                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <button class="btn btn-outline-secondary" onclick="chooseViewOnly()">
+                            <span data-feather="eye" style="width:16px;height:16px;"></span>
+                            View Only
                         </button>
-                        <button class="extraction-option" data-type="text">
+                        <button class="btn btn-outline-primary" onclick="chooseExtractText()">
+                            <span data-feather="file-text" style="width:16px;height:16px;"></span>
+                            Extract Text
+                        </button>
+                        <button class="btn btn-primary" onclick="chooseBoth()">
+                            <span data-feather="zap" style="width:16px;height:16px;"></span>
+                            Both
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Extraction Type Options (hidden initially) -->
+                <div class="mb-3" id="extractionTypeContainer" style="display: none;">
+                    <label class="form-label">What type of extraction?</label>
+                    <div class="extraction-options" id="extractionOptions">
+                        <button class="extraction-option selected" data-type="text">
                             <span data-feather="type" style="width:14px;height:14px;"></span> All Text
                         </button>
                         <button class="extraction-option" data-type="summary">
                             <span data-feather="align-left" style="width:14px;height:14px;"></span> Summary
                         </button>
-                        <button class="extraction-option" data-type="flashcards">
-                            <span data-feather="layers" style="width:14px;height:14px;"></span> Flashcards
-                        </button>
                     </div>
                 </div>
 
-                <!-- Extract Button -->
-                <div class="text-center mb-3" id="extractButtonContainer">
+                <!-- Extract Button (hidden initially) -->
+                <div class="text-center mb-3" id="extractButtonContainer" style="display: none;">
                     <button type="button" class="btn btn-ai btn-lg" id="extractBtn" onclick="extractFromImage()">
                         <span data-feather="zap"></span>
                         Extract Information
@@ -2069,7 +2087,7 @@
     let currentImageData = null;
     let currentImageType = null;
     let currentExtraction = null;
-    let selectedExtractionType = 'notes';
+    let selectedExtractionType = 'text';
 
     // Prevent default drag behaviors on the entire document
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -2141,37 +2159,56 @@
             const modal = new bootstrap.Modal(document.getElementById('imageExtractionModal'));
             modal.show();
             feather.replace();
-
-            // Auto-start extraction after modal is shown
-            setTimeout(() => {
-                extractFromImage();
-            }, 500);
         };
         reader.readAsDataURL(file);
     }
 
     function resetExtractionModal() {
-        // Reset extraction type selection
-        selectedExtractionType = 'notes';
+        // Show action choice, hide extraction options
+        document.getElementById('actionChoiceContainer').style.display = 'block';
+        document.getElementById('extractionTypeContainer').style.display = 'none';
+
+        // Reset extraction type selection to 'text'
+        selectedExtractionType = 'text';
         document.querySelectorAll('.extraction-option').forEach(opt => {
             opt.classList.remove('selected');
-            if (opt.dataset.type === 'notes') {
+            if (opt.dataset.type === 'text') {
                 opt.classList.add('selected');
             }
         });
 
-        // Hide results
+        // Hide results and buttons
         document.getElementById('extractionResultContainer').style.display = 'none';
-        document.getElementById('extractionResult').textContent = '';
+        document.getElementById('extractionResult').innerHTML = '';
         document.getElementById('copyExtractionBtn').style.display = 'none';
         document.getElementById('insertExtractionBtn').style.display = 'none';
-
-        // Show extract button
-        document.getElementById('extractButtonContainer').style.display = 'block';
+        document.getElementById('extractButtonContainer').style.display = 'none';
         document.getElementById('extractBtn').disabled = false;
         document.getElementById('extractBtn').innerHTML = '<span data-feather="zap"></span> Extract Information';
 
         currentExtraction = null;
+    }
+
+    // Action choice functions
+    function chooseViewOnly() {
+        // Hide action choice - user just views the image
+        document.getElementById('actionChoiceContainer').style.display = 'none';
+    }
+
+    function chooseExtractText() {
+        // Hide action choice, show extraction type options
+        document.getElementById('actionChoiceContainer').style.display = 'none';
+        document.getElementById('extractionTypeContainer').style.display = 'block';
+        document.getElementById('extractButtonContainer').style.display = 'block';
+        feather.replace();
+    }
+
+    function chooseBoth() {
+        // Hide action choice, show extraction type options (image stays visible)
+        document.getElementById('actionChoiceContainer').style.display = 'none';
+        document.getElementById('extractionTypeContainer').style.display = 'block';
+        document.getElementById('extractButtonContainer').style.display = 'block';
+        feather.replace();
     }
 
     // Extraction type selection
@@ -2233,7 +2270,7 @@
                 currentExtraction = data.extracted;
 
                 // Show results
-                document.getElementById('extractionResult').textContent = data.extracted;
+                document.getElementById('extractionResult').innerHTML = data.extracted;
                 document.getElementById('extractionResultContainer').style.display = 'block';
                 document.getElementById('copyExtractionBtn').style.display = 'inline-flex';
                 document.getElementById('insertExtractionBtn').style.display = 'inline-flex';
@@ -2275,26 +2312,9 @@
     function insertExtraction() {
         if (!currentExtraction) return;
 
-        // Format the extracted text as HTML for the editor
-        let htmlContent = '';
-
-        if (selectedExtractionType === 'flashcards') {
-            // Format flashcard-style output
-            htmlContent = '<h2>Flashcards from Image</h2>';
-            htmlContent += currentExtraction
-                .replace(/FRONT:\s*/gi, '<p><strong>Q: </strong>')
-                .replace(/BACK:\s*/gi, '</p><p><strong>A: </strong>')
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\n/g, '<br>');
-            htmlContent += '</p>';
-        } else {
-            // General formatting
-            htmlContent = '<h2>Extracted from Image</h2>';
-            htmlContent += '<p>' + currentExtraction
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\n/g, '<br>')
-                + '</p>';
-        }
+        // The extracted text is already HTML-formatted by cleanup_text
+        // Just insert it directly
+        const htmlContent = currentExtraction;
 
         // Insert at current cursor position or at the end
         const range = quill.getSelection();

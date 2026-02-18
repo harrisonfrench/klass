@@ -491,7 +491,7 @@ def extract_from_image(note_id):
         data = request.get_json()
         image_data = data.get('image_data')
         image_type = data.get('image_type', 'image/png')
-        extraction_type = data.get('extraction_type', 'notes')
+        extraction_type = data.get('extraction_type', 'text')
 
         if not image_data:
             return jsonify({'success': False, 'error': 'No image provided'}), 400
@@ -509,7 +509,7 @@ def extract_from_image(note_id):
             image_bytes = file.read()
             image_data = base64.b64encode(image_bytes).decode('utf-8')
             image_type = file.content_type or f'image/{ext}'
-            extraction_type = request.form.get('extraction_type', 'notes')
+            extraction_type = request.form.get('extraction_type', 'text')
         else:
             return jsonify({'success': False, 'error': 'No image provided'}), 400
     else:
@@ -521,9 +521,17 @@ def extract_from_image(note_id):
 
     try:
         extracted_text = extract_image_info(image_data, image_type, extraction_type)
+
+        # Auto-cleanup the extracted text (format with headers, colors, etc.)
+        try:
+            cleaned_text = cleanup_text(extracted_text)
+        except Exception:
+            # If cleanup fails, use original extracted text
+            cleaned_text = extracted_text
+
         return jsonify({
             'success': True,
-            'extracted': extracted_text,
+            'extracted': cleaned_text,
             'extraction_type': extraction_type
         })
     except ValueError as e:

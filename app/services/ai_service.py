@@ -674,7 +674,7 @@ Grade this answer:"""
 
 
 @with_retry(max_retries=3, base_delay=1)
-def extract_image_info(image_data, image_type="image/png", extraction_type="notes"):
+def extract_image_info(image_data, image_type="image/png", extraction_type="text"):
     """
     Extract information from an image using Groq's vision model.
 
@@ -697,22 +697,6 @@ def extract_image_info(image_data, image_type="image/png", extraction_type="note
 
     # Define extraction prompts based on type
     prompts = {
-        'notes': """Extract all information from this image and format it as study notes.
-
-Include:
-- All text, formulas, equations, and diagrams you can see
-- Key concepts and definitions
-- Important points and facts
-- Any structured information (tables, lists, etc.)
-
-Format the output as clean, well-organized notes using:
-- Headers for main topics
-- Bullet points for lists
-- Clear paragraphs for explanations
-- Preserve any mathematical notation or formulas
-
-Be thorough - extract ALL visible information.""",
-
         'text': """Extract all text from this image exactly as it appears.
 
 Include:
@@ -730,22 +714,10 @@ Include:
 - Important facts or data shown
 - Brief description of any visual elements
 
-Keep the summary clear and scannable.""",
-
-        'flashcards': """Extract information from this image that would make good flashcards.
-
-For each piece of information, format as:
-FRONT: [question or term]
-BACK: [answer or definition]
-
-Focus on:
-- Key terms and definitions
-- Important facts and figures
-- Concepts that should be memorized
-- Formulas and their explanations"""
+Keep the summary clear and scannable."""
     }
 
-    prompt = prompts.get(extraction_type, prompts['notes'])
+    prompt = prompts.get(extraction_type, prompts['text'])
 
     response = client.chat.completions.create(
         model="meta-llama/llama-4-scout-17b-16e-instruct",
