@@ -3,6 +3,7 @@
 import os
 import re
 import time
+import base64
 from functools import wraps
 from groq import Groq
 
@@ -670,3 +671,103 @@ Grade this answer:"""
         if user_answer.lower().strip() in expected_answer.lower():
             return {'score': 80, 'feedback': 'Answer appears correct.', 'is_correct': True}
         return {'score': 0, 'feedback': 'Could not evaluate answer.', 'is_correct': False}
+
+
+@with_retry(max_retries=3, base_delay=1)
+def extract_image_info(image_data, image_type="image/png", extraction_type="notes"):
+    """
+    Extract information from an image using Groq's vision model.
+
+    Args:
+        image_data: Base64 encoded image data or raw bytes
+        image_type: MIME type of the image (e.g., 'image/png', 'image/jpeg')
+        extraction_type: Type of extraction - 'notes', 'text', 'summary', 'flashcards'
+
+    Returns:
+        str: Extracted information formatted appropriately
+    """
+    if not image_data:
+        raise ValueError("No image data provided")
+
+    client = get_groq_client()
+
+    # Ensure image_data is base64 encoded string
+    if isinstance(image_data, bytes):
+        image_data = base64.b64encode(image_data).decode('utf-8')
+
+    # Define extraction prompts based on type
+    prompts = {
+        'notes': """Extract all information from this image and format it as study notes.
+
+Include:
+- All text, formulas, equations, and diagrams you can see
+- Key concepts and definitions
+- Important points and facts
+- Any structured information (tables, lists, etc.)
+
+Format the output as clean, well-organized notes using:
+- Headers for main topics
+- Bullet points for lists
+- Clear paragraphs for explanations
+- Preserve any mathematical notation or formulas
+
+Be thorough - extract ALL visible information.""",
+
+        'text': """Extract all text from this image exactly as it appears.
+
+Include:
+- All visible text, including headers, body text, captions
+- Numbers, dates, and labels
+- Text from diagrams, charts, or tables
+
+Preserve the original formatting and structure as much as possible.""",
+
+        'summary': """Analyze this image and provide a concise summary of its content.
+
+Include:
+- Main topic or subject
+- Key points and takeaways
+- Important facts or data shown
+- Brief description of any visual elements
+
+Keep the summary clear and scannable.""",
+
+        'flashcards': """Extract information from this image that would make good flashcards.
+
+For each piece of information, format as:
+FRONT: [question or term]
+BACK: [answer or definition]
+
+Focus on:
+- Key terms and definitions
+- Important facts and figures
+- Concepts that should be memorized
+- Formulas and their explanations"""
+    }
+
+    prompt = prompts.get(extraction_type, prompts['notes'])
+
+    response = client.chat.completions.create(
+        model="llama-3.2-11b-vision-preview",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{image_type};base64,{image_data}"
+                        }
+                    }
+                ]
+            }
+        ],
+        temperature=0.3,
+        max_tokens=4000
+    )
+
+    return response.choices[0].message.content

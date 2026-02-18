@@ -1,7 +1,8 @@
 import re
+import base64
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app.db_connect import get_db
-from app.services.ai_service import summarize_text, expand_text, cleanup_text, transform_text, generate_flashcards, chat_with_tutor
+from app.services.ai_service import summarize_text, expand_text, cleanup_text, transform_text, generate_flashcards, chat_with_tutor, extract_image_info
 from app.blueprints.auth import login_required
 
 notes = Blueprint('notes', __name__)
@@ -464,5 +465,68 @@ def ask_ai_about_note(note_id):
             'success': True,
             'response': response
         })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'AI service error: {str(e)}'}), 500
+
+
+@notes.route('/<int:note_id>/extract-image', methods=['POST'])
+@login_required
+def extract_from_image(note_id):
+    """Extract information from an uploaded image using AI vision."""
+    db = get_db()
+
+    # Verify note ownership
+    cursor = db.execute('''
+        SELECT n.* FROM notes n
+        JOIN classes c ON n.class_id = c.id
+        WHERE n.id = ? AND c.user_id = ?
+    ''', (note_id, session['user_id']))
+    note = cursor.fetchone()
+
+    if not note:
+        return jsonify({'success': False, 'error': 'Note not found'}), 404
+
+    # Check if image data was sent via JSON (base64 encoded)
+    if request.is_json:
+        data = request.get_json()
+        image_data = data.get('image_data')
+        image_type = data.get('image_type', 'image/png')
+        extraction_type = data.get('extraction_type', 'notes')
+
+        if not image_data:
+            return jsonify({'success': False, 'error': 'No image provided'}), 400
+    elif 'image' in request.files:
+        # Get from file upload
+        file = request.files.get('image')
+        if file and file.filename:
+            # Validate file type
+            allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+            ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+            if ext not in allowed_extensions:
+                return jsonify({'success': False, 'error': 'Invalid image type. Allowed: PNG, JPG, GIF, WebP'}), 400
+
+            # Read and encode image
+            image_bytes = file.read()
+            image_data = base64.b64encode(image_bytes).decode('utf-8')
+            image_type = file.content_type or f'image/{ext}'
+            extraction_type = request.form.get('extraction_type', 'notes')
+        else:
+            return jsonify({'success': False, 'error': 'No image provided'}), 400
+    else:
+        return jsonify({'success': False, 'error': 'No image provided'}), 400
+
+    # Validate image size (max 10MB - base64 is ~37% larger than original)
+    if len(image_data) > 10 * 1024 * 1024 * 1.37:
+        return jsonify({'success': False, 'error': 'Image too large. Maximum size is 10MB.'}), 400
+
+    try:
+        extracted_text = extract_image_info(image_data, image_type, extraction_type)
+        return jsonify({
+            'success': True,
+            'extracted': extracted_text,
+            'extraction_type': extraction_type
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': f'AI service error: {str(e)}'}), 500

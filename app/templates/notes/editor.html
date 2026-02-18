@@ -530,6 +530,106 @@
         font-size: 15px;
         color: var(--text);
     }
+
+    /* Image Drop Zone */
+    .drop-zone-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(99, 102, 241, 0.1);
+        border: 3px dashed var(--primary);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    .drop-zone-overlay.active {
+        display: flex;
+    }
+
+    .drop-zone-content {
+        background: var(--bg);
+        border-radius: 16px;
+        padding: 3rem 4rem;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .drop-zone-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: var(--primary);
+    }
+
+    .drop-zone-text {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .drop-zone-hint {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    /* Image Extraction Modal */
+    .extraction-preview {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .extraction-preview img {
+        max-width: 100%;
+        max-height: 200px;
+        object-fit: contain;
+        border-radius: 6px;
+    }
+
+    .extraction-options {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .extraction-option {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.15s;
+    }
+
+    .extraction-option:hover {
+        border-color: var(--primary);
+    }
+
+    .extraction-option.selected {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .extraction-result {
+        background: var(--bg);
+        border-radius: 8px;
+        padding: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
 </style>
 {% endblock %}
 
@@ -1013,6 +1113,82 @@
     cursor: not-allowed;
 }
 </style>
+
+<!-- Image Drop Zone Overlay -->
+<div id="dropZoneOverlay" class="drop-zone-overlay">
+    <div class="drop-zone-content">
+        <div class="drop-zone-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        </div>
+        <div class="drop-zone-text">Drop image to extract information</div>
+        <div class="drop-zone-hint">PNG, JPG, GIF, or WebP</div>
+    </div>
+</div>
+
+<!-- Image Extraction Modal -->
+<div class="modal fade" id="imageExtractionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span data-feather="image" class="me-2"></span>
+                    Extract from Image
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Image Preview -->
+                <div class="extraction-preview text-center" id="imagePreviewContainer">
+                    <img id="imagePreview" src="" alt="Uploaded image">
+                </div>
+
+                <!-- Extraction Type Options -->
+                <div class="mb-3">
+                    <label class="form-label">What would you like to extract?</label>
+                    <div class="extraction-options" id="extractionOptions">
+                        <button class="extraction-option selected" data-type="notes">
+                            <span data-feather="file-text" style="width:14px;height:14px;"></span> Study Notes
+                        </button>
+                        <button class="extraction-option" data-type="text">
+                            <span data-feather="type" style="width:14px;height:14px;"></span> All Text
+                        </button>
+                        <button class="extraction-option" data-type="summary">
+                            <span data-feather="align-left" style="width:14px;height:14px;"></span> Summary
+                        </button>
+                        <button class="extraction-option" data-type="flashcards">
+                            <span data-feather="layers" style="width:14px;height:14px;"></span> Flashcards
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Extract Button -->
+                <div class="text-center mb-3" id="extractButtonContainer">
+                    <button type="button" class="btn btn-ai btn-lg" id="extractBtn" onclick="extractFromImage()">
+                        <span data-feather="zap"></span>
+                        Extract Information
+                    </button>
+                </div>
+
+                <!-- Results (hidden initially) -->
+                <div id="extractionResultContainer" style="display: none;">
+                    <label class="form-label">Extracted Content</label>
+                    <div class="extraction-result" id="extractionResult"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" onclick="copyExtraction()" id="copyExtractionBtn" style="display: none;">
+                    <span data-feather="copy"></span>
+                    Copy
+                </button>
+                <button type="button" class="btn btn-primary" onclick="insertExtraction()" id="insertExtractionBtn" style="display: none;">
+                    <span data-feather="plus"></span>
+                    Insert into Note
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -1886,6 +2062,244 @@
     aiChatInput.addEventListener('input', () => {
         aiChatInput.style.height = 'auto';
         aiChatInput.style.height = Math.min(aiChatInput.scrollHeight, 100) + 'px';
+    });
+
+    // ===== IMAGE DRAG AND DROP =====
+    const dropZoneOverlay = document.getElementById('dropZoneOverlay');
+    let currentImageData = null;
+    let currentImageType = null;
+    let currentExtraction = null;
+    let selectedExtractionType = 'notes';
+
+    // Prevent default drag behaviors on the entire document
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Show drop zone overlay when dragging files over the page
+    let dragCounter = 0;
+
+    document.addEventListener('dragenter', (e) => {
+        dragCounter++;
+        if (e.dataTransfer.types.includes('Files')) {
+            dropZoneOverlay.classList.add('active');
+        }
+    });
+
+    document.addEventListener('dragleave', (e) => {
+        dragCounter--;
+        if (dragCounter === 0) {
+            dropZoneOverlay.classList.remove('active');
+        }
+    });
+
+    document.addEventListener('drop', (e) => {
+        dragCounter = 0;
+        dropZoneOverlay.classList.remove('active');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleImageFile(files[0]);
+        }
+    });
+
+    function handleImageFile(file) {
+        // Validate file type
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Please drop an image file (PNG, JPG, GIF, or WebP)');
+            return;
+        }
+
+        // Validate file size (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('Image is too large. Maximum size is 10MB.');
+            return;
+        }
+
+        // Read file as base64
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            const base64Data = dataUrl.split(',')[1];
+
+            currentImageData = base64Data;
+            currentImageType = file.type;
+
+            // Show preview
+            document.getElementById('imagePreview').src = dataUrl;
+
+            // Reset modal state
+            resetExtractionModal();
+
+            // Open modal
+            const modal = new bootstrap.Modal(document.getElementById('imageExtractionModal'));
+            modal.show();
+            feather.replace();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetExtractionModal() {
+        // Reset extraction type selection
+        selectedExtractionType = 'notes';
+        document.querySelectorAll('.extraction-option').forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.dataset.type === 'notes') {
+                opt.classList.add('selected');
+            }
+        });
+
+        // Hide results
+        document.getElementById('extractionResultContainer').style.display = 'none';
+        document.getElementById('extractionResult').textContent = '';
+        document.getElementById('copyExtractionBtn').style.display = 'none';
+        document.getElementById('insertExtractionBtn').style.display = 'none';
+
+        // Show extract button
+        document.getElementById('extractButtonContainer').style.display = 'block';
+        document.getElementById('extractBtn').disabled = false;
+        document.getElementById('extractBtn').innerHTML = '<span data-feather="zap"></span> Extract Information';
+
+        currentExtraction = null;
+    }
+
+    // Extraction type selection
+    document.querySelectorAll('.extraction-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.extraction-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            selectedExtractionType = option.dataset.type;
+        });
+    });
+
+    async function extractFromImage() {
+        if (!currentImageData) {
+            alert('No image to extract from');
+            return;
+        }
+
+        const btn = document.getElementById('extractBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Extracting...';
+
+        try {
+            const response = await fetch(`/notes/${noteId}/extract-image`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({
+                    image_data: currentImageData,
+                    image_type: currentImageType,
+                    extraction_type: selectedExtractionType
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                currentExtraction = data.extracted;
+
+                // Show results
+                document.getElementById('extractionResult').textContent = data.extracted;
+                document.getElementById('extractionResultContainer').style.display = 'block';
+                document.getElementById('copyExtractionBtn').style.display = 'inline-flex';
+                document.getElementById('insertExtractionBtn').style.display = 'inline-flex';
+
+                // Hide extract button container
+                document.getElementById('extractButtonContainer').style.display = 'none';
+
+                feather.replace();
+            } else {
+                alert('Extraction failed: ' + data.error);
+                btn.disabled = false;
+                btn.innerHTML = '<span data-feather="zap"></span> Extract Information';
+                feather.replace();
+            }
+        } catch (error) {
+            console.error('Extraction error:', error);
+            alert('Error extracting from image: ' + error.message);
+            btn.disabled = false;
+            btn.innerHTML = '<span data-feather="zap"></span> Extract Information';
+            feather.replace();
+        }
+    }
+
+    function copyExtraction() {
+        if (currentExtraction) {
+            navigator.clipboard.writeText(currentExtraction).then(() => {
+                const btn = document.getElementById('copyExtractionBtn');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span data-feather="check"></span> Copied!';
+                feather.replace();
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    feather.replace();
+                }, 2000);
+            });
+        }
+    }
+
+    function insertExtraction() {
+        if (!currentExtraction) return;
+
+        // Format the extracted text as HTML for the editor
+        let htmlContent = '';
+
+        if (selectedExtractionType === 'flashcards') {
+            // Format flashcard-style output
+            htmlContent = '<h2>Flashcards from Image</h2>';
+            htmlContent += currentExtraction
+                .replace(/FRONT:\s*/gi, '<p><strong>Q: </strong>')
+                .replace(/BACK:\s*/gi, '</p><p><strong>A: </strong>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+            htmlContent += '</p>';
+        } else {
+            // General formatting
+            htmlContent = '<h2>Extracted from Image</h2>';
+            htmlContent += '<p>' + currentExtraction
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>')
+                + '</p>';
+        }
+
+        // Insert at current cursor position or at the end
+        const range = quill.getSelection();
+        const position = range ? range.index : quill.getLength();
+
+        quill.clipboard.dangerouslyPasteHTML(position, htmlContent);
+
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('imageExtractionModal')).hide();
+
+        // Trigger save
+        debouncedSave();
+    }
+
+    // Also support paste from clipboard
+    document.addEventListener('paste', (e) => {
+        // Only handle if not in a text input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        const items = e.clipboardData.items;
+        for (let item of items) {
+            if (item.type.indexOf('image') !== -1) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                handleImageFile(file);
+                break;
+            }
+        }
     });
 </script>
 {% endblock %}
