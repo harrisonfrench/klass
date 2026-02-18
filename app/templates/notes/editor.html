@@ -2184,6 +2184,13 @@
             return;
         }
 
+        const csrfToken = getCsrfToken();
+        console.log('CSRF Token:', csrfToken ? 'Present (' + csrfToken.substring(0, 10) + '...)' : 'MISSING');
+        if (!csrfToken) {
+            alert('CSRF token not found. Please refresh the page and try again.');
+            return;
+        }
+
         const btn = document.getElementById('extractBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Extracting...';
@@ -2191,9 +2198,10 @@
         try {
             const response = await fetch(`/notes/${noteId}/extract-image`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken()
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify({
                     image_data: currentImageData,
@@ -2201,6 +2209,13 @@
                     extraction_type: selectedExtractionType
                 })
             });
+
+            // Check for non-JSON error responses (like CSRF errors)
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(text || `Server error: ${response.status}`);
+            }
 
             const data = await response.json();
 
