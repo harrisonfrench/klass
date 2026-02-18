@@ -2141,11 +2141,6 @@
             const modal = new bootstrap.Modal(document.getElementById('imageExtractionModal'));
             modal.show();
             feather.replace();
-
-            // Auto-start extraction after a brief delay
-            setTimeout(() => {
-                extractFromImage();
-            }, 300);
         };
         reader.readAsDataURL(file);
     }
@@ -2189,10 +2184,15 @@
             return;
         }
 
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        console.log('CSRF Meta tag:', metaTag ? 'Found' : 'NOT FOUND');
+        console.log('CSRF Meta content:', metaTag ? metaTag.content : 'N/A');
+
         const csrfToken = getCsrfToken();
-        console.log('CSRF Token:', csrfToken ? 'Present (' + csrfToken.substring(0, 10) + '...)' : 'MISSING');
+        console.log('CSRF Token from getCsrfToken():', csrfToken ? csrfToken.substring(0, 20) + '...' : 'EMPTY/NULL');
+
         if (!csrfToken) {
-            alert('CSRF token not found. Please refresh the page and try again.');
+            alert('CSRF token not found. Please refresh the page and try again.\n\nDebug: Meta tag ' + (metaTag ? 'exists but content is empty' : 'not found'));
             return;
         }
 
