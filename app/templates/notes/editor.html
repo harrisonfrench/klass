@@ -2141,6 +2141,11 @@
             const modal = new bootstrap.Modal(document.getElementById('imageExtractionModal'));
             modal.show();
             feather.replace();
+
+            // Auto-start extraction after a brief delay
+            setTimeout(() => {
+                extractFromImage();
+            }, 300);
         };
         reader.readAsDataURL(file);
     }
