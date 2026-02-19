@@ -855,52 +855,49 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Top Navbar -->
-    <header class="top-navbar">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">Klass</a>
-        <form class="search-form" action="{{ url_for('search') }}" method="GET">
-            <span data-feather="search" class="search-icon"></span>
-            <input type="text" name="q" placeholder="Search..." class="search-input">
-        </form>
-        <div class="navbar-end">
-            {% if g.user %}
-            <button class="ai-chat-toggle" onclick="toggleAiChat()" title="AI Tutor">
-                <span data-feather="message-circle"></span>
-            </button>
-            <span class="user-name">{{ g.user.username }}</span>
-            <a class="nav-link-minimal" href="{{ url_for('auth.logout') }}">Sign out</a>
-            {% else %}
-            <a class="nav-link-minimal" href="{{ url_for('auth.login') }}">Sign in</a>
-            {% endif %}
-        </div>
+    <!-- Hidden top navbar (minimal) -->
+    <header class="top-navbar" style="display: none;">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">StudyFlow</a>
     </header>
 
     <div class="app-container">
         <!-- Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-content">
-                <ul class="nav-list">
-                    <li>
-                        <a class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                            <span data-feather="home"></span>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-item {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">
-                            <span data-feather="calendar"></span>
-                            Calendar
-                        </a>
-                    </li>
-                </ul>
-
-                <!-- Study Tools -->
-                <div class="nav-section">
-                    <div class="nav-section-title" onclick="toggleSection(this)">
-                        <span>Study Tools</span>
-                        <span data-feather="chevron-down" class="section-chevron"></span>
+                <!-- Branding -->
+                <div class="sidebar-branding">
+                    <div class="sidebar-logo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                        </svg>
                     </div>
-                    <ul class="nav-list nav-collapsible">
+                    <div class="sidebar-branding-text">
+                        <h1>StudyFlow</h1>
+                        <span>Smart Notes</span>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="sidebar-search">
+                    <a href="{{ url_for('search') }}" class="sidebar-search-input">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <span>Search notes...</span>
+                        <kbd>&#8984;K</kbd>
+                    </a>
+                </div>
+
+                <!-- Main Navigation -->
+                <div class="sidebar-nav">
+                    <ul class="nav-list">
+                        <li>
+                            <a class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                                <span data-feather="grid"></span>
+                                Dashboard
+                            </a>
+                        </li>
                         <li>
                             <a class="nav-item {% if request.endpoint == 'notes.list_notes' %}active{% endif %}" href="{{ url_for('notes.list_notes') }}">
                                 <span data-feather="file-text"></span>
@@ -908,68 +905,68 @@
                             </a>
                         </li>
                         <li>
-                            <a class="nav-item {% if 'flashcards' in request.endpoint %}active{% endif %}" href="{{ url_for('flashcards.list_decks') }}">
-                                <span data-feather="layers"></span>
-                                Flashcards
+                            <a class="nav-item {% if request.endpoint == 'notes.favorites' %}active{% endif %}" href="{{ url_for('notes.favorites') }}">
+                                <span data-feather="star"></span>
+                                Favorites
                             </a>
                         </li>
                         <li>
-                            <a class="nav-item {% if 'study_guides' in request.endpoint %}active{% endif %}" href="{{ url_for('study_guides.list_guides') }}">
-                                <span data-feather="book-open"></span>
-                                Study Guides
-                            </a>
-                        </li>
-                        <li>
-                            <a class="nav-item {% if 'quizzes' in request.endpoint %}active{% endif %}" href="{{ url_for('quizzes.list_quizzes') }}">
-                                <span data-feather="check-circle"></span>
-                                Quizzes
+                            <a class="nav-item {% if request.endpoint == 'ai_assistant' %}active{% endif %}" href="{{ url_for('ai_assistant') }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
+                                </svg>
+                                AI Assistant
                             </a>
                         </li>
                     </ul>
-                </div>
 
-                <!-- My Classes -->
-                <div class="nav-section">
-                    <div class="nav-section-title" onclick="toggleSection(this)">
-                        <span>My Classes</span>
-                        <div class="section-actions">
-                            <a href="{{ url_for('classes.create_class') }}" class="add-btn" title="Add class" onclick="event.stopPropagation()">
-                                <span data-feather="plus"></span>
-                            </a>
-                            <span data-feather="chevron-down" class="section-chevron"></span>
-                        </div>
-                    </div>
-                    <ul class="nav-list nav-collapsible">
-                        <li>
-                            <a class="nav-item {% if request.endpoint == 'classes.list_classes' %}active{% endif %}" href="{{ url_for('classes.list_classes') }}">
-                                <span data-feather="grid"></span>
-                                All Classes
-                            </a>
-                        </li>
-                        {% if sidebar_classes %}
-                            {% for class in sidebar_classes %}
-                            <li>
-                                <a class="nav-item {% if request.endpoint == 'classes.view_class' and request.view_args.get('class_id') == class.id %}active{% endif %}" href="{{ url_for('classes.view_class', class_id=class.id) }}">
-                                    <span class="class-dot" style="background: {{ class.color }};"></span>
-                                    {{ class.code or class.name }}
+                    <!-- My Classes -->
+                    <div class="nav-section">
+                        <div class="nav-section-title" onclick="toggleSection(this)">
+                            <span>MY CLASSES</span>
+                            <div class="section-actions">
+                                <a href="{{ url_for('classes.create_class') }}" class="add-btn" title="Add class" onclick="event.stopPropagation()">
+                                    <span data-feather="plus"></span>
                                 </a>
-                            </li>
-                            {% endfor %}
-                        {% endif %}
-                    </ul>
+                                <span data-feather="chevron-down" class="section-chevron"></span>
+                            </div>
+                        </div>
+                        <ul class="nav-list nav-collapsible">
+                            {% if sidebar_classes %}
+                                {% for class in sidebar_classes %}
+                                <li>
+                                    <a class="nav-item {% if request.endpoint == 'classes.view_class' and request.view_args.get('class_id') == class.id %}active{% endif %}" href="{{ url_for('classes.view_class', class_id=class.id) }}">
+                                        <span class="class-dot" style="background: {{ class.color }};"></span>
+                                        {{ class.name }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            {% else %}
+                                <li>
+                                    <span class="nav-item" style="color: var(--text-muted); cursor: default;">
+                                        No classes yet
+                                    </span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
                 </div>
 
-                <!-- Settings -->
-                <div class="nav-section">
-                    <ul class="nav-list">
-                        <li>
-                            <a class="nav-item {% if 'settings' in request.endpoint %}active{% endif %}" href="{{ url_for('settings.preferences') }}">
-                                <span data-feather="settings"></span>
-                                Settings
-                            </a>
-                        </li>
-                    </ul>
+                <!-- User Profile -->
+                {% if g.user %}
+                <div class="sidebar-user">
+                    <div class="sidebar-user-avatar">
+                        {{ g.user.username[0]|upper }}
+                    </div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">{{ g.user.username }}</div>
+                        <div class="sidebar-user-email">{{ g.user.email[:20] }}{% if g.user.email|length > 20 %}...{% endif %}</div>
+                    </div>
+                    <a href="{{ url_for('auth.logout') }}" class="sidebar-logout-btn" title="Sign out">
+                        <span data-feather="log-out"></span>
+                    </a>
                 </div>
+                {% endif %}
             </div>
         </nav>
 

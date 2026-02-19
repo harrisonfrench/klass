@@ -679,28 +679,32 @@
         <span>Last edited {{ (note.updated_at|string)[:16] if note.updated_at else 'just now' }}</span>
     </div>
 
-    <!-- AI Toolbar -->
-    <div class="ai-toolbar">
-        <button type="button" class="btn btn-sm btn-ai" id="summarizeBtn" onclick="summarizeNote()">
-            <span data-feather="zap"></span>
-            Summarize
+    <!-- AI Tools Dropdown -->
+    <div class="ai-tools-dropdown">
+        <button type="button" class="ai-tools-btn" onclick="toggleAiToolsMenu()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
+            </svg>
+            AI Tools
         </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="expandBtn" onclick="expandNote()" disabled title="Select text first">
-            <span data-feather="maximize-2"></span>
-            Expand
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="cleanupBtn" onclick="cleanupNote()">
-            <span data-feather="edit-3"></span>
-            Clean Up
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-primary" id="flashcardsBtn" onclick="generateFlashcards()">
-            <span data-feather="layers"></span>
-            Generate Flashcards
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-primary" id="askAiBtn" onclick="toggleAiChat()">
-            <span data-feather="message-circle"></span>
-            Ask AI
-        </button>
+        <div class="ai-tools-menu" id="aiToolsMenu">
+            <button type="button" class="ai-tools-menu-item" onclick="summarizeNote(); closeAiToolsMenu();">
+                <span data-feather="file-text"></span>
+                Summarize Notes
+            </button>
+            <button type="button" class="ai-tools-menu-item" id="expandBtn" onclick="expandNote(); closeAiToolsMenu();" title="Select text first">
+                <span data-feather="edit-3"></span>
+                Expand & Elaborate
+            </button>
+            <button type="button" class="ai-tools-menu-item" onclick="generateQuizFromNote(); closeAiToolsMenu();">
+                <span data-feather="list"></span>
+                Generate Quiz
+            </button>
+            <button type="button" class="ai-tools-menu-item" onclick="simplifyNote(); closeAiToolsMenu();">
+                <span data-feather="message-square"></span>
+                Simplify & Explain
+            </button>
+        </div>
     </div>
 
     <!-- Quill Editor Toolbar -->
@@ -1449,9 +1453,27 @@
     let currentAiResult = '';
     let currentAiResultIsHtml = false;  // Track if result is HTML
 
+    // AI Tools Dropdown Toggle
+    function toggleAiToolsMenu() {
+        const menu = document.getElementById('aiToolsMenu');
+        menu.classList.toggle('show');
+    }
+
+    function closeAiToolsMenu() {
+        const menu = document.getElementById('aiToolsMenu');
+        menu.classList.remove('show');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.ai-tools-dropdown')) {
+            closeAiToolsMenu();
+        }
+    });
+
     // Summarize note
     async function summarizeNote() {
-        const btn = document.getElementById('summarizeBtn');
+        const btn = document.querySelector('.ai-tools-btn');
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Summarizing...';
@@ -1515,6 +1537,61 @@
         quill.clipboard.dangerouslyPasteHTML(quill.getLength(), summaryHtml);
         bootstrap.Modal.getInstance(document.getElementById('summaryModal')).hide();
         debouncedSave();
+    }
+
+    // Generate quiz from note
+    async function generateQuizFromNote() {
+        const overlay = showAiOverlay('Generating quiz questions...');
+
+        try {
+            const response = await fetch(`/notes/${noteId}/generate-quiz`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken() }
+            });
+            const data = await response.json();
+
+            hideAiOverlay(overlay);
+
+            if (data.success && data.quiz_id) {
+                window.location.href = `/quizzes/quiz/${data.quiz_id}`;
+            } else if (data.success) {
+                showToast('Quiz questions generated! Check the Quizzes section.', 'success');
+            } else {
+                alert('Failed to generate quiz: ' + data.error);
+            }
+        } catch (error) {
+            hideAiOverlay(overlay);
+            alert('Error: ' + error.message);
+        }
+    }
+
+    // Simplify and explain note content
+    async function simplifyNote() {
+        const overlay = showAiOverlay('Simplifying and explaining...');
+
+        try {
+            const response = await fetch(`/notes/${noteId}/simplify`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken() }
+            });
+            const data = await response.json();
+
+            hideAiOverlay(overlay);
+
+            if (data.success) {
+                currentAiResult = data.simplified;
+                currentAiResultIsHtml = false;
+                document.getElementById('aiResultTitle').textContent = 'Simplified Explanation';
+                document.getElementById('aiResultContent').innerHTML = `<p>${data.simplified.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+                const modal = new bootstrap.Modal(document.getElementById('aiResultModal'));
+                modal.show();
+            } else {
+                alert('Failed to simplify: ' + data.error);
+            }
+        } catch (error) {
+            hideAiOverlay(overlay);
+            alert('Error: ' + error.message);
+        }
     }
 
     // Expand selected text

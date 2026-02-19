@@ -3,177 +3,146 @@
 {% block title %}{{ class_data.name }}{% endblock %}
 
 {% block content %}
-<nav class="breadcrumb" style="margin-bottom: 0.5rem;">
-    <a href="{{ url_for('classes.list_classes') }}">Classes</a>
-    <span class="separator">/</span>
-    <span>{{ class_data.name }}</span>
-</nav>
-<div class="page-header">
-    <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <span class="badge" style="background-color: {{ class_data.color }}; color: #fff;">{{ class_data.code or '---' }}</span>
-        <h1>{{ class_data.name }}</h1>
+<!-- Purple Header -->
+<div class="class-header">
+    <div class="class-header-left">
+        <a href="{{ url_for('classes.list_classes') }}" class="class-header-back">
+            <span data-feather="arrow-left"></span>
+        </a>
+        <div class="class-header-info">
+            <h1>{{ class_data.name }}</h1>
+            <div class="class-header-subtitle">
+                {{ class_data.code or '' }}{% if class_data.code and class_data.instructor %} &middot; {% endif %}{{ class_data.instructor or '' }}
+            </div>
+        </div>
     </div>
-    <div style="display: flex; gap: 0.5rem;">
-        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editModal">
-            <span data-feather="edit"></span>
-            Edit
-        </button>
-        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-            <span data-feather="trash-2"></span>
-            Delete
+    <div class="class-header-right">
+        <button type="button" class="class-header-btn" data-bs-toggle="modal" data-bs-target="#editModal" title="Settings">
+            <span data-feather="settings"></span>
         </button>
     </div>
 </div>
 
-<!-- Class Info -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Class Information</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <strong>Instructor:</strong><br>
-                        {{ class_data.instructor or 'Not specified' }}
+<!-- Two-Panel Layout -->
+<div class="class-content" style="display: flex; margin: 0 -2rem; min-height: calc(100vh - 200px);">
+    <!-- Notes Panel (Left) -->
+    <div class="class-notes-panel">
+        <!-- Search -->
+        <div class="class-search">
+            <span data-feather="search"></span>
+            <input type="text" id="noteSearch" placeholder="Search in notebook..." onkeyup="filterNotes()">
+        </div>
+
+        <!-- New Page Button -->
+        <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" style="margin: 0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="class-new-page-btn">
+                <span data-feather="plus"></span>
+                New Page
+            </button>
+        </form>
+
+        <!-- Filter Tabs -->
+        <div class="class-tabs">
+            <button class="class-tab active" onclick="filterByType('all', this)">All</button>
+            <button class="class-tab" onclick="filterByType('general', this)">General</button>
+            <button class="class-tab" onclick="filterByType('lecture', this)">Lectures</button>
+            <button class="class-tab" onclick="filterByType('assignment', this)">Assignments</button>
+        </div>
+
+        <!-- Notes List -->
+        <div class="class-notes-list" id="notesList">
+            {% if notes %}
+                {% for note in notes %}
+                <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="class-note-item {% if note.is_pinned %}pinned{% endif %}" data-type="{{ note.note_type|default('general') }}">
+                    <div class="class-note-title">
+                        {% if note.is_pinned %}
+                        <span class="class-note-pin"><span data-feather="bookmark"></span></span>
+                        {% endif %}
+                        {{ note.title or 'Untitled' }}
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <strong>Semester:</strong><br>
-                        {{ class_data.semester or 'Not specified' }}
+                    <div class="class-note-preview">
+                        {{ note.content|striptags|truncate(80) if note.content else 'Empty note' }}
                     </div>
+                    <div class="class-note-date">
+                        {{ (note.updated_at|string)[:16].replace('T', ' ').replace('-', '/') if note.updated_at else '' }}
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="class-empty-state" style="padding: 2rem;">
+                    <p>No notes yet. Click "New Page" to create one.</p>
                 </div>
-                {% if class_data.description %}
-                <div class="mb-0">
-                    <strong>Description:</strong><br>
-                    {{ class_data.description }}
-                </div>
-                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Panel (Right) - Empty State / Selected Note Preview -->
+    <div class="class-main-panel">
+        <div class="class-empty-state">
+            <div class="class-empty-state-icon">
+                <span data-feather="file-text"></span>
             </div>
+            <p>Select a note or create a new one</p>
         </div>
     </div>
 </div>
 
-<!-- Quick Actions -->
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card stat-card h-100">
-            <div class="card-body text-center">
-                <span data-feather="file-text" class="mb-2" style="width: 32px; height: 32px; color: #0d6efd;"></span>
-                <h5>Notes</h5>
-                <p class="text-muted small mb-2">{{ notes|length }} note{% if notes|length != 1 %}s{% endif %}</p>
-                <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn btn-sm btn-outline-primary">
-                        <span data-feather="plus"></span> Add Note
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card stat-card h-100">
-            <div class="card-body text-center">
-                <span data-feather="file" class="mb-2" style="width: 32px; height: 32px; color: #10b981;"></span>
-                <h5>Syllabus</h5>
-                {% if class_data.syllabus_filename %}
-                <p class="text-muted small mb-2">{{ class_data.syllabus_filename.split('_', 1)[1] if '_' in class_data.syllabus_filename else class_data.syllabus_filename }}</p>
-                <div class="d-flex gap-1 justify-content-center">
-                    <a href="{{ url_for('classes.view_syllabus', class_id=class_data.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                        <span data-feather="eye"></span> View
+<!-- Quick Tools Section -->
+<div style="padding: 1.5rem 0; margin: 0 -2rem; padding-left: 2rem; padding-right: 2rem; border-top: 1px solid var(--border); background: var(--bg);">
+    <h4 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text);">Quick Tools</h4>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card h-100" style="border-left: 4px solid #10b981;">
+                <div class="card-body d-flex align-items-center">
+                    <span data-feather="book-open" class="me-3" style="width: 32px; height: 32px; color: #10b981;"></span>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">Study Guide</h5>
+                        <p class="text-muted small mb-0">Generate an AI-powered study guide</p>
+                    </div>
+                    <a href="{{ url_for('study_guides.generate_guide', class_id=class_data.id) }}" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
+                        <span data-feather="zap"></span> Generate
                     </a>
-                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSyllabusModal">
-                        <span data-feather="trash-2"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100" style="border-left: 4px solid #8b5cf6;">
+                <div class="card-body d-flex align-items-center">
+                    <span data-feather="layers" class="me-3" style="width: 32px; height: 32px; color: #8b5cf6;"></span>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">Quick Flashcards</h5>
+                        <p class="text-muted small mb-0">Generate flashcards from notes</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;" data-bs-toggle="modal" data-bs-target="#quickFlashcardsModal">
+                        <span data-feather="zap"></span> Generate
                     </button>
                 </div>
-                {% else %}
-                <p class="text-muted small mb-2">Not uploaded</p>
-                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#uploadSyllabusModal">
-                    <span data-feather="upload"></span> Upload
-                </button>
-                {% endif %}
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
-        <div class="card stat-card h-100">
-            <div class="card-body text-center">
-                <span data-feather="layers" class="mb-2" style="width: 32px; height: 32px; color: #8b5cf6;"></span>
-                <h5>Flashcards</h5>
-                <p class="text-muted small mb-2">{{ flashcard_decks|length }} deck{% if flashcard_decks|length != 1 %}s{% endif %}</p>
-                <button type="button" class="btn btn-sm btn-outline-primary" style="border-color: #8b5cf6; color: #8b5cf6;" data-bs-toggle="modal" data-bs-target="#createDeckModal">
-                    <span data-feather="plus"></span> New Deck
-                </button>
+    {% if class_data.d2l_course_url %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card" style="border-left: 4px solid #ef4444;">
+                <div class="card-body d-flex align-items-center">
+                    <span data-feather="external-link" class="me-3" style="width: 32px; height: 32px; color: #ef4444;"></span>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">D2L / GAView</h5>
+                        <p class="text-muted small mb-0">Open in D2L</p>
+                    </div>
+                    <a href="{{ class_data.d2l_course_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary" style="background: #ef4444; border: none;">
+                        <span data-feather="external-link"></span> Open
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
-        <div class="card stat-card h-100">
-            <div class="card-body text-center">
-                <span data-feather="check-square" class="mb-2" style="width: 32px; height: 32px; color: #f59e0b;"></span>
-                <h5>Assignments</h5>
-                <p class="text-muted small mb-2">{{ assignments|length }} assignment{% if assignments|length != 1 %}s{% endif %}</p>
-                <a href="#assignments-section" class="btn btn-sm btn-outline-warning">
-                    <span data-feather="list"></span> View
-                </a>
-            </div>
-        </div>
-    </div>
+    {% endif %}
 </div>
 
-<!-- AI Tools Row -->
-<div class="row mb-4">
-    <div class="col-md-6 mb-3">
-        <div class="card h-100" style="border-left: 4px solid #10b981;">
-            <div class="card-body d-flex align-items-center">
-                <span data-feather="book-open" class="me-3" style="width: 32px; height: 32px; color: #10b981;"></span>
-                <div class="flex-grow-1">
-                    <h5 class="mb-1">Study Guide</h5>
-                    <p class="text-muted small mb-0">Generate an AI-powered study guide from your notes</p>
-                </div>
-                <a href="{{ url_for('study_guides.generate_guide', class_id=class_data.id) }}" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
-                    <span data-feather="zap"></span> Generate
-                </a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card h-100" style="border-left: 4px solid #8b5cf6;">
-            <div class="card-body d-flex align-items-center">
-                <span data-feather="layers" class="me-3" style="width: 32px; height: 32px; color: #8b5cf6;"></span>
-                <div class="flex-grow-1">
-                    <h5 class="mb-1">Quick Flashcards</h5>
-                    <p class="text-muted small mb-0">Generate flashcards from all notes in this class</p>
-                </div>
-                <button type="button" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;" data-bs-toggle="modal" data-bs-target="#quickFlashcardsModal">
-                    <span data-feather="zap"></span> Generate
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% if class_data.d2l_course_url %}
-<!-- D2L Quick Link -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card" style="border-left: 4px solid #ef4444;">
-            <div class="card-body d-flex align-items-center">
-                <span data-feather="external-link" class="me-3" style="width: 32px; height: 32px; color: #ef4444;"></span>
-                <div class="flex-grow-1">
-                    <h5 class="mb-1">D2L / GAView</h5>
-                    <p class="text-muted small mb-0">Open this class in D2L to view assignments, grades, and announcements</p>
-                </div>
-                <a href="{{ class_data.d2l_course_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary" style="background: #ef4444; border: none;">
-                    <span data-feather="external-link"></span> Open in D2L
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Notes Section -->
+<!-- Notes Section (hidden, keeping for backwards compatibility) -->
+<div id="notes-section" class="mb-4" style="display: none;">
 <div id="notes-section" class="mb-4">
     <div class="section-header">
         <h4>Notes</h4>
@@ -650,6 +619,35 @@
     feather.replace();
 
     const classId = {{ class_data.id }};
+    let currentTypeFilter = 'all';
+
+    // Filter notes by search text
+    function filterNotes() {
+        const searchText = document.getElementById('noteSearch').value.toLowerCase();
+        const noteItems = document.querySelectorAll('.class-note-item');
+
+        noteItems.forEach(item => {
+            const title = item.querySelector('.class-note-title').textContent.toLowerCase();
+            const preview = item.querySelector('.class-note-preview').textContent.toLowerCase();
+            const noteType = item.dataset.type || 'general';
+            const matchesSearch = title.includes(searchText) || preview.includes(searchText);
+            const matchesType = currentTypeFilter === 'all' || noteType === currentTypeFilter;
+
+            item.style.display = (matchesSearch && matchesType) ? 'block' : 'none';
+        });
+    }
+
+    // Filter notes by type
+    function filterByType(type, btn) {
+        currentTypeFilter = type;
+
+        // Update active tab
+        document.querySelectorAll('.class-tab').forEach(tab => tab.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Apply filter
+        filterNotes();
+    }
 
     async function generateQuickFlashcards() {
         const title = document.getElementById('quickDeckTitle').value;

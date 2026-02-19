@@ -324,3 +324,20 @@ def calendar():
         next_year=next_year,
         next_month=next_month
     )
+
+
+@app.route('/ai-assistant')
+@login_required
+def ai_assistant():
+    """AI Study Assistant page."""
+    db = get_db()
+    user_id = session['user_id']
+
+    # Get user's classes for the filter dropdown
+    cursor = db.execute(
+        'SELECT id, name, code, color FROM classes WHERE user_id = %s ORDER BY name',
+        (user_id,)
+    )
+    classes = cursor.fetchall()
+
+    return render_template('ai_assistant.html', classes=classes)

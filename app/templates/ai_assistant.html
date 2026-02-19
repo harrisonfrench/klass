@@ -1,0 +1,210 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}AI Study Assistant{% endblock %}
+
+{% block content %}
+<div class="ai-assistant-page">
+    <!-- Header -->
+    <div class="ai-assistant-header">
+        <div class="ai-assistant-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
+            </svg>
+        </div>
+        <div class="ai-assistant-header-text">
+            <h1>AI Study Assistant</h1>
+            <p>Ask questions about your notes, generate study materials, and more.</p>
+        </div>
+    </div>
+
+    <!-- Class Filter -->
+    <div class="ai-class-filter">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <select id="aiClassSelect" class="ai-class-select">
+            <option value="">All Classes</option>
+            {% for class in classes %}
+            <option value="{{ class.id }}">{{ class.code or class.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Quick Action Cards -->
+    <div class="ai-quick-actions">
+        <button class="ai-action-card" onclick="quickAction('summarize')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <span>Summarize my notes</span>
+        </button>
+        <button class="ai-action-card" onclick="quickAction('flashcards')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                <polyline points="2 17 12 22 22 17"/>
+                <polyline points="2 12 12 17 22 12"/>
+            </svg>
+            <span>Create flashcards</span>
+        </button>
+        <button class="ai-action-card" onclick="quickAction('explain')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="9" y1="18" x2="15" y2="18"/>
+                <line x1="10" y1="22" x2="14" y2="22"/>
+                <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+            </svg>
+            <span>Explain concepts</span>
+        </button>
+        <button class="ai-action-card" onclick="quickAction('exam')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+            <span>Exam prep</span>
+        </button>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="ai-chat-container">
+        <div class="ai-chat-input-wrapper">
+            <textarea
+                id="aiChatInput"
+                placeholder="Ask anything about your notes... e.g. 'What are the key themes in my psychology notes?'"
+                rows="3"
+            ></textarea>
+        </div>
+        <div class="ai-chat-footer">
+            <button class="ai-ask-btn" onclick="sendAiMessage()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+                Ask AI
+            </button>
+        </div>
+    </div>
+
+    <!-- Response Area (hidden initially) -->
+    <div id="aiResponseArea" class="card mt-4" style="display: none;">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">AI Response</h5>
+            <button type="button" class="btn-close" onclick="hideResponse()"></button>
+        </div>
+        <div class="card-body">
+            <div id="aiResponseContent"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const classSelect = document.getElementById('aiClassSelect');
+    const chatInput = document.getElementById('aiChatInput');
+    const responseArea = document.getElementById('aiResponseArea');
+    const responseContent = document.getElementById('aiResponseContent');
+
+    function quickAction(type) {
+        let prompt = '';
+        switch(type) {
+            case 'summarize':
+                prompt = 'Please summarize my notes';
+                break;
+            case 'flashcards':
+                prompt = 'Create flashcards from my notes';
+                break;
+            case 'explain':
+                prompt = 'Explain the key concepts from my notes in simple terms';
+                break;
+            case 'exam':
+                prompt = 'Help me prepare for an exam on this material. What are the most important topics to study?';
+                break;
+        }
+
+        const classId = classSelect.value;
+        if (classId) {
+            const className = classSelect.options[classSelect.selectedIndex].text;
+            prompt += ` for ${className}`;
+        }
+
+        chatInput.value = prompt;
+        chatInput.focus();
+    }
+
+    async function sendAiMessage() {
+        const message = chatInput.value.trim();
+        const classId = classSelect.value || null;
+
+        if (!message) {
+            showToast('Please enter a message', 'error');
+            return;
+        }
+
+        // Show loading state
+        const btn = document.querySelector('.ai-ask-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Thinking...';
+
+        try {
+            const response = await fetchWithCsrf('/ai-tutor/message', {
+                method: 'POST',
+                body: { message: message, class_id: classId }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                // Show response
+                responseArea.style.display = 'block';
+                responseContent.innerHTML = formatAiResponse(data.response);
+                responseArea.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                showToast(data.error || 'Failed to get response', 'error');
+            }
+        } catch (error) {
+            showToast('Error: ' + error.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+                Ask AI
+            `;
+        }
+    }
+
+    function formatAiResponse(text) {
+        // Convert markdown-style formatting to HTML
+        let html = escapeHtml(text);
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+        html = html.split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+        return html;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function hideResponse() {
+        responseArea.style.display = 'none';
+    }
+
+    // Handle Enter key
+    chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendAiMessage();
+        }
+    });
+</script>
+{% endblock %}

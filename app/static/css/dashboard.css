@@ -114,7 +114,7 @@ body {
 /* App Container */
 .app-container {
     display: flex;
-    min-height: calc(100vh - 45px);
+    min-height: 100vh;
 }
 
 /* Sidebar */
@@ -1205,4 +1205,753 @@ strong {
 
 .ql-editor.ql-blank::before {
     color: var(--text-muted);
+}
+
+/* =====================================================
+   NEW STUDYFLOW SIDEBAR STYLES
+   ===================================================== */
+
+/* Sidebar Layout */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.sidebar-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Sidebar Branding */
+.sidebar-branding {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sidebar-logo svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+}
+
+.sidebar-branding-text h1 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.sidebar-branding-text span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Sidebar Search */
+.sidebar-search {
+    padding: 12px 12px 8px;
+}
+
+.sidebar-search-input {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.sidebar-search-input:hover {
+    background: var(--bg-hover);
+    border-color: var(--text-muted);
+}
+
+.sidebar-search-input svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.sidebar-search-input span {
+    flex: 1;
+}
+
+.sidebar-search-input kbd {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    background: var(--bg-hover);
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+/* User Profile Section */
+.sidebar-user {
+    margin-top: auto;
+    padding: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.sidebar-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sidebar-user-name {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-user-email {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-logout-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.sidebar-logout-btn:hover {
+    background: var(--bg-hover);
+    color: var(--danger);
+}
+
+.sidebar-logout-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* =====================================================
+   CLASS VIEW PURPLE HEADER
+   ===================================================== */
+
+.class-header {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    margin: -1.5rem -2rem 0;
+    padding: 1rem 2rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.class-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.class-header-back {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.class-header-back:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.class-header-back svg {
+    width: 20px;
+    height: 20px;
+}
+
+.class-header-info h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+    margin: 0 0 4px 0;
+}
+
+.class-header-subtitle {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.class-header-right {
+    display: flex;
+    gap: 8px;
+}
+
+.class-header-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.class-header-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.class-header-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Class Content Area */
+.class-content {
+    display: flex;
+    gap: 0;
+}
+
+.class-notes-panel {
+    width: 360px;
+    border-right: 1px solid var(--border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.class-main-panel {
+    flex: 1;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+/* Search and New Page */
+.class-search-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.class-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.class-search svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+}
+
+.class-search input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.class-search input::placeholder {
+    color: var(--text-muted);
+}
+
+.class-new-page-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.class-new-page-btn:hover {
+    color: var(--primary-hover);
+}
+
+.class-new-page-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Filter Tabs */
+.class-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.class-tab {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.class-tab:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+}
+
+.class-tab.active {
+    background: var(--primary);
+    color: white;
+}
+
+/* Note List Items */
+.class-notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.class-note-item {
+    padding: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+}
+
+.class-note-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-muted);
+}
+
+.class-note-item.pinned {
+    border-left: 3px solid var(--primary);
+}
+
+.class-note-pin {
+    display: inline-flex;
+    margin-right: 4px;
+    color: var(--primary);
+}
+
+.class-note-pin svg {
+    width: 12px;
+    height: 12px;
+}
+
+.class-note-title {
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.class-note-preview {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.class-note-date {
+    font-size: 0.7rem;
+    color: var(--text-light);
+}
+
+/* Empty state for class */
+.class-empty-state {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.class-empty-state-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.class-empty-state-icon svg {
+    width: 32px;
+    height: 32px;
+    color: var(--text-muted);
+}
+
+.class-empty-state p {
+    margin: 0;
+}
+
+/* =====================================================
+   AI ASSISTANT PAGE STYLES
+   ===================================================== */
+
+.ai-assistant-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.ai-assistant-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.ai-assistant-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ai-assistant-icon svg {
+    width: 28px;
+    height: 28px;
+    color: white;
+}
+
+.ai-assistant-header-text h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 4px;
+}
+
+.ai-assistant-header-text p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Class Filter */
+.ai-class-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.ai-class-filter svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+}
+
+.ai-class-select {
+    padding: 10px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.ai-class-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Quick Action Cards */
+.ai-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.ai-action-card {
+    padding: 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+}
+
+.ai-action-card:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.ai-action-card svg {
+    width: 24px;
+    height: 24px;
+    color: var(--primary);
+    margin-bottom: 12px;
+}
+
+.ai-action-card span {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* AI Chat Input */
+.ai-chat-container {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.ai-chat-input-wrapper {
+    padding: 16px;
+}
+
+.ai-chat-input-wrapper textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+}
+
+.ai-chat-input-wrapper textarea:focus {
+    border-color: var(--primary);
+}
+
+.ai-chat-input-wrapper textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.ai-chat-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 16px 16px;
+}
+
+.ai-ask-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.ai-ask-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.ai-ask-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* =====================================================
+   AI TOOLS DROPDOWN
+   ===================================================== */
+
+.ai-tools-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.ai-tools-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.ai-tools-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+}
+
+.ai-tools-btn svg {
+    width: 16px;
+    height: 16px;
+    color: var(--primary);
+}
+
+.ai-tools-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 200px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    padding: 6px;
+    z-index: 100;
+    display: none;
+}
+
+.ai-tools-menu.show {
+    display: block;
+}
+
+.ai-tools-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 0.9rem;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: all 0.15s;
+}
+
+.ai-tools-menu-item:hover {
+    background: var(--bg-secondary);
+}
+
+.ai-tools-menu-item svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+}
+
+/* =====================================================
+   RESPONSIVE ADJUSTMENTS
+   ===================================================== */
+
+@media (max-width: 768px) {
+    .class-header {
+        margin: -1rem -1rem 0;
+        padding: 1rem;
+    }
+
+    .class-content {
+        flex-direction: column;
+    }
+
+    .class-notes-panel {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .ai-quick-actions {
+        grid-template-columns: 1fr;
+    }
 }

@@ -159,11 +159,19 @@ def init_db():
             title VARCHAR(255) NOT NULL DEFAULT 'Untitled',
             content LONGTEXT DEFAULT '',
             is_pinned TINYINT(1) DEFAULT 0,
+            note_type VARCHAR(20) DEFAULT 'general',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (class_id) REFERENCES classes (id) ON DELETE CASCADE
         )
     ''')
+
+    # Add note_type column if it doesn't exist (for existing databases)
+    try:
+        cursor.execute('ALTER TABLE notes ADD COLUMN note_type VARCHAR(20) DEFAULT \'general\'')
+        db.commit()
+    except pymysql.err.OperationalError:
+        pass  # Column already exists
 
     # Create flashcard decks table
     cursor.execute('''

@@ -58,6 +58,36 @@ def list_notes():
     )
 
 
+@notes.route('/favorites')
+@login_required
+def favorites():
+    """List all favorite (pinned) notes for the current user."""
+    db = get_db()
+
+    # Get all pinned notes with class info
+    cursor = db.execute('''
+        SELECT n.*, c.name as class_name, c.code as class_code, c.color as class_color
+        FROM notes n
+        JOIN classes c ON n.class_id = c.id
+        WHERE c.user_id = %s AND n.is_pinned = 1
+        ORDER BY n.updated_at DESC
+    ''', (session['user_id'],))
+    favorite_notes = cursor.fetchall()
+
+    # Get all classes for the "new note" dropdown
+    cursor = db.execute(
+        'SELECT * FROM classes WHERE user_id = %s ORDER BY name ASC',
+        (session['user_id'],)
+    )
+    classes = cursor.fetchall()
+
+    return render_template(
+        'notes/favorites.html',
+        notes=favorite_notes,
+        classes=classes
+    )
+
+
 @notes.route('/<int:note_id>')
 @login_required
 def view_note(note_id):
@@ -382,6 +412,88 @@ def cleanup_note(note_id):
     try:
         cleaned = cleanup_text(clean_content)
         return jsonify({'success': True, 'cleaned': cleaned})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'AI service error: {str(e)}'}), 500
+
+
+@notes.route('/<int:note_id>/generate-quiz', methods=['POST'])
+@login_required
+def generate_quiz_from_note(note_id):
+    """Generate a quiz from note content using AI."""
+    db = get_db()
+    user_id = session['user_id']
+
+    cursor = db.execute('''
+        SELECT n.*, c.id as class_id, c.name as class_name
+        FROM notes n
+        JOIN classes c ON n.class_id = c.id
+        WHERE n.id = %s AND c.user_id = %s
+    ''', (note_id, user_id))
+    note = cursor.fetchone()
+
+    if not note:
+        return jsonify({'success': False, 'error': 'Note not found'}), 404
+
+    content = note['content']
+    if content:
+        clean_content = re.sub(r'<[^>]+>', '', content).strip()
+    else:
+        clean_content = ''
+
+    if not clean_content:
+        return jsonify({'success': False, 'error': 'Note is empty'}), 400
+
+    try:
+        # Use AI to generate quiz questions
+        prompt = f"""Based on the following notes, create 5 multiple choice quiz questions.
+Format each question as:
+Q: [question text]
+A: [correct answer]
+B: [wrong answer]
+C: [wrong answer]
+D: [wrong answer]
+Correct: [letter of correct answer]
+
+Notes:
+{clean_content[:3000]}"""
+
+        from app.services.ai_service import chat_with_tutor
+        quiz_text = chat_with_tutor(prompt, None, [], note['class_name'])
+
+        # For now, return success - in a full implementation, parse and save to quizzes table
+        return jsonify({'success': True, 'message': 'Quiz generated', 'quiz_content': quiz_text})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'AI service error: {str(e)}'}), 500
+
+
+@notes.route('/<int:note_id>/simplify', methods=['POST'])
+@login_required
+def simplify_note(note_id):
+    """Simplify and explain note content using AI."""
+    db = get_db()
+
+    cursor = db.execute('''
+        SELECT n.*, c.name as class_name FROM notes n
+        JOIN classes c ON n.class_id = c.id
+        WHERE n.id = %s AND c.user_id = %s
+    ''', (note_id, session['user_id']))
+    note = cursor.fetchone()
+
+    if not note:
+        return jsonify({'success': False, 'error': 'Note not found'}), 404
+
+    content = note['content']
+    if content:
+        clean_content = re.sub(r'<[^>]+>', '', content).strip()
+    else:
+        clean_content = ''
+
+    if not clean_content:
+        return jsonify({'success': False, 'error': 'Note is empty'}), 400
+
+    try:
+        simplified = transform_text(clean_content[:3000], 'simplify')
+        return jsonify({'success': True, 'simplified': simplified})
     except Exception as e:
         return jsonify({'success': False, 'error': f'AI service error: {str(e)}'}), 500
 
