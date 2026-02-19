@@ -121,10 +121,13 @@ def view_class(class_id):
         assignment = dict(a)
         if assignment['due_date'] and assignment['status'] != 'completed':
             try:
-                due_date = datetime.strptime(assignment['due_date'], '%Y-%m-%d').date()
+                due_date = assignment['due_date']
+                # Handle both string (SQLite) and date object (MySQL)
+                if isinstance(due_date, str):
+                    due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
                 if due_date < today:
                     assignment['status'] = 'completed'
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
         assignments.append(assignment)
 

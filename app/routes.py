@@ -240,18 +240,22 @@ def calendar():
     events_by_date = {}
     for assignment in assignments:
         if assignment['due_date']:
-            date_str = assignment['due_date']
+            due_date_val = assignment['due_date']
+            # Handle both string (SQLite) and date object (MySQL)
+            if isinstance(due_date_val, str):
+                date_str = due_date_val
+                due_date = datetime.strptime(due_date_val, '%Y-%m-%d').date()
+            else:
+                date_str = due_date_val.strftime('%Y-%m-%d')
+                due_date = due_date_val
+
             if date_str not in events_by_date:
                 events_by_date[date_str] = []
 
             # Auto-mark as completed if due date has passed
             status = assignment['status']
-            try:
-                due_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-                if due_date < today and status != 'completed':
-                    status = 'completed'
-            except ValueError:
-                pass
+            if due_date < today and status != 'completed':
+                status = 'completed'
 
             events_by_date[date_str].append({
                 'title': assignment['title'],
@@ -263,7 +267,13 @@ def calendar():
 
     for event in events:
         if event['event_date']:
-            date_str = event['event_date']
+            event_date_val = event['event_date']
+            # Handle both string (SQLite) and date object (MySQL)
+            if isinstance(event_date_val, str):
+                date_str = event_date_val
+            else:
+                date_str = event_date_val.strftime('%Y-%m-%d')
+
             if date_str not in events_by_date:
                 events_by_date[date_str] = []
             events_by_date[date_str].append({
