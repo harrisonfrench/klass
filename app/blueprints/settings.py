@@ -18,14 +18,14 @@ def preferences():
 
     # Get user info
     cursor = db.execute(
-        'SELECT id, email, username, created_at FROM users WHERE id = ?',
+        'SELECT id, email, username, created_at FROM users WHERE id = %s',
         (user_id,)
     )
     user = cursor.fetchone()
 
     # Get user settings
     cursor = db.execute(
-        'SELECT * FROM user_settings WHERE user_id = ?',
+        'SELECT * FROM user_settings WHERE user_id = %s',
         (user_id,)
     )
     user_settings = cursor.fetchone()
@@ -33,19 +33,19 @@ def preferences():
     if not user_settings:
         # Create default settings
         db.execute(
-            'INSERT INTO user_settings (user_id) VALUES (?)',
+            'INSERT INTO user_settings (user_id) VALUES (%s)',
             (user_id,)
         )
         db.commit()
         cursor = db.execute(
-            'SELECT * FROM user_settings WHERE user_id = ?',
+            'SELECT * FROM user_settings WHERE user_id = %s',
             (user_id,)
         )
         user_settings = cursor.fetchone()
 
     # Get stats
     cursor = db.execute(
-        'SELECT COUNT(*) as count FROM classes WHERE user_id = ?',
+        'SELECT COUNT(*) as count FROM classes WHERE user_id = %s',
         (user_id,)
     )
     class_count = cursor.fetchone()['count']
@@ -53,21 +53,21 @@ def preferences():
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     notes_count = cursor.fetchone()['count']
 
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     deck_count = cursor.fetchone()['count']
 
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM quizzes q
         JOIN classes c ON q.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     quiz_count = cursor.fetchone()['count']
 
@@ -106,7 +106,7 @@ def update_profile():
 
     # Check if username is taken by another user
     cursor = db.execute(
-        'SELECT id FROM users WHERE username = ? AND id != ?',
+        'SELECT id FROM users WHERE username = %s AND id != %s',
         (username, user_id)
     )
     if cursor.fetchone():
@@ -115,7 +115,7 @@ def update_profile():
 
     # Check if email is taken by another user
     cursor = db.execute(
-        'SELECT id FROM users WHERE email = ? AND id != ?',
+        'SELECT id FROM users WHERE email = %s AND id != %s',
         (email, user_id)
     )
     if cursor.fetchone():
@@ -123,7 +123,7 @@ def update_profile():
         return redirect(url_for('settings.preferences'))
 
     db.execute(
-        'UPDATE users SET username = ?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        'UPDATE users SET username = %s, email = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s',
         (username, email, user_id)
     )
     db.commit()
@@ -157,7 +157,7 @@ def change_password():
         return redirect(url_for('settings.preferences'))
 
     # Verify current password
-    cursor = db.execute('SELECT password_hash FROM users WHERE id = ?', (user_id,))
+    cursor = db.execute('SELECT password_hash FROM users WHERE id = %s', (user_id,))
     user = cursor.fetchone()
 
     if not check_password_hash(user['password_hash'], current_password):
@@ -166,7 +166,7 @@ def change_password():
 
     # Update password
     db.execute(
-        'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        'UPDATE users SET password_hash = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s',
         (generate_password_hash(new_password), user_id)
     )
     db.commit()
@@ -187,8 +187,8 @@ def update_preferences():
 
     db.execute('''
         UPDATE user_settings
-        SET default_class_color = ?, ai_features_enabled = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE user_id = ?
+        SET default_class_color = %s, ai_features_enabled = %s, updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = %s
     ''', (default_class_color, ai_features_enabled, user_id))
     db.commit()
 
@@ -206,7 +206,7 @@ def delete_account():
     password = request.form.get('password', '')
 
     # Verify password
-    cursor = db.execute('SELECT password_hash FROM users WHERE id = ?', (user_id,))
+    cursor = db.execute('SELECT password_hash FROM users WHERE id = %s', (user_id,))
     user = cursor.fetchone()
 
     if not check_password_hash(user['password_hash'], password):
@@ -214,20 +214,20 @@ def delete_account():
         return redirect(url_for('settings.preferences'))
 
     # Delete all user data (cascading deletes should handle most of this)
-    db.execute('DELETE FROM chat_messages WHERE session_id IN (SELECT id FROM chat_sessions WHERE user_id = ?)', (user_id,))
-    db.execute('DELETE FROM chat_sessions WHERE user_id = ?', (user_id,))
-    db.execute('DELETE FROM user_settings WHERE user_id = ?', (user_id,))
-    db.execute('DELETE FROM study_sessions WHERE user_id = ?', (user_id,))
-    db.execute('DELETE FROM quiz_attempts WHERE user_id = ?', (user_id,))
-    db.execute('DELETE FROM quizzes WHERE user_id = ?', (user_id,))
-    db.execute('DELETE FROM study_guides WHERE user_id = ?', (user_id,))
-    db.execute('DELETE FROM flashcards WHERE deck_id IN (SELECT id FROM flashcard_decks WHERE user_id = ?)', (user_id,))
-    db.execute('DELETE FROM flashcard_decks WHERE user_id = ?', (user_id,))
-    db.execute('DELETE FROM notes WHERE class_id IN (SELECT id FROM classes WHERE user_id = ?)', (user_id,))
-    db.execute('DELETE FROM assignments WHERE class_id IN (SELECT id FROM classes WHERE user_id = ?)', (user_id,))
-    db.execute('DELETE FROM calendar_events WHERE class_id IN (SELECT id FROM classes WHERE user_id = ?)', (user_id,))
-    db.execute('DELETE FROM classes WHERE user_id = ?', (user_id,))
-    db.execute('DELETE FROM users WHERE id = ?', (user_id,))
+    db.execute('DELETE FROM chat_messages WHERE session_id IN (SELECT id FROM chat_sessions WHERE user_id = %s)', (user_id,))
+    db.execute('DELETE FROM chat_sessions WHERE user_id = %s', (user_id,))
+    db.execute('DELETE FROM user_settings WHERE user_id = %s', (user_id,))
+    db.execute('DELETE FROM study_sessions WHERE user_id = %s', (user_id,))
+    db.execute('DELETE FROM quiz_attempts WHERE user_id = %s', (user_id,))
+    db.execute('DELETE FROM quizzes WHERE user_id = %s', (user_id,))
+    db.execute('DELETE FROM study_guides WHERE user_id = %s', (user_id,))
+    db.execute('DELETE FROM flashcards WHERE deck_id IN (SELECT id FROM flashcard_decks WHERE user_id = %s)', (user_id,))
+    db.execute('DELETE FROM flashcard_decks WHERE user_id = %s', (user_id,))
+    db.execute('DELETE FROM notes WHERE class_id IN (SELECT id FROM classes WHERE user_id = %s)', (user_id,))
+    db.execute('DELETE FROM assignments WHERE class_id IN (SELECT id FROM classes WHERE user_id = %s)', (user_id,))
+    db.execute('DELETE FROM calendar_events WHERE class_id IN (SELECT id FROM classes WHERE user_id = %s)', (user_id,))
+    db.execute('DELETE FROM classes WHERE user_id = %s', (user_id,))
+    db.execute('DELETE FROM users WHERE id = %s', (user_id,))
     db.commit()
 
     session.clear()

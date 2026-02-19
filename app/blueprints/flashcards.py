@@ -22,14 +22,14 @@ def list_decks():
                (SELECT COUNT(*) FROM flashcards WHERE deck_id = d.id) as card_count
         FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         ORDER BY d.updated_at DESC
     ''', (session['user_id'],))
     decks = cursor.fetchall()
 
     # Get classes for creating new decks
     cursor = db.execute(
-        'SELECT * FROM classes WHERE user_id = ? ORDER BY name ASC',
+        'SELECT * FROM classes WHERE user_id = %s ORDER BY name ASC',
         (session['user_id'],)
     )
     classes = cursor.fetchall()
@@ -47,7 +47,7 @@ def view_deck(deck_id):
         SELECT d.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE d.id = ? AND c.user_id = ?
+        WHERE d.id = %s AND c.user_id = %s
     ''', (deck_id, session['user_id']))
     deck = cursor.fetchone()
 
@@ -56,7 +56,7 @@ def view_deck(deck_id):
         return redirect(url_for('flashcards.list_decks'))
 
     cursor = db.execute('''
-        SELECT * FROM flashcards WHERE deck_id = ? ORDER BY created_at DESC
+        SELECT * FROM flashcards WHERE deck_id = %s ORDER BY created_at DESC
     ''', (deck_id,))
     cards = cursor.fetchall()
 
@@ -78,7 +78,7 @@ def create_deck():
 
     # Verify class belongs to user
     cursor = db.execute(
-        'SELECT id FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT id FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     if not cursor.fetchone():
@@ -87,7 +87,7 @@ def create_deck():
 
     cursor = db.execute('''
         INSERT INTO flashcard_decks (user_id, class_id, title)
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
     ''', (session['user_id'], class_id, title))
     db.commit()
 
@@ -105,14 +105,14 @@ def delete_deck(deck_id):
     cursor = db.execute('''
         SELECT d.id FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE d.id = ? AND c.user_id = ?
+        WHERE d.id = %s AND c.user_id = %s
     ''', (deck_id, session['user_id']))
     if not cursor.fetchone():
         flash('Deck not found.', 'error')
         return redirect(url_for('flashcards.list_decks'))
 
-    db.execute('DELETE FROM flashcards WHERE deck_id = ?', (deck_id,))
-    db.execute('DELETE FROM flashcard_decks WHERE id = ?', (deck_id,))
+    db.execute('DELETE FROM flashcards WHERE deck_id = %s', (deck_id,))
+    db.execute('DELETE FROM flashcard_decks WHERE id = %s', (deck_id,))
     db.commit()
 
     flash('Deck deleted.', 'success')
@@ -129,7 +129,7 @@ def add_card(deck_id):
     cursor = db.execute('''
         SELECT d.id FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE d.id = ? AND c.user_id = ?
+        WHERE d.id = %s AND c.user_id = %s
     ''', (deck_id, session['user_id']))
     if not cursor.fetchone():
         if request.is_json:
@@ -148,12 +148,12 @@ def add_card(deck_id):
 
     cursor = db.execute('''
         INSERT INTO flashcards (deck_id, front, back)
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
     ''', (deck_id, front, back))
     db.commit()
 
     # Update deck timestamp
-    db.execute('UPDATE flashcard_decks SET updated_at = CURRENT_TIMESTAMP WHERE id = ?', (deck_id,))
+    db.execute('UPDATE flashcard_decks SET updated_at = CURRENT_TIMESTAMP WHERE id = %s', (deck_id,))
     db.commit()
 
     if request.is_json:
@@ -174,7 +174,7 @@ def edit_card(card_id):
         SELECT f.id FROM flashcards f
         JOIN flashcard_decks d ON f.deck_id = d.id
         JOIN classes c ON d.class_id = c.id
-        WHERE f.id = ? AND c.user_id = ?
+        WHERE f.id = %s AND c.user_id = %s
     ''', (card_id, session['user_id']))
     if not cursor.fetchone():
         if request.is_json:
@@ -192,7 +192,7 @@ def edit_card(card_id):
         flash('Both front and back are required.', 'error')
         return redirect(request.referrer)
 
-    db.execute('UPDATE flashcards SET front = ?, back = ? WHERE id = ?', (front, back, card_id))
+    db.execute('UPDATE flashcards SET front = %s, back = %s WHERE id = %s', (front, back, card_id))
     db.commit()
 
     if request.is_json:
@@ -213,12 +213,12 @@ def delete_card(card_id):
         SELECT f.deck_id FROM flashcards f
         JOIN flashcard_decks d ON f.deck_id = d.id
         JOIN classes c ON d.class_id = c.id
-        WHERE f.id = ? AND c.user_id = ?
+        WHERE f.id = %s AND c.user_id = %s
     ''', (card_id, session['user_id']))
     card = cursor.fetchone()
 
     if card:
-        db.execute('DELETE FROM flashcards WHERE id = ?', (card_id,))
+        db.execute('DELETE FROM flashcards WHERE id = %s', (card_id,))
         db.commit()
 
     if request.is_json:
@@ -238,7 +238,7 @@ def study_deck(deck_id):
         SELECT d.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE d.id = ? AND c.user_id = ?
+        WHERE d.id = %s AND c.user_id = %s
     ''', (deck_id, session['user_id']))
     deck = cursor.fetchone()
 
@@ -249,7 +249,7 @@ def study_deck(deck_id):
     # Get cards for study (prioritize cards due for review)
     cursor = db.execute('''
         SELECT * FROM flashcards
-        WHERE deck_id = ?
+        WHERE deck_id = %s
         ORDER BY
             CASE WHEN next_review IS NULL THEN 0 ELSE 1 END,
             next_review ASC,
@@ -319,7 +319,7 @@ def review_card(card_id):
         SELECT f.* FROM flashcards f
         JOIN flashcard_decks d ON f.deck_id = d.id
         JOIN classes c ON d.class_id = c.id
-        WHERE f.id = ? AND c.user_id = ?
+        WHERE f.id = %s AND c.user_id = %s
     ''', (card_id, session['user_id']))
     card = cursor.fetchone()
 
@@ -338,10 +338,10 @@ def review_card(card_id):
 
     db.execute('''
         UPDATE flashcards
-        SET times_reviewed = ?, times_correct = ?, difficulty = ?,
-            ease_factor = ?, interval = ?, repetitions = ?,
-            last_reviewed = CURRENT_TIMESTAMP, next_review = ?
-        WHERE id = ?
+        SET times_reviewed = %s, times_correct = %s, difficulty = %s,
+            ease_factor = %s, `interval` = %s, repetitions = %s,
+            last_reviewed = CURRENT_TIMESTAMP, next_review = %s
+        WHERE id = %s
     ''', (times_reviewed, times_correct, difficulty,
           sm2_result['ease_factor'], sm2_result['interval'], sm2_result['repetitions'],
           sm2_result['next_review'], card_id))
@@ -349,13 +349,13 @@ def review_card(card_id):
 
     # Record study session for streak tracking
     cursor = db.execute('''
-        SELECT d.class_id FROM flashcard_decks d WHERE d.id = ?
+        SELECT d.class_id FROM flashcard_decks d WHERE d.id = %s
     ''', (card['deck_id'],))
     deck = cursor.fetchone()
     if deck:
         db.execute('''
             INSERT INTO study_sessions (user_id, class_id, activity_type, duration)
-            VALUES (?, ?, 'flashcards', 1)
+            VALUES (%s, %s, 'flashcards', 1)
         ''', (session['user_id'], deck['class_id']))
         db.commit()
 
@@ -377,7 +377,7 @@ def get_due_count(deck_id):
 
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM flashcards
-        WHERE deck_id = ? AND (next_review IS NULL OR next_review <= datetime('now'))
+        WHERE deck_id = %s AND (next_review IS NULL OR next_review <= NOW())
     ''', (deck_id,))
     result = cursor.fetchone()
 
@@ -394,7 +394,7 @@ def import_note_to_deck(deck_id):
     cursor = db.execute('''
         SELECT d.* FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE d.id = ? AND c.user_id = ?
+        WHERE d.id = %s AND c.user_id = %s
     ''', (deck_id, session['user_id']))
     deck = cursor.fetchone()
     if not deck:
@@ -411,7 +411,7 @@ def import_note_to_deck(deck_id):
     cursor = db.execute('''
         SELECT n.* FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
     if not note:
@@ -434,10 +434,10 @@ def import_note_to_deck(deck_id):
         for card in cards:
             db.execute('''
                 INSERT INTO flashcards (deck_id, front, back)
-                VALUES (?, ?, ?)
+                VALUES (%s, %s, %s)
             ''', (deck_id, card['front'], card['back']))
 
-        db.execute('UPDATE flashcard_decks SET updated_at = CURRENT_TIMESTAMP WHERE id = ?', (deck_id,))
+        db.execute('UPDATE flashcard_decks SET updated_at = CURRENT_TIMESTAMP WHERE id = %s', (deck_id,))
         db.commit()
 
         return jsonify({
@@ -458,7 +458,7 @@ def get_deck_notes(deck_id):
     cursor = db.execute('''
         SELECT d.class_id FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE d.id = ? AND c.user_id = ?
+        WHERE d.id = %s AND c.user_id = %s
     ''', (deck_id, session['user_id']))
     deck = cursor.fetchone()
 
@@ -466,7 +466,7 @@ def get_deck_notes(deck_id):
         return jsonify({'success': False, 'error': 'Deck not found'}), 404
 
     cursor = db.execute('''
-        SELECT id, title FROM notes WHERE class_id = ? ORDER BY updated_at DESC
+        SELECT id, title FROM notes WHERE class_id = %s ORDER BY updated_at DESC
     ''', (deck['class_id'],))
     notes = cursor.fetchall()
 
@@ -481,7 +481,7 @@ def generate_from_all_notes(class_id):
 
     # Check class exists and belongs to user
     cursor = db.execute(
-        'SELECT * FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT * FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -494,7 +494,7 @@ def generate_from_all_notes(class_id):
 
     # Get all notes for this class
     cursor = db.execute('''
-        SELECT id, title, content FROM notes WHERE class_id = ? ORDER BY updated_at DESC
+        SELECT id, title, content FROM notes WHERE class_id = %s ORDER BY updated_at DESC
     ''', (class_id,))
     notes = cursor.fetchall()
 
@@ -516,7 +516,7 @@ def generate_from_all_notes(class_id):
         # Create deck first
         cursor = db.execute('''
             INSERT INTO flashcard_decks (user_id, class_id, title)
-            VALUES (?, ?, ?)
+            VALUES (%s, %s, %s)
         ''', (session['user_id'], class_id, title))
         db.commit()
         deck_id = cursor.lastrowid
@@ -528,10 +528,10 @@ def generate_from_all_notes(class_id):
         for card in cards:
             db.execute('''
                 INSERT INTO flashcards (deck_id, front, back)
-                VALUES (?, ?, ?)
+                VALUES (%s, %s, %s)
             ''', (deck_id, card['front'], card['back']))
 
-        db.execute('UPDATE flashcard_decks SET updated_at = CURRENT_TIMESTAMP WHERE id = ?', (deck_id,))
+        db.execute('UPDATE flashcard_decks SET updated_at = CURRENT_TIMESTAMP WHERE id = %s', (deck_id,))
         db.commit()
 
         return jsonify({

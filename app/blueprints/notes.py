@@ -23,7 +23,7 @@ def list_notes():
     total_result = db.execute('''
         SELECT COUNT(*) as count FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (session['user_id'],)).fetchone()
     total = total_result['count'] if total_result else 0
 
@@ -32,15 +32,15 @@ def list_notes():
         SELECT n.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         ORDER BY n.is_pinned DESC, n.updated_at DESC
-        LIMIT ? OFFSET ?
+        LIMIT %s OFFSET %s
     ''', (session['user_id'], per_page, offset))
     all_notes = cursor.fetchall()
 
     # Get all classes for the "new note" dropdown
     cursor = db.execute(
-        'SELECT * FROM classes WHERE user_id = ? ORDER BY name ASC',
+        'SELECT * FROM classes WHERE user_id = %s ORDER BY name ASC',
         (session['user_id'],)
     )
     classes = cursor.fetchall()
@@ -68,7 +68,7 @@ def view_note(note_id):
         SELECT n.*, c.name as class_name, c.code as class_code, c.color as class_color, c.id as class_id
         FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -89,7 +89,7 @@ def update_note(note_id):
     cursor = db.execute('''
         SELECT n.* FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -113,7 +113,7 @@ def update_note(note_id):
     # If changing class, verify new class belongs to user
     if new_class_id and int(new_class_id) != note['class_id']:
         cursor = db.execute(
-            'SELECT id FROM classes WHERE id = ? AND user_id = ?',
+            'SELECT id FROM classes WHERE id = %s AND user_id = %s',
             (new_class_id, session['user_id'])
         )
         if not cursor.fetchone():
@@ -125,15 +125,15 @@ def update_note(note_id):
         # Update note with new class
         db.execute('''
             UPDATE notes
-            SET title = ?, content = ?, class_id = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            SET title = %s, content = %s, class_id = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
         ''', (title, content, new_class_id, note_id))
     else:
         # Update note without changing class
         db.execute('''
             UPDATE notes
-            SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            SET title = %s, content = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
         ''', (title, content, note_id))
 
     db.commit()
@@ -143,6 +143,52 @@ def update_note(note_id):
 
     flash('Note saved.', 'success')
     return redirect(url_for('notes.view_note', note_id=note_id))
+
+
+@notes.route('/<int:note_id>/beacon-save', methods=['POST'])
+@login_required
+def beacon_save_note(note_id):
+    """Save note via sendBeacon (CSRF-exempt for page unload reliability).
+
+    This endpoint is specifically for navigator.sendBeacon() calls during
+    beforeunload events. It validates the user session but doesn't require
+    CSRF token since sendBeacon can't set headers.
+    """
+    from app import csrf
+
+    # Manually exempt this specific request from CSRF
+    # This is safe because:
+    # 1. User must be logged in (session validation)
+    # 2. Note must belong to user (ownership check below)
+    # 3. sendBeacon is same-origin only
+
+    db = get_db()
+
+    # Check if note exists and belongs to user
+    cursor = db.execute('''
+        SELECT n.* FROM notes n
+        JOIN classes c ON n.class_id = c.id
+        WHERE n.id = %s AND c.user_id = %s
+    ''', (note_id, session['user_id']))
+    note = cursor.fetchone()
+
+    if not note:
+        return jsonify({'success': False, 'error': 'Note not found'}), 404
+
+    # Get data from JSON
+    data = request.get_json(force=True, silent=True) or {}
+    title = data.get('title', note['title'])
+    content = data.get('content', note['content'])
+
+    # Update note
+    db.execute('''
+        UPDATE notes
+        SET title = %s, content = %s, updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+    ''', (title, content, note_id))
+    db.commit()
+
+    return jsonify({'success': True, 'message': 'Note saved via beacon'})
 
 
 @notes.route('/<int:note_id>/delete', methods=['POST'])
@@ -155,7 +201,7 @@ def delete_note(note_id):
         SELECT n.*, c.id as class_id
         FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -165,7 +211,7 @@ def delete_note(note_id):
 
     class_id = note['class_id']
 
-    db.execute('DELETE FROM notes WHERE id = ?', (note_id,))
+    db.execute('DELETE FROM notes WHERE id = %s', (note_id,))
     db.commit()
 
     flash('Note deleted.', 'success')
@@ -187,7 +233,7 @@ def toggle_pin(note_id):
     cursor = db.execute('''
         SELECT n.* FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -199,7 +245,7 @@ def toggle_pin(note_id):
 
     new_status = 0 if note['is_pinned'] else 1
 
-    db.execute('UPDATE notes SET is_pinned = ? WHERE id = ?', (new_status, note_id))
+    db.execute('UPDATE notes SET is_pinned = %s WHERE id = %s', (new_status, note_id))
     db.commit()
 
     if request.is_json:
@@ -217,7 +263,7 @@ def create_note(class_id):
 
     # Check if class exists and belongs to user
     cursor = db.execute(
-        'SELECT * FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT * FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -229,7 +275,7 @@ def create_note(class_id):
     # Create new note with default title
     cursor = db.execute('''
         INSERT INTO notes (class_id, title, content)
-        VALUES (?, 'Untitled', '')
+        VALUES (%s, 'Untitled', '')
     ''', (class_id,))
     db.commit()
 
@@ -248,7 +294,7 @@ def summarize_note(note_id):
     cursor = db.execute('''
         SELECT n.* FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -285,7 +331,7 @@ def expand_note(note_id):
     cursor = db.execute('''
         SELECT n.* FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -317,7 +363,7 @@ def cleanup_note(note_id):
     cursor = db.execute('''
         SELECT n.* FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -349,7 +395,7 @@ def ai_transform(note_id):
     cursor = db.execute('''
         SELECT n.* FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -385,7 +431,7 @@ def generate_flashcards_from_note(note_id):
         SELECT n.*, c.id as class_id
         FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -427,7 +473,7 @@ def ask_ai_about_note(note_id):
         SELECT n.*, c.name as class_name
         FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 
@@ -479,7 +525,7 @@ def extract_from_image(note_id):
     cursor = db.execute('''
         SELECT n.* FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE n.id = ? AND c.user_id = ?
+        WHERE n.id = %s AND c.user_id = %s
     ''', (note_id, session['user_id']))
     note = cursor.fetchone()
 

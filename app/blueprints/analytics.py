@@ -119,12 +119,12 @@ def create_goal():
         return jsonify({'success': False, 'error': 'Invalid goal type'}), 400
 
     # Delete existing goal of same type
-    db.execute('DELETE FROM study_goals WHERE user_id = ? AND goal_type = ?', (user_id, goal_type))
+    db.execute('DELETE FROM study_goals WHERE user_id = %s AND goal_type = %s', (user_id, goal_type))
 
     # Create new goal
     db.execute('''
         INSERT INTO study_goals (user_id, goal_type, target_value, period_start)
-        VALUES (?, ?, ?, DATE('now'))
+        VALUES (%s, %s, %s, CURDATE())
     ''', (user_id, goal_type, target_value))
     db.commit()
 
@@ -138,7 +138,7 @@ def delete_goal(goal_id):
     db = get_db()
     user_id = session['user_id']
 
-    db.execute('DELETE FROM study_goals WHERE id = ? AND user_id = ?', (goal_id, user_id))
+    db.execute('DELETE FROM study_goals WHERE id = %s AND user_id = %s', (goal_id, user_id))
     db.commit()
 
     return jsonify({'success': True})
@@ -151,14 +151,14 @@ def get_overall_stats(db, user_id):
     # Total quizzes taken
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM quiz_attempts
-        WHERE user_id = ?
+        WHERE user_id = %s
     ''', (user_id,))
     stats['total_quizzes'] = cursor.fetchone()['count']
 
     # Average quiz score
     cursor = db.execute('''
         SELECT AVG(score) as avg_score FROM quiz_attempts
-        WHERE user_id = ?
+        WHERE user_id = %s
     ''', (user_id,))
     result = cursor.fetchone()
     stats['avg_quiz_score'] = round(result['avg_score'] or 0, 1)
@@ -167,22 +167,22 @@ def get_overall_stats(db, user_id):
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM flashcards f
         JOIN flashcard_decks d ON f.deck_id = d.id
-        WHERE d.user_id = ? AND f.times_reviewed > 0
+        WHERE d.user_id = %s AND f.times_reviewed > 0
     ''', (user_id,))
     stats['flashcards_studied'] = cursor.fetchone()['count']
 
     # Total notes created
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM notes
-        WHERE class_id IN (SELECT id FROM classes WHERE user_id = ?)
+        WHERE class_id IN (SELECT id FROM classes WHERE user_id = %s)
     ''', (user_id,))
     stats['total_notes'] = cursor.fetchone()['count']
 
     # Study streak (days with activity)
     cursor = db.execute('''
-        SELECT COUNT(DISTINCT date(created_at)) as days
+        SELECT COUNT(DISTINCT DATE(created_at)) as days
         FROM study_sessions
-        WHERE user_id = ? AND created_at >= date('now', '-30 days')
+        WHERE user_id = %s AND created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
     ''', (user_id,))
     stats['study_days'] = cursor.fetchone()['days']
 
@@ -190,7 +190,7 @@ def get_overall_stats(db, user_id):
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM flashcards f
         JOIN flashcard_decks d ON f.deck_id = d.id
-        WHERE d.user_id = ? AND f.confidence >= 4
+        WHERE d.user_id = %s AND f.confidence >= 4
     ''', (user_id,))
     stats['mastered_cards'] = cursor.fetchone()['count']
 
@@ -206,7 +206,7 @@ def get_quiz_trend_data(db, user_id):
             qa.score as score
         FROM quiz_attempts qa
         JOIN quizzes q ON qa.quiz_id = q.id
-        WHERE qa.user_id = ?
+        WHERE qa.user_id = %s
         ORDER BY qa.completed_at DESC
         LIMIT 20
     ''', (user_id,))
@@ -243,7 +243,7 @@ def get_flashcard_mastery(db, user_id):
             AVG(f.confidence) as avg_confidence
         FROM flashcard_decks d
         LEFT JOIN flashcards f ON d.id = f.deck_id
-        WHERE d.user_id = ?
+        WHERE d.user_id = %s
         GROUP BY d.id
         ORDER BY d.title
     ''', (user_id,))
@@ -280,9 +280,9 @@ def get_class_performance(db, user_id):
             (SELECT COUNT(*) FROM quizzes WHERE class_id = c.id) as quiz_count,
             (SELECT AVG(qa.score) FROM quiz_attempts qa
              JOIN quizzes q ON qa.quiz_id = q.id
-             WHERE q.class_id = c.id AND qa.user_id = ?) as avg_score
+             WHERE q.class_id = c.id AND qa.user_id = %s) as avg_score
         FROM classes c
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         ORDER BY c.name
     ''', (user_id, user_id))
 
@@ -310,11 +310,11 @@ def get_study_activity(db, user_id):
     # Get actual activity counts
     cursor = db.execute('''
         SELECT
-            date(created_at) as date,
+            DATE(created_at) as date,
             COUNT(*) as count
         FROM study_sessions
-        WHERE user_id = ? AND created_at >= date('now', '-30 days')
-        GROUP BY date(created_at)
+        WHERE user_id = %s AND created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY DATE(created_at)
     ''', (user_id,))
 
     activity_map = {row['date']: row['count'] for row in cursor.fetchall()}
@@ -322,11 +322,11 @@ def get_study_activity(db, user_id):
     # Also count quiz attempts as activity
     cursor = db.execute('''
         SELECT
-            date(completed_at) as date,
+            DATE(completed_at) as date,
             COUNT(*) as count
         FROM quiz_attempts
-        WHERE user_id = ? AND completed_at >= date('now', '-30 days')
-        GROUP BY date(completed_at)
+        WHERE user_id = %s AND completed_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY DATE(completed_at)
     ''', (user_id,))
 
     for row in cursor.fetchall():
@@ -353,7 +353,7 @@ def get_user_streak(db, user_id):
     """Get user's streak data."""
     cursor = db.execute('''
         SELECT current_streak, longest_streak, last_study_date
-        FROM user_streaks WHERE user_id = ?
+        FROM user_streaks WHERE user_id = %s
     ''', (user_id,))
     streak = cursor.fetchone()
 
@@ -374,11 +374,11 @@ def update_user_streak(db, user_id):
     # Check if there was activity today
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM (
-            SELECT created_at FROM study_sessions WHERE user_id = ? AND DATE(created_at) = DATE('now')
+            SELECT created_at FROM study_sessions WHERE user_id = %s AND DATE(created_at) = CURDATE()
             UNION ALL
-            SELECT completed_at FROM quiz_attempts WHERE user_id = ? AND DATE(completed_at) = DATE('now')
+            SELECT completed_at FROM quiz_attempts WHERE user_id = %s AND DATE(completed_at) = CURDATE()
             UNION ALL
-            SELECT completed_at FROM pomodoro_sessions WHERE user_id = ? AND completed = 1 AND DATE(completed_at) = DATE('now')
+            SELECT completed_at FROM pomodoro_sessions WHERE user_id = %s AND completed = 1 AND DATE(completed_at) = CURDATE()
         )
     ''', (user_id, user_id, user_id))
     has_activity_today = cursor.fetchone()['count'] > 0
@@ -389,7 +389,7 @@ def update_user_streak(db, user_id):
     # Get current streak data
     cursor = db.execute('''
         SELECT current_streak, longest_streak, last_study_date
-        FROM user_streaks WHERE user_id = ?
+        FROM user_streaks WHERE user_id = %s
     ''', (user_id,))
     streak = cursor.fetchone()
 
@@ -409,13 +409,13 @@ def update_user_streak(db, user_id):
 
         db.execute('''
             UPDATE user_streaks
-            SET current_streak = ?, longest_streak = ?, last_study_date = ?
-            WHERE user_id = ?
+            SET current_streak = %s, longest_streak = %s, last_study_date = %s
+            WHERE user_id = %s
         ''', (current, longest, today, user_id))
     else:
         db.execute('''
             INSERT INTO user_streaks (user_id, current_streak, longest_streak, last_study_date)
-            VALUES (?, 1, 1, ?)
+            VALUES (%s, 1, 1, %s)
         ''', (user_id, today))
 
     db.commit()
@@ -425,7 +425,7 @@ def get_user_goals(db, user_id):
     """Get user's study goals with progress."""
     cursor = db.execute('''
         SELECT id, goal_type, target_value, period_start
-        FROM study_goals WHERE user_id = ?
+        FROM study_goals WHERE user_id = %s
     ''', (user_id,))
     goals = []
 
@@ -438,26 +438,26 @@ def get_user_goals(db, user_id):
         if goal_type == 'daily_minutes':
             cursor2 = db.execute('''
                 SELECT COALESCE(SUM(duration), 0) as total FROM study_sessions
-                WHERE user_id = ? AND DATE(created_at) = DATE('now')
+                WHERE user_id = %s AND DATE(created_at) = CURDATE()
             ''', (user_id,))
             current = cursor2.fetchone()['total']
         elif goal_type == 'weekly_quizzes':
             cursor2 = db.execute('''
                 SELECT COUNT(*) as count FROM quiz_attempts
-                WHERE user_id = ? AND DATE(completed_at) >= DATE('now', '-7 days')
+                WHERE user_id = %s AND DATE(completed_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
             ''', (user_id,))
             current = cursor2.fetchone()['count']
         elif goal_type == 'cards_reviewed':
             cursor2 = db.execute('''
                 SELECT COUNT(*) as count FROM flashcards f
                 JOIN flashcard_decks d ON f.deck_id = d.id
-                WHERE d.user_id = ? AND DATE(f.last_reviewed) = DATE('now')
+                WHERE d.user_id = %s AND DATE(f.last_reviewed) = DATE('now')
             ''', (user_id,))
             current = cursor2.fetchone()['count']
         elif goal_type == 'pomodoro_sessions':
             cursor2 = db.execute('''
                 SELECT COUNT(*) as count FROM pomodoro_sessions
-                WHERE user_id = ? AND completed = 1 AND DATE(completed_at) = DATE('now')
+                WHERE user_id = %s AND completed = 1 AND DATE(completed_at) = CURDATE()
                 AND session_type = 'work'
             ''', (user_id,))
             current = cursor2.fetchone()['count']
@@ -493,7 +493,7 @@ def get_user_achievements(db, user_id):
     """Get user's earned achievements."""
     cursor = db.execute('''
         SELECT achievement_type, earned_at
-        FROM achievements WHERE user_id = ?
+        FROM achievements WHERE user_id = %s
         ORDER BY earned_at DESC
     ''', (user_id,))
 
@@ -513,14 +513,14 @@ def get_user_achievements(db, user_id):
 def check_achievements(db, user_id):
     """Check and award any new achievements."""
     earned = set()
-    cursor = db.execute('SELECT achievement_type FROM achievements WHERE user_id = ?', (user_id,))
+    cursor = db.execute('SELECT achievement_type FROM achievements WHERE user_id = %s', (user_id,))
     for row in cursor.fetchall():
         earned.add(row['achievement_type'])
 
     new_achievements = []
 
     # Check streak achievements
-    cursor = db.execute('SELECT current_streak FROM user_streaks WHERE user_id = ?', (user_id,))
+    cursor = db.execute('SELECT current_streak FROM user_streaks WHERE user_id = %s', (user_id,))
     streak = cursor.fetchone()
     if streak:
         if streak['current_streak'] >= 3 and 'streak_3' not in earned:
@@ -534,7 +534,7 @@ def check_achievements(db, user_id):
     cursor = db.execute('''
         SELECT SUM(f.times_reviewed) as total FROM flashcards f
         JOIN flashcard_decks d ON f.deck_id = d.id
-        WHERE d.user_id = ?
+        WHERE d.user_id = %s
     ''', (user_id,))
     result = cursor.fetchone()
     total_reviews = result['total'] or 0
@@ -546,26 +546,26 @@ def check_achievements(db, user_id):
         new_achievements.append('cards_500')
 
     # Check quiz achievements
-    cursor = db.execute('SELECT COUNT(*) as count FROM quiz_attempts WHERE user_id = ?', (user_id,))
+    cursor = db.execute('SELECT COUNT(*) as count FROM quiz_attempts WHERE user_id = %s', (user_id,))
     quiz_count = cursor.fetchone()['count']
     if quiz_count >= 10 and 'quiz_10' not in earned:
         new_achievements.append('quiz_10')
 
-    cursor = db.execute('SELECT score FROM quiz_attempts WHERE user_id = ? AND score = 100', (user_id,))
+    cursor = db.execute('SELECT score FROM quiz_attempts WHERE user_id = %s AND score = 100', (user_id,))
     if cursor.fetchone() and 'quiz_perfect' not in earned:
         new_achievements.append('quiz_perfect')
 
     # Check notes achievement
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM notes
-        WHERE class_id IN (SELECT id FROM classes WHERE user_id = ?)
+        WHERE class_id IN (SELECT id FROM classes WHERE user_id = %s)
     ''', (user_id,))
     note_count = cursor.fetchone()['count']
     if note_count >= 10 and 'notes_10' not in earned:
         new_achievements.append('notes_10')
 
     # Check first class
-    cursor = db.execute('SELECT COUNT(*) as count FROM classes WHERE user_id = ?', (user_id,))
+    cursor = db.execute('SELECT COUNT(*) as count FROM classes WHERE user_id = %s', (user_id,))
     if cursor.fetchone()['count'] >= 1 and 'first_class' not in earned:
         new_achievements.append('first_class')
 
@@ -573,7 +573,7 @@ def check_achievements(db, user_id):
     for ach_type in new_achievements:
         db.execute('''
             INSERT INTO achievements (user_id, achievement_type)
-            VALUES (?, ?)
+            VALUES (%s, %s)
         ''', (user_id, ach_type))
 
     if new_achievements:

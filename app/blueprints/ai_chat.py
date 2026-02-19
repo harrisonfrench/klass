@@ -16,7 +16,7 @@ def get_or_create_session(user_id):
 
     # Try to get existing session
     cursor = db.execute(
-        'SELECT id FROM chat_sessions WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1',
+        'SELECT id FROM chat_sessions WHERE user_id = %s ORDER BY updated_at DESC LIMIT 1',
         (user_id,)
     )
     existing = cursor.fetchone()
@@ -26,7 +26,7 @@ def get_or_create_session(user_id):
 
     # Create new session
     cursor = db.execute(
-        'INSERT INTO chat_sessions (user_id, title) VALUES (?, ?)',
+        'INSERT INTO chat_sessions (user_id, title) VALUES (%s, %s)',
         (user_id, 'AI Tutor Chat')
     )
     db.commit()
@@ -41,7 +41,7 @@ def get_classes():
     user_id = session['user_id']
 
     cursor = db.execute(
-        'SELECT id, name, code, color FROM classes WHERE user_id = ? ORDER BY name',
+        'SELECT id, name, code, color FROM classes WHERE user_id = %s ORDER BY name',
         (user_id,)
     )
     classes = [dict(row) for row in cursor.fetchall()]
@@ -61,7 +61,7 @@ def get_messages():
     # Get messages (limit to last 50 for performance)
     cursor = db.execute('''
         SELECT role, content FROM chat_messages
-        WHERE session_id = ?
+        WHERE session_id = %s
         ORDER BY created_at ASC
         LIMIT 50
     ''', (session_id,))
@@ -90,14 +90,14 @@ def send_message():
     # Save user message
     db.execute('''
         INSERT INTO chat_messages (session_id, role, content)
-        VALUES (?, 'user', ?)
+        VALUES (%s, 'user', %s)
     ''', (session_id, message))
     db.commit()
 
     # Get conversation history (last 10 messages for context)
     cursor = db.execute('''
         SELECT role, content FROM chat_messages
-        WHERE session_id = ?
+        WHERE session_id = %s
         ORDER BY created_at DESC
         LIMIT 10
     ''', (session_id,))
@@ -110,7 +110,7 @@ def send_message():
     if class_id:
         # Verify class belongs to user and get name
         cursor = db.execute(
-            'SELECT id, name FROM classes WHERE id = ? AND user_id = ?',
+            'SELECT id, name FROM classes WHERE id = %s AND user_id = %s',
             (class_id, user_id)
         )
         class_data = cursor.fetchone()
@@ -121,7 +121,7 @@ def send_message():
             # Get notes from this class for context
             cursor = db.execute('''
                 SELECT title, content FROM notes
-                WHERE class_id = ?
+                WHERE class_id = %s
                 ORDER BY updated_at DESC
                 LIMIT 5
             ''', (class_id,))
@@ -148,12 +148,12 @@ def send_message():
         # Save AI response
         db.execute('''
             INSERT INTO chat_messages (session_id, role, content)
-            VALUES (?, 'assistant', ?)
+            VALUES (%s, 'assistant', %s)
         ''', (session_id, ai_response))
 
         # Update session timestamp
         db.execute(
-            'UPDATE chat_sessions SET updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            'UPDATE chat_sessions SET updated_at = CURRENT_TIMESTAMP WHERE id = %s',
             (session_id,)
         )
         db.commit()
@@ -177,7 +177,7 @@ def clear_chat():
     session_id = get_or_create_session(user_id)
 
     # Delete all messages
-    db.execute('DELETE FROM chat_messages WHERE session_id = ?', (session_id,))
+    db.execute('DELETE FROM chat_messages WHERE session_id = %s', (session_id,))
     db.commit()
 
     return jsonify({'success': True})

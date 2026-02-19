@@ -23,14 +23,14 @@ def list_quizzes():
                (SELECT total FROM quiz_attempts WHERE quiz_id = q.id ORDER BY completed_at DESC LIMIT 1) as total_questions
         FROM quizzes q
         JOIN classes c ON q.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         ORDER BY q.created_at DESC
     ''', (session['user_id'],))
     quizzes_list = cursor.fetchall()
 
     # Get classes for creating new quizzes
     cursor = db.execute(
-        'SELECT * FROM classes WHERE user_id = ? ORDER BY name ASC',
+        'SELECT * FROM classes WHERE user_id = %s ORDER BY name ASC',
         (session['user_id'],)
     )
     classes = cursor.fetchall()
@@ -48,7 +48,7 @@ def view_quiz(quiz_id):
         SELECT q.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM quizzes q
         JOIN classes c ON q.class_id = c.id
-        WHERE q.id = ? AND c.user_id = ?
+        WHERE q.id = %s AND c.user_id = %s
     ''', (quiz_id, session['user_id']))
     quiz = cursor.fetchone()
 
@@ -58,7 +58,7 @@ def view_quiz(quiz_id):
 
     # Get quiz attempts
     cursor = db.execute('''
-        SELECT * FROM quiz_attempts WHERE quiz_id = ? ORDER BY completed_at DESC
+        SELECT * FROM quiz_attempts WHERE quiz_id = %s ORDER BY completed_at DESC
     ''', (quiz_id,))
     attempts = cursor.fetchall()
 
@@ -83,7 +83,7 @@ def take_quiz(quiz_id):
         SELECT q.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM quizzes q
         JOIN classes c ON q.class_id = c.id
-        WHERE q.id = ? AND c.user_id = ?
+        WHERE q.id = %s AND c.user_id = %s
     ''', (quiz_id, session['user_id']))
     quiz = cursor.fetchone()
 
@@ -116,7 +116,7 @@ def submit_quiz(quiz_id):
     cursor = db.execute('''
         SELECT q.* FROM quizzes q
         JOIN classes c ON q.class_id = c.id
-        WHERE q.id = ? AND c.user_id = ?
+        WHERE q.id = %s AND c.user_id = %s
     ''', (quiz_id, session['user_id']))
     quiz = cursor.fetchone()
 
@@ -199,7 +199,7 @@ def submit_quiz(quiz_id):
     # Save attempt
     cursor = db.execute('''
         INSERT INTO quiz_attempts (user_id, quiz_id, score, total, answers, time_taken)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s)
     ''', (session['user_id'], quiz_id, score, len(questions), json.dumps(answers), time_taken))
     db.commit()
 
@@ -220,7 +220,7 @@ def generate_quiz_page(class_id):
     db = get_db()
 
     cursor = db.execute(
-        'SELECT * FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT * FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -230,7 +230,7 @@ def generate_quiz_page(class_id):
         return redirect(url_for('quizzes.list_quizzes'))
 
     cursor = db.execute('''
-        SELECT * FROM notes WHERE class_id = ? ORDER BY updated_at DESC
+        SELECT * FROM notes WHERE class_id = %s ORDER BY updated_at DESC
     ''', (class_id,))
     notes = cursor.fetchall()
 
@@ -249,7 +249,7 @@ def generate_quiz_page(class_id):
             question_types = ['multiple_choice', 'true_false']
 
         # Combine selected notes content
-        placeholders = ','.join(['?' for _ in selected_notes])
+        placeholders = ','.join(['%s' for _ in selected_notes])
         cursor = db.execute(f'''
             SELECT id, title, content FROM notes WHERE id IN ({placeholders})
         ''', selected_notes)
@@ -271,7 +271,7 @@ def generate_quiz_page(class_id):
 
             cursor = db.execute('''
                 INSERT INTO quizzes (user_id, class_id, title, questions, time_limit)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
             ''', (session['user_id'], class_id, title, json.dumps(questions), time_limit if time_limit > 0 else None))
             db.commit()
 
@@ -296,14 +296,14 @@ def delete_quiz(quiz_id):
     cursor = db.execute('''
         SELECT q.id FROM quizzes q
         JOIN classes c ON q.class_id = c.id
-        WHERE q.id = ? AND c.user_id = ?
+        WHERE q.id = %s AND c.user_id = %s
     ''', (quiz_id, session['user_id']))
     if not cursor.fetchone():
         flash('Quiz not found.', 'error')
         return redirect(url_for('quizzes.list_quizzes'))
 
-    db.execute('DELETE FROM quiz_attempts WHERE quiz_id = ?', (quiz_id,))
-    db.execute('DELETE FROM quizzes WHERE id = ?', (quiz_id,))
+    db.execute('DELETE FROM quiz_attempts WHERE quiz_id = %s', (quiz_id,))
+    db.execute('DELETE FROM quizzes WHERE id = %s', (quiz_id,))
     db.commit()
 
     flash('Quiz deleted.', 'success')
@@ -321,7 +321,7 @@ def review_attempt(attempt_id):
         FROM quiz_attempts a
         JOIN quizzes q ON a.quiz_id = q.id
         JOIN classes c ON q.class_id = c.id
-        WHERE a.id = ? AND c.user_id = ?
+        WHERE a.id = %s AND c.user_id = %s
     ''', (attempt_id, session['user_id']))
     attempt = cursor.fetchone()
 

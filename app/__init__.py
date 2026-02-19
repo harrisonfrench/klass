@@ -70,6 +70,10 @@ app.register_blueprint(flashcards, url_prefix='/flashcards')
 app.register_blueprint(study_guides, url_prefix='/study-guides')
 app.register_blueprint(quizzes, url_prefix='/quizzes')
 
+# Exempt beacon-save endpoint from CSRF (used by navigator.sendBeacon on page unload)
+# This is safe because the endpoint still validates user session and note ownership
+csrf.exempt(notes.name + '.beacon_save_note')
+
 from . import routes
 
 # Setup database connection teardown
@@ -105,7 +109,7 @@ def inject_sidebar_classes():
 
         db = get_db()
         cursor = db.execute(
-            'SELECT id, name, code, color FROM classes WHERE user_id = ? ORDER BY name',
+            'SELECT id, name, code, color FROM classes WHERE user_id = %s ORDER BY name',
             (user_id,)
         )
         sidebar_classes = cursor.fetchall()

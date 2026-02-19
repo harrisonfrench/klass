@@ -20,14 +20,14 @@ def list_guides():
         SELECT sg.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM study_guides sg
         JOIN classes c ON sg.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         ORDER BY sg.created_at DESC
     ''', (session['user_id'],))
     guides = cursor.fetchall()
 
     # Get classes for creating new guides
     cursor = db.execute(
-        'SELECT * FROM classes WHERE user_id = ? ORDER BY name ASC',
+        'SELECT * FROM classes WHERE user_id = %s ORDER BY name ASC',
         (session['user_id'],)
     )
     classes = cursor.fetchall()
@@ -45,7 +45,7 @@ def view_guide(guide_id):
         SELECT sg.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM study_guides sg
         JOIN classes c ON sg.class_id = c.id
-        WHERE sg.id = ? AND c.user_id = ?
+        WHERE sg.id = %s AND c.user_id = %s
     ''', (guide_id, session['user_id']))
     guide = cursor.fetchone()
 
@@ -64,7 +64,7 @@ def view_guide(guide_id):
     # Get source note titles
     source_notes = []
     if source_note_ids:
-        placeholders = ','.join(['?' for _ in source_note_ids])
+        placeholders = ','.join(['%s' for _ in source_note_ids])
         cursor = db.execute(f'''
             SELECT id, title FROM notes WHERE id IN ({placeholders})
         ''', source_note_ids)
@@ -81,7 +81,7 @@ def generate_guide(class_id):
 
     # Get class info (verify belongs to user)
     cursor = db.execute(
-        'SELECT * FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT * FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -92,7 +92,7 @@ def generate_guide(class_id):
 
     # Get notes for this class
     cursor = db.execute('''
-        SELECT * FROM notes WHERE class_id = ? ORDER BY updated_at DESC
+        SELECT * FROM notes WHERE class_id = %s ORDER BY updated_at DESC
     ''', (class_id,))
     notes = cursor.fetchall()
 
@@ -106,7 +106,7 @@ def generate_guide(class_id):
             return redirect(url_for('study_guides.generate_guide', class_id=class_id))
 
         # Combine selected notes content
-        placeholders = ','.join(['?' for _ in selected_notes])
+        placeholders = ','.join(['%s' for _ in selected_notes])
         cursor = db.execute(f'''
             SELECT id, title, content FROM notes WHERE id IN ({placeholders})
         ''', selected_notes)
@@ -131,7 +131,7 @@ def generate_guide(class_id):
             # Save to database
             cursor = db.execute('''
                 INSERT INTO study_guides (user_id, class_id, title, content, source_notes)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
             ''', (session['user_id'], class_id, title, content, json.dumps([int(n) for n in selected_notes])))
             db.commit()
 
@@ -156,13 +156,13 @@ def delete_guide(guide_id):
     cursor = db.execute('''
         SELECT sg.id FROM study_guides sg
         JOIN classes c ON sg.class_id = c.id
-        WHERE sg.id = ? AND c.user_id = ?
+        WHERE sg.id = %s AND c.user_id = %s
     ''', (guide_id, session['user_id']))
     if not cursor.fetchone():
         flash('Study guide not found.', 'error')
         return redirect(url_for('study_guides.list_guides'))
 
-    db.execute('DELETE FROM study_guides WHERE id = ?', (guide_id,))
+    db.execute('DELETE FROM study_guides WHERE id = %s', (guide_id,))
     db.commit()
 
     flash('Study guide deleted.', 'success')
@@ -189,7 +189,7 @@ def api_generate_guide():
 
     # Get class info (verify belongs to user)
     cursor = db.execute(
-        'SELECT name FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT name FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -197,7 +197,7 @@ def api_generate_guide():
         return jsonify({'success': False, 'error': 'Class not found'}), 404
 
     # Get notes content
-    placeholders = ','.join(['?' for _ in note_ids])
+    placeholders = ','.join(['%s' for _ in note_ids])
     cursor = db.execute(f'''
         SELECT id, title, content FROM notes WHERE id IN ({placeholders})
     ''', note_ids)

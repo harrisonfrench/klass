@@ -1248,9 +1248,60 @@
 
     let saveTimeout = null;
     let hasChanges = false;
+    let autoSaveInterval = null;
+
+    // localStorage key for backup
+    const BACKUP_KEY = `note_backup_${noteId}`;
+
+    // Save to localStorage as backup
+    function saveToLocalStorage() {
+        const data = {
+            title: titleInput.value || 'Untitled',
+            content: quill.root.innerHTML,
+            timestamp: Date.now()
+        };
+        try {
+            localStorage.setItem(BACKUP_KEY, JSON.stringify(data));
+        } catch (e) {
+            console.warn('Failed to save to localStorage:', e);
+        }
+    }
+
+    // Clear localStorage backup after successful save
+    function clearLocalStorageBackup() {
+        try {
+            localStorage.removeItem(BACKUP_KEY);
+        } catch (e) {
+            console.warn('Failed to clear localStorage backup:', e);
+        }
+    }
+
+    // Check for and recover from localStorage backup on load
+    function checkForBackup() {
+        try {
+            const backup = localStorage.getItem(BACKUP_KEY);
+            if (backup) {
+                const data = JSON.parse(backup);
+                // Only restore if backup is less than 24 hours old
+                if (Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
+                    console.log('Found unsaved backup, attempting to save...');
+                    // Restore the backup content
+                    titleInput.value = data.title;
+                    quill.root.innerHTML = data.content;
+                    hasChanges = true;
+                    // Try to save it
+                    saveNote();
+                } else {
+                    clearLocalStorageBackup();
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to check localStorage backup:', e);
+        }
+    }
 
     // Function to show save status
-    function showSaveStatus(status) {
+    function showSaveStatus(status, message) {
         if (status === 'saving') {
             saveStatus.className = 'save-status saving';
             saveStatus.innerHTML = '<span data-feather="loader" style="width: 14px; height: 14px;"></span> Saving...';
@@ -1259,16 +1310,28 @@
             saveStatus.innerHTML = '<span data-feather="check" style="width: 14px; height: 14px;"></span> Saved';
         } else if (status === 'error') {
             saveStatus.className = 'save-status';
-            saveStatus.innerHTML = '<span data-feather="alert-circle" style="width: 14px; height: 14px; color: var(--danger);"></span> Error saving';
+            const errorMsg = message || 'Error saving';
+            saveStatus.innerHTML = `<span data-feather="alert-circle" style="width: 14px; height: 14px; color: var(--danger);"></span> ${errorMsg} <button onclick="saveNote()" class="btn btn-link btn-sm p-0 ms-1" style="font-size: 12px;">Retry</button>`;
         }
         feather.replace();
     }
 
-    // Function to save note
-    async function saveNote() {
-        if (!hasChanges) return;
+    // Function to save note with retry logic
+    async function saveNote(retryCount = 0) {
+        if (!hasChanges && retryCount === 0) return;
+
+        const MAX_RETRIES = 3;
+        const RETRY_DELAYS = [1000, 2000, 4000]; // Exponential backoff
 
         showSaveStatus('saving');
+
+        // Save to localStorage first as backup
+        saveToLocalStorage();
+
+        const noteData = {
+            title: titleInput.value || 'Untitled',
+            content: quill.root.innerHTML
+        };
 
         try {
             const response = await fetch(`/notes/${noteId}/update`, {
@@ -1277,27 +1340,40 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCsrfToken()
                 },
-                body: JSON.stringify({
-                    title: titleInput.value || 'Untitled',
-                    content: quill.root.innerHTML
-                })
+                body: JSON.stringify(noteData)
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
 
             if (data.success) {
                 showSaveStatus('saved');
                 hasChanges = false;
+                clearLocalStorageBackup();
 
                 // Update page title and breadcrumb
                 document.title = (titleInput.value || 'Untitled') + ' - Class Manager';
-                document.querySelector('.note-breadcrumb span.text-dark').textContent = titleInput.value || 'Untitled';
+                const breadcrumb = document.querySelector('.note-breadcrumb span.text-dark');
+                if (breadcrumb) {
+                    breadcrumb.textContent = titleInput.value || 'Untitled';
+                }
             } else {
-                showSaveStatus('error');
+                throw new Error(data.error || 'Save failed');
             }
         } catch (error) {
             console.error('Save error:', error);
-            showSaveStatus('error');
+
+            if (retryCount < MAX_RETRIES) {
+                console.log(`Retrying save (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+                showSaveStatus('saving');
+                setTimeout(() => saveNote(retryCount + 1), RETRY_DELAYS[retryCount]);
+            } else {
+                showSaveStatus('error', 'Save failed - click to retry');
+                console.error('All retry attempts failed. Content backed up to localStorage.');
+            }
         }
     }
 
@@ -1305,6 +1381,9 @@
     function debouncedSave() {
         hasChanges = true;
         showSaveStatus('saving');
+
+        // Immediately save to localStorage
+        saveToLocalStorage();
 
         if (saveTimeout) {
             clearTimeout(saveTimeout);
@@ -1323,10 +1402,23 @@
     // Listen for title changes
     titleInput.addEventListener('input', debouncedSave);
 
-    // Save before leaving page
+    // Save before leaving page using sendBeacon for reliability
     window.addEventListener('beforeunload', function(e) {
         if (hasChanges) {
-            saveNote();
+            // Save to localStorage as final backup
+            saveToLocalStorage();
+
+            // Use sendBeacon for reliable delivery during page unload
+            // Uses a CSRF-exempt endpoint specifically for beacon saves
+            const noteData = {
+                title: titleInput.value || 'Untitled',
+                content: quill.root.innerHTML
+            };
+
+            // sendBeacon is more reliable than fetch during unload
+            const blob = new Blob([JSON.stringify(noteData)], { type: 'application/json' });
+            navigator.sendBeacon(`/notes/${noteId}/beacon-save`, blob);
+
             e.preventDefault();
             e.returnValue = '';
         }
@@ -1339,6 +1431,17 @@
             saveNote();
         }
     });
+
+    // Periodic auto-save every 30 seconds as fallback
+    autoSaveInterval = setInterval(function() {
+        if (hasChanges) {
+            console.log('Periodic auto-save triggered');
+            saveNote();
+        }
+    }, 30000);
+
+    // Check for backup on page load
+    setTimeout(checkForBackup, 500);
 
     // ===== AI FUNCTIONS =====
 

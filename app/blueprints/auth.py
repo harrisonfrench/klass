@@ -26,7 +26,7 @@ def get_current_user():
     if not hasattr(g, 'current_user'):
         db = get_db()
         g.current_user = db.execute(
-            'SELECT id, email, username, created_at FROM users WHERE id = ?',
+            'SELECT id, email, username, created_at FROM users WHERE id = %s',
             (session['user_id'],)
         ).fetchone()
 
@@ -61,7 +61,7 @@ def login():
         if error is None:
             db = get_db()
             user = db.execute(
-                'SELECT * FROM users WHERE email = ?',
+                'SELECT * FROM users WHERE email = %s',
                 (email,)
             ).fetchone()
 
@@ -121,7 +121,7 @@ def register():
 
             # Check if email already exists
             existing = db.execute(
-                'SELECT id FROM users WHERE email = ?',
+                'SELECT id FROM users WHERE email = %s',
                 (email,)
             ).fetchone()
 
@@ -130,7 +130,7 @@ def register():
             else:
                 # Check if username already exists
                 existing = db.execute(
-                    'SELECT id FROM users WHERE username = ?',
+                    'SELECT id FROM users WHERE username = %s',
                     (username,)
                 ).fetchone()
 
@@ -140,20 +140,20 @@ def register():
         if error is None:
             # Create the user
             db.execute(
-                'INSERT INTO users (email, username, password_hash) VALUES (?, ?, ?)',
+                'INSERT INTO users (email, username, password_hash) VALUES (%s, %s, %s)',
                 (email, username, generate_password_hash(password))
             )
             db.commit()
 
             # Get the new user
             user = db.execute(
-                'SELECT id, username FROM users WHERE email = ?',
+                'SELECT id, username FROM users WHERE email = %s',
                 (email,)
             ).fetchone()
 
             # Create default settings for the user
             db.execute(
-                'INSERT INTO user_settings (user_id) VALUES (?)',
+                'INSERT INTO user_settings (user_id) VALUES (%s)',
                 (user['id'],)
             )
             db.commit()
@@ -191,7 +191,7 @@ def forgot_password():
         else:
             db = get_db()
             user = db.execute(
-                'SELECT id FROM users WHERE email = ?',
+                'SELECT id FROM users WHERE email = %s',
                 (email,)
             ).fetchone()
 

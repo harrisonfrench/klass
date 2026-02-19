@@ -51,7 +51,7 @@ def list_classes():
     """List all classes for the current user."""
     db = get_db()
     cursor = db.execute(
-        'SELECT * FROM classes WHERE user_id = ? ORDER BY created_at DESC',
+        'SELECT * FROM classes WHERE user_id = %s ORDER BY created_at DESC',
         (session['user_id'],)
     )
     all_classes = cursor.fetchall()
@@ -78,7 +78,7 @@ def create_class():
         db = get_db()
         db.execute(
             '''INSERT INTO classes (user_id, name, code, instructor, semester, color, description, d2l_course_url)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)''',
             (session['user_id'], name, code, instructor, semester, color, description, d2l_course_url)
         )
         db.commit()
@@ -98,7 +98,7 @@ def view_class(class_id):
     """View a single class."""
     db = get_db()
     cursor = db.execute(
-        'SELECT * FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT * FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -109,7 +109,7 @@ def view_class(class_id):
 
     # Get assignments
     cursor = db.execute(
-        'SELECT * FROM assignments WHERE class_id = ? ORDER BY due_date ASC',
+        'SELECT * FROM assignments WHERE class_id = %s ORDER BY due_date ASC',
         (class_id,)
     )
     assignments_raw = cursor.fetchall()
@@ -130,14 +130,14 @@ def view_class(class_id):
 
     # Get calendar events
     cursor = db.execute(
-        'SELECT * FROM calendar_events WHERE class_id = ? ORDER BY event_date ASC',
+        'SELECT * FROM calendar_events WHERE class_id = %s ORDER BY event_date ASC',
         (class_id,)
     )
     calendar_events = cursor.fetchall()
 
     # Get notes for this class
     cursor = db.execute(
-        'SELECT * FROM notes WHERE class_id = ? ORDER BY is_pinned DESC, updated_at DESC',
+        'SELECT * FROM notes WHERE class_id = %s ORDER BY is_pinned DESC, updated_at DESC',
         (class_id,)
     )
     notes = cursor.fetchall()
@@ -146,14 +146,14 @@ def view_class(class_id):
     cursor = db.execute('''
         SELECT d.*, (SELECT COUNT(*) FROM flashcards WHERE deck_id = d.id) as card_count
         FROM flashcard_decks d
-        WHERE d.class_id = ?
+        WHERE d.class_id = %s
         ORDER BY d.updated_at DESC
     ''', (class_id,))
     flashcard_decks = cursor.fetchall()
 
     # Get study guides for this class
     cursor = db.execute('''
-        SELECT * FROM study_guides WHERE class_id = ? ORDER BY created_at DESC
+        SELECT * FROM study_guides WHERE class_id = %s ORDER BY created_at DESC
     ''', (class_id,))
     study_guides = cursor.fetchall()
 
@@ -187,9 +187,9 @@ def update_class(class_id):
     db = get_db()
     db.execute(
         '''UPDATE classes
-           SET name = ?, code = ?, instructor = ?, semester = ?, color = ?, description = ?,
-               d2l_course_url = ?, updated_at = CURRENT_TIMESTAMP
-           WHERE id = ? AND user_id = ?''',
+           SET name = %s, code = %s, instructor = %s, semester = %s, color = %s, description = %s,
+               d2l_course_url = %s, updated_at = CURRENT_TIMESTAMP
+           WHERE id = %s AND user_id = %s''',
         (name, code, instructor, semester, color, description, d2l_course_url, class_id, session['user_id'])
     )
     db.commit()
@@ -209,7 +209,7 @@ def delete_class(class_id):
 
     # Get class info for cleanup (only if owned by user)
     cursor = db.execute(
-        'SELECT name, syllabus_filename FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT name, syllabus_filename FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -224,7 +224,7 @@ def delete_class(class_id):
             except Exception:
                 pass
 
-        db.execute('DELETE FROM classes WHERE id = ? AND user_id = ?', (class_id, session['user_id']))
+        db.execute('DELETE FROM classes WHERE id = %s AND user_id = %s', (class_id, session['user_id']))
         db.commit()
 
         # Invalidate sidebar cache
@@ -243,7 +243,7 @@ def upload_syllabus(class_id):
     """Upload a syllabus for a class."""
     db = get_db()
     cursor = db.execute(
-        'SELECT * FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT * FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -285,7 +285,7 @@ def upload_syllabus(class_id):
 
         # Update database
         db.execute(
-            'UPDATE classes SET syllabus_filename = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            'UPDATE classes SET syllabus_filename = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s',
             (unique_filename, class_id)
         )
         db.commit()
@@ -314,7 +314,7 @@ def view_syllabus(class_id):
     """View/download the syllabus for a class."""
     db = get_db()
     cursor = db.execute(
-        'SELECT syllabus_filename FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT syllabus_filename FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -337,7 +337,7 @@ def update_assignment_status(class_id, assignment_id):
     # Verify the class belongs to the user
     db = get_db()
     cursor = db.execute(
-        'SELECT id FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT id FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     if not cursor.fetchone():
@@ -349,7 +349,7 @@ def update_assignment_status(class_id, assignment_id):
         new_status = 'pending'
 
     db.execute(
-        'UPDATE assignments SET status = ? WHERE id = ? AND class_id = ?',
+        'UPDATE assignments SET status = %s WHERE id = %s AND class_id = %s',
         (new_status, assignment_id, class_id)
     )
     db.commit()
@@ -363,7 +363,7 @@ def delete_syllabus(class_id):
     """Delete the syllabus for a class."""
     db = get_db()
     cursor = db.execute(
-        'SELECT syllabus_filename FROM classes WHERE id = ? AND user_id = ?',
+        'SELECT syllabus_filename FROM classes WHERE id = %s AND user_id = %s',
         (class_id, session['user_id'])
     )
     class_data = cursor.fetchone()
@@ -377,7 +377,7 @@ def delete_syllabus(class_id):
             pass
 
         db.execute(
-            'UPDATE classes SET syllabus_filename = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
+            'UPDATE classes SET syllabus_filename = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = %s AND user_id = %s',
             (class_id, session['user_id'])
         )
         db.commit()
