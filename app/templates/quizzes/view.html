@@ -108,7 +108,7 @@
                 <div class="quiz-meta">
                     {{ question_count }} questions
                     {% if quiz.time_limit %} | <span data-feather="clock" style="width: 14px; height: 14px;"></span> {{ quiz.time_limit }} min{% endif %}
-                    | Created {{ quiz.created_at[:10] if quiz.created_at else '' }}
+                    | Created {{ (quiz.created_at|string)[:10] if quiz.created_at else '' }}
                 </div>
             </div>
             <div class="d-flex gap-2">

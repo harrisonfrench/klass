@@ -203,7 +203,7 @@
                         {{ note.content|striptags|truncate(100) if note.content else 'Empty note' }}
                     </div>
                     <div class="note-card-meta">
-                        {{ note.updated_at[:10] if note.updated_at else '' }}
+                        {{ (note.updated_at|string)[:10] if note.updated_at else '' }}
                     </div>
                 </div>
             </a>
@@ -290,7 +290,7 @@
                     <div class="card-body">
                         <h6 class="card-title text-dark">{{ guide.title }}</h6>
                         <p class="card-text text-muted small mb-0">
-                            Created {{ guide.created_at[:10] if guide.created_at else '' }}
+                            Created {{ (guide.created_at|string)[:10] if guide.created_at else '' }}
                         </p>
                     </div>
                 </div>

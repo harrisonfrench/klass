@@ -676,7 +676,7 @@
             <span data-feather="check" style="width: 14px; height: 14px;"></span>
             Saved
         </span>
-        <span>Last edited {{ note.updated_at[:16] if note.updated_at else 'just now' }}</span>
+        <span>Last edited {{ (note.updated_at|string)[:16] if note.updated_at else 'just now' }}</span>
     </div>
 
     <!-- AI Toolbar -->

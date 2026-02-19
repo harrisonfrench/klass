@@ -138,7 +138,7 @@
             <div>
                 <h1>{{ guide.title }}</h1>
                 <div class="guide-meta">
-                    Created {{ guide.created_at[:10] if guide.created_at else '' }}
+                    Created {{ (guide.created_at|string)[:10] if guide.created_at else '' }}
                 </div>
             </div>
             <div class="guide-actions">

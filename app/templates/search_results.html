@@ -165,7 +165,7 @@
                     {{ note.content|striptags|truncate(100) if note.content else 'Empty note' }}
                 </div>
                 <div class="note-card-meta">
-                    {{ note.updated_at[:10] if note.updated_at else '' }}
+                    {{ (note.updated_at|string)[:10] if note.updated_at else '' }}
                 </div>
             </div>
         </a>

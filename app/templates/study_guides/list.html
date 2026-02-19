@@ -33,7 +33,7 @@
             <div class="item-title">{{ guide.title }}</div>
             <div class="item-subtitle">{{ guide.class_code or guide.class_name }}</div>
         </div>
-        <div class="item-meta">{{ guide.created_at[:10] if guide.created_at else '' }}</div>
+        <div class="item-meta">{{ (guide.created_at|string)[:10] if guide.created_at else '' }}</div>
     </a>
     {% endfor %}
 </div>

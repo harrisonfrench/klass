@@ -57,7 +57,7 @@
                     <span class="note-title">{{ note.title or 'Untitled' }}</span>
                     <span class="note-preview">{{ note.content|striptags|truncate(60) if note.content else 'Empty note' }}</span>
                 </div>
-                <span class="note-date">{{ note.updated_at[:10] if note.updated_at else '' }}</span>
+                <span class="note-date">{{ (note.updated_at|string)[:10] if note.updated_at else '' }}</span>
             </a>
             {% endfor %}
         </div>
