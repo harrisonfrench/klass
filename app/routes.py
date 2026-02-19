@@ -13,21 +13,21 @@ def index():
     user_id = session['user_id']
 
     cursor = db.execute(
-        'SELECT * FROM classes WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
+        'SELECT * FROM classes WHERE user_id = %s ORDER BY created_at DESC LIMIT 5',
         (user_id,)
     )
     classes = cursor.fetchall()
 
-    cursor = db.execute('SELECT COUNT(*) as count FROM classes WHERE user_id = ?', (user_id,))
+    cursor = db.execute('SELECT COUNT(*) as count FROM classes WHERE user_id = %s', (user_id,))
     class_count = cursor.fetchone()['count']
 
     # Count upcoming assignments (pending with future due dates)
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM assignments a
         JOIN classes c ON a.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         AND a.status != 'completed'
-        AND a.due_date >= date('now')
+        AND a.due_date >= CURDATE()
     ''', (user_id,))
     upcoming_count = cursor.fetchone()['count']
 
@@ -35,7 +35,7 @@ def index():
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     notes_count = cursor.fetchone()['count']
 
@@ -43,7 +43,7 @@ def index():
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     flashcard_count = cursor.fetchone()['count']
 
@@ -51,7 +51,7 @@ def index():
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM study_guides sg
         JOIN classes c ON sg.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     study_guide_count = cursor.fetchone()['count']
 
@@ -60,7 +60,7 @@ def index():
         SELECT n.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         ORDER BY n.updated_at DESC
         LIMIT 5
     ''', (user_id,))
@@ -89,21 +89,21 @@ def dashboard():
     user_id = session['user_id']
 
     cursor = db.execute(
-        'SELECT * FROM classes WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
+        'SELECT * FROM classes WHERE user_id = %s ORDER BY created_at DESC LIMIT 5',
         (user_id,)
     )
     classes = cursor.fetchall()
 
-    cursor = db.execute('SELECT COUNT(*) as count FROM classes WHERE user_id = ?', (user_id,))
+    cursor = db.execute('SELECT COUNT(*) as count FROM classes WHERE user_id = %s', (user_id,))
     class_count = cursor.fetchone()['count']
 
     # Count upcoming assignments (pending with future due dates)
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM assignments a
         JOIN classes c ON a.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         AND a.status != 'completed'
-        AND a.due_date >= date('now')
+        AND a.due_date >= CURDATE()
     ''', (user_id,))
     upcoming_count = cursor.fetchone()['count']
 
@@ -111,7 +111,7 @@ def dashboard():
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     notes_count = cursor.fetchone()['count']
 
@@ -119,7 +119,7 @@ def dashboard():
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM flashcard_decks d
         JOIN classes c ON d.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     flashcard_count = cursor.fetchone()['count']
 
@@ -127,7 +127,7 @@ def dashboard():
     cursor = db.execute('''
         SELECT COUNT(*) as count FROM study_guides sg
         JOIN classes c ON sg.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     study_guide_count = cursor.fetchone()['count']
 
@@ -136,7 +136,7 @@ def dashboard():
         SELECT n.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         ORDER BY n.updated_at DESC
         LIMIT 5
     ''', (user_id,))
@@ -166,7 +166,7 @@ def search():
     # Search classes
     classes = db.execute('''
         SELECT * FROM classes
-        WHERE user_id = ? AND (name LIKE ? OR code LIKE ? OR instructor LIKE ?)
+        WHERE user_id = %s AND (name LIKE %s OR code LIKE %s OR instructor LIKE %s)
     ''', (user_id, f'%{query}%', f'%{query}%', f'%{query}%')).fetchall()
 
     # Search assignments with class info
@@ -174,7 +174,7 @@ def search():
         SELECT a.*, c.name as class_name, c.color as class_color
         FROM assignments a
         JOIN classes c ON a.class_id = c.id
-        WHERE c.user_id = ? AND (a.title LIKE ? OR a.description LIKE ?)
+        WHERE c.user_id = %s AND (a.title LIKE %s OR a.description LIKE %s)
     ''', (user_id, f'%{query}%', f'%{query}%')).fetchall()
 
     # Search calendar events with class info
@@ -182,7 +182,7 @@ def search():
         SELECT e.*, c.name as class_name, c.color as class_color
         FROM calendar_events e
         JOIN classes c ON e.class_id = c.id
-        WHERE c.user_id = ? AND (e.title LIKE ? OR e.description LIKE ?)
+        WHERE c.user_id = %s AND (e.title LIKE %s OR e.description LIKE %s)
     ''', (user_id, f'%{query}%', f'%{query}%')).fetchall()
 
     # Search notes with class info
@@ -190,7 +190,7 @@ def search():
         SELECT n.*, c.name as class_name, c.color as class_color
         FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE c.user_id = ? AND (n.title LIKE ? OR n.content LIKE ?)
+        WHERE c.user_id = %s AND (n.title LIKE %s OR n.content LIKE %s)
     ''', (user_id, f'%{query}%', f'%{query}%')).fetchall()
 
     return render_template('search_results.html',
@@ -221,7 +221,7 @@ def calendar():
         SELECT a.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM assignments a
         JOIN classes c ON a.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         ORDER BY a.due_date ASC
     ''', (user_id,))
     assignments = cursor.fetchall()
@@ -231,7 +231,7 @@ def calendar():
         SELECT e.*, c.name as class_name, c.code as class_code, c.color as class_color
         FROM calendar_events e
         JOIN classes c ON e.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
         ORDER BY e.event_date ASC
     ''', (user_id,))
     events = cursor.fetchall()

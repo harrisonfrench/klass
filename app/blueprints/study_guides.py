@@ -218,7 +218,7 @@ def api_generate_guide():
 
         cursor = db.execute('''
             INSERT INTO study_guides (user_id, class_id, title, content, source_notes)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
         ''', (session['user_id'], class_id, title, content, json.dumps(note_ids)))
         db.commit()
 

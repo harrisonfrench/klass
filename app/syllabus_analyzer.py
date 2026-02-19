@@ -134,7 +134,7 @@ def save_analysis_to_db(db, class_id, analysis_data):
         try:
             db.execute(
                 '''INSERT INTO assignments (class_id, title, description, due_date, points, status)
-                   VALUES (?, ?, ?, ?, ?, 'pending')''',
+                   VALUES (%s, %s, %s, %s, %s, 'pending')''',
                 (
                     class_id,
                     assignment.get('title', 'Untitled'),
@@ -152,7 +152,7 @@ def save_analysis_to_db(db, class_id, analysis_data):
         try:
             db.execute(
                 '''INSERT INTO calendar_events (class_id, title, description, event_date, event_type)
-                   VALUES (?, ?, ?, ?, ?)''',
+                   VALUES (%s, %s, %s, %s, %s)''',
                 (
                     class_id,
                     event.get('title', 'Untitled'),
@@ -182,8 +182,8 @@ def analyze_and_save(filepath, class_id, db, api_key):
         return False, error
 
     # Clear existing assignments/events for this class (re-analysis)
-    db.execute('DELETE FROM assignments WHERE class_id = ?', (class_id,))
-    db.execute('DELETE FROM calendar_events WHERE class_id = ?', (class_id,))
+    db.execute('DELETE FROM assignments WHERE class_id = %s', (class_id,))
+    db.execute('DELETE FROM calendar_events WHERE class_id = %s', (class_id,))
 
     # Save to database
     assignments_added, events_added = save_analysis_to_db(db, class_id, analysis_data)

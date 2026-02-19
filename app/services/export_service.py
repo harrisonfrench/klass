@@ -23,7 +23,7 @@ def export_notes_markdown(db, user_id, class_id=None):
             SELECT n.*, c.name as class_name, c.code as class_code
             FROM notes n
             JOIN classes c ON n.class_id = c.id
-            WHERE c.user_id = ? AND n.class_id = ?
+            WHERE c.user_id = %s AND n.class_id = %s
             ORDER BY c.name, n.updated_at DESC
         ''', (user_id, class_id))
     else:
@@ -31,7 +31,7 @@ def export_notes_markdown(db, user_id, class_id=None):
             SELECT n.*, c.name as class_name, c.code as class_code
             FROM notes n
             JOIN classes c ON n.class_id = c.id
-            WHERE c.user_id = ?
+            WHERE c.user_id = %s
             ORDER BY c.name, n.updated_at DESC
         ''', (user_id,))
 
@@ -78,7 +78,7 @@ def export_flashcards_csv(db, user_id, deck_id=None):
             FROM flashcards f
             JOIN flashcard_decks d ON f.deck_id = d.id
             JOIN classes c ON d.class_id = c.id
-            WHERE d.user_id = ? AND d.id = ?
+            WHERE d.user_id = %s AND d.id = %s
             ORDER BY d.title, f.id
         ''', (user_id, deck_id))
     else:
@@ -87,7 +87,7 @@ def export_flashcards_csv(db, user_id, deck_id=None):
             FROM flashcards f
             JOIN flashcard_decks d ON f.deck_id = d.id
             JOIN classes c ON d.class_id = c.id
-            WHERE d.user_id = ?
+            WHERE d.user_id = %s
             ORDER BY d.title, f.id
         ''', (user_id,))
 
@@ -138,7 +138,7 @@ def export_full_backup(db, user_id):
 
     # Export classes
     cursor = db.execute(
-        'SELECT * FROM classes WHERE user_id = ?',
+        'SELECT * FROM classes WHERE user_id = %s',
         (user_id,)
     )
     backup['classes'] = [dict(row) for row in cursor.fetchall()]
@@ -147,13 +147,13 @@ def export_full_backup(db, user_id):
     cursor = db.execute('''
         SELECT n.* FROM notes n
         JOIN classes c ON n.class_id = c.id
-        WHERE c.user_id = ?
+        WHERE c.user_id = %s
     ''', (user_id,))
     backup['notes'] = [dict(row) for row in cursor.fetchall()]
 
     # Export flashcard decks
     cursor = db.execute(
-        'SELECT * FROM flashcard_decks WHERE user_id = ?',
+        'SELECT * FROM flashcard_decks WHERE user_id = %s',
         (user_id,)
     )
     backup['flashcard_decks'] = [dict(row) for row in cursor.fetchall()]
@@ -162,27 +162,27 @@ def export_full_backup(db, user_id):
     cursor = db.execute('''
         SELECT f.* FROM flashcards f
         JOIN flashcard_decks d ON f.deck_id = d.id
-        WHERE d.user_id = ?
+        WHERE d.user_id = %s
     ''', (user_id,))
     backup['flashcards'] = [dict(row) for row in cursor.fetchall()]
 
     # Export study guides
     cursor = db.execute(
-        'SELECT * FROM study_guides WHERE user_id = ?',
+        'SELECT * FROM study_guides WHERE user_id = %s',
         (user_id,)
     )
     backup['study_guides'] = [dict(row) for row in cursor.fetchall()]
 
     # Export quizzes
     cursor = db.execute(
-        'SELECT * FROM quizzes WHERE user_id = ?',
+        'SELECT * FROM quizzes WHERE user_id = %s',
         (user_id,)
     )
     backup['quizzes'] = [dict(row) for row in cursor.fetchall()]
 
     # Export quiz attempts
     cursor = db.execute(
-        'SELECT * FROM quiz_attempts WHERE user_id = ?',
+        'SELECT * FROM quiz_attempts WHERE user_id = %s',
         (user_id,)
     )
     backup['quiz_attempts'] = [dict(row) for row in cursor.fetchall()]

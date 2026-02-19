@@ -208,7 +208,7 @@ def get_stats():
         SELECT COUNT(*) as sessions,
                COALESCE(SUM(duration), 0) as minutes
         FROM pomodoro_sessions
-        WHERE user_id = ? AND completed = 1
+        WHERE user_id = %s AND completed = 1
         AND DATE(completed_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         AND session_type = 'work'
     ''', (user_id,))
@@ -230,8 +230,8 @@ def get_stats():
                COALESCE(SUM(p.duration), 0) as minutes
         FROM pomodoro_sessions p
         JOIN classes c ON p.class_id = c.id
-        WHERE p.user_id = ? AND p.completed = 1
-        AND DATE(p.completed_at) >= DATE('now', '-7 days')
+        WHERE p.user_id = %s AND p.completed = 1
+        AND DATE(p.completed_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         AND p.session_type = 'work'
         GROUP BY c.id
         ORDER BY minutes DESC
