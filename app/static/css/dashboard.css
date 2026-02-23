@@ -1180,11 +1180,11 @@ strong {
 }
 
 .ql-snow .ql-stroke {
-    stroke: var(--text-muted);
+    stroke: var(--text);
 }
 
 .ql-snow .ql-fill {
-    fill: var(--text-muted);
+    fill: var(--text);
 }
 
 .ql-snow .ql-picker-options {
@@ -1860,6 +1860,7 @@ strong {
 .ai-tools-dropdown {
     position: relative;
     display: inline-block;
+    margin-bottom: 1rem;
 }
 
 .ai-tools-btn {
