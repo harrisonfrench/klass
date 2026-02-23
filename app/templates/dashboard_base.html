@@ -246,6 +246,14 @@
                                 Classes
                             </a>
                         </li>
+                        {% if is_admin %}
+                        <li>
+                            <a class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                                <span data-feather="shield"></span>
+                                Admin
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
 
                     <!-- My Classes -->

@@ -1,0 +1,451 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-page {
+    padding: 1.5rem;
+}
+
+.admin-header {
+    margin-bottom: 1.5rem;
+}
+
+.admin-header h1 {
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.admin-header p {
+    color: var(--text-muted);
+    margin: 0.25rem 0 0;
+}
+
+/* Stat Cards Row */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary);
+    box-shadow: var(--shadow);
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-card.primary { border-left-color: var(--primary); }
+.stat-card.success { border-left-color: var(--success); }
+.stat-card.info { border-left-color: var(--info); }
+.stat-card.warning { border-left-color: var(--warning); }
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.stat-card.primary .stat-label { color: var(--primary); }
+.stat-card.success .stat-label { color: var(--success); }
+.stat-card.info .stat-label { color: var(--info); }
+.stat-card.warning .stat-label { color: var(--warning); }
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.3;
+}
+
+.stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.stat-card.primary .stat-icon { color: var(--primary); }
+.stat-card.success .stat-icon { color: var(--success); }
+.stat-card.info .stat-icon { color: var(--info); }
+.stat-card.warning .stat-icon { color: var(--warning); }
+
+/* Charts Row */
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.chart-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chart-card-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.chart-card-header svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+}
+
+.chart-card-body {
+    padding: 1.25rem;
+}
+
+/* Users Table */
+.users-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.users-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.users-card-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.users-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    max-width: 250px;
+}
+
+.users-search svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+}
+
+.users-search input {
+    border: none;
+    background: transparent;
+    color: var(--text-dark);
+    font-size: 0.875rem;
+    outline: none;
+    width: 100%;
+}
+
+.users-search input::placeholder {
+    color: var(--text-muted);
+}
+
+.users-table-container {
+    overflow-x: auto;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dark);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
+}
+
+.users-table td {
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+}
+
+.users-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.user-email {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.user-stat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <!-- Header -->
+    <div class="admin-header">
+        <h1>Admin Dashboard</h1>
+        <p>Overview of all users and activity</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+        <div class="stat-card primary">
+            <div class="stat-content">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value">{{ total_users }}</div>
+            </div>
+            <div class="stat-icon">
+                <span data-feather="users"></span>
+            </div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-content">
+                <div class="stat-label">Total Notes</div>
+                <div class="stat-value">{{ total_notes }}</div>
+            </div>
+            <div class="stat-icon">
+                <span data-feather="file-text"></span>
+            </div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-content">
+                <div class="stat-label">Total Classes</div>
+                <div class="stat-value">{{ total_classes }}</div>
+            </div>
+            <div class="stat-icon">
+                <span data-feather="folder"></span>
+            </div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-content">
+                <div class="stat-label">Flashcard Decks</div>
+                <div class="stat-value">{{ total_decks }}</div>
+            </div>
+            <div class="stat-icon">
+                <span data-feather="layers"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <span data-feather="trending-up"></span>
+                <h5>User Signups (Last 30 Days)</h5>
+            </div>
+            <div class="chart-card-body">
+                <canvas id="signupsChart" height="200"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <span data-feather="bar-chart-2"></span>
+                <h5>Notes Created (Last 30 Days)</h5>
+            </div>
+            <div class="chart-card-body">
+                <canvas id="activityChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="users-card">
+        <div class="users-card-header">
+            <h5>All Users</h5>
+            <div class="users-search">
+                <span data-feather="search"></span>
+                <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
+            </div>
+        </div>
+        <div class="users-table-container">
+            <table class="users-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Joined</th>
+                        <th>Classes</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td><strong>{{ user.username }}</strong></td>
+                        <td class="user-email">{{ user.email }}</td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</td>
+                        <td><span class="user-stat">{{ user.classes_count }}</span></td>
+                        <td><span class="user-stat">{{ user.notes_count }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted);">No users found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    feather.replace();
+
+    // User Signups Chart
+    const signupsCtx = document.getElementById('signupsChart').getContext('2d');
+    new Chart(signupsCtx, {
+        type: 'line',
+        data: {
+            labels: {{ signup_labels|tojson }},
+            datasets: [{
+                label: 'New Users',
+                data: {{ signup_values|tojson }},
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#4e73df',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    },
+                    grid: {
+                        color: '#e3e6f0'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Activity Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    new Chart(activityCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ activity_labels|tojson }},
+            datasets: [{
+                label: 'Notes Created',
+                data: {{ activity_values|tojson }},
+                backgroundColor: '#1cc88a',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    },
+                    grid: {
+                        color: '#e3e6f0'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Filter users table
+    function filterUsers() {
+        const searchText = document.getElementById('userSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('#usersTable tbody tr');
+
+        rows.forEach(row => {
+            const username = row.cells[0]?.textContent.toLowerCase() || '';
+            const email = row.cells[1]?.textContent.toLowerCase() || '';
+            const matches = username.includes(searchText) || email.includes(searchText);
+            row.style.display = matches ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

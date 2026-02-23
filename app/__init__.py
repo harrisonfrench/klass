@@ -57,8 +57,10 @@ from app.blueprints.ai_chat import ai_chat
 from app.blueprints.settings import settings
 from app.blueprints.analytics import analytics
 from app.blueprints.pomodoro import pomodoro
+from app.blueprints.admin import admin
 
 app.register_blueprint(auth, url_prefix='/auth')
+app.register_blueprint(admin)
 app.register_blueprint(pomodoro, url_prefix='/pomodoro')
 app.register_blueprint(ai_chat, url_prefix='/ai-tutor')
 app.register_blueprint(settings, url_prefix='/settings')
@@ -90,6 +92,13 @@ def add_security_headers(response):
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
+
+
+# Context processor to inject admin check into all templates
+@app.context_processor
+def inject_admin_check():
+    from app.blueprints.admin import is_admin
+    return {'is_admin': is_admin()}
 
 
 # Context processor to inject sidebar classes into all templates (with caching)
