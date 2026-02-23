@@ -25,6 +25,7 @@
             </div>
 
             <form action="{{ url_for('settings.update_profile') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" class="form-control" id="username" name="username"
@@ -43,6 +44,7 @@
         <div class="settings-section">
             <h3>Change Password</h3>
             <form action="{{ url_for('settings.change_password') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
                     <label for="current_password" class="form-label">Current Password</label>
                     <input type="password" class="form-control" id="current_password" name="current_password" required>
@@ -67,6 +69,7 @@
         <div class="settings-section">
             <h3>Appearance</h3>
             <form action="{{ url_for('settings.update_preferences') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-4">
                     <label class="form-label">Theme</label>
                     <div class="theme-options">
@@ -179,6 +182,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ url_for('settings.delete_account') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-body">
                     <div class="alert alert-danger">
                         <strong>Warning!</strong> This action cannot be undone. All your data will be permanently deleted.
