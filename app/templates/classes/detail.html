@@ -4,33 +4,30 @@
 
 {% block extra_css %}
 <style>
-.class-page {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
+.class-detail-page {
+    padding: 1.5rem;
 }
 
-.class-page-header {
+/* Header */
+.class-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
 }
 
-.class-page-header-left {
+.class-header-left {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
 .class-back-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: var(--bg-secondary);
+    background: var(--card-bg);
     color: var(--text-muted);
     display: flex;
     align-items: center;
@@ -41,180 +38,269 @@
 
 .class-back-btn:hover {
     background: var(--bg-hover);
-    color: var(--text);
+    color: var(--text-dark);
 }
 
 .class-back-btn svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 }
 
-.class-page-title {
+.class-info h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 0.75rem;
 }
 
 .class-color-dot {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     flex-shrink: 0;
 }
 
-.class-page-title h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-    color: var(--text);
-}
-
-.class-page-subtitle {
-    font-size: 0.85rem;
+.class-meta {
+    font-size: 0.875rem;
     color: var(--text-muted);
     margin-top: 0.25rem;
 }
 
-.class-page-actions {
+.class-actions {
     display: flex;
     gap: 0.5rem;
 }
 
-.class-action-btn {
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg-secondary);
-    color: var(--text);
-    font-size: 0.875rem;
+/* Tabs */
+.class-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 1.5rem;
+}
+
+.class-tab {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
     font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-decoration: none;
 }
 
-.class-action-btn:hover {
-    background: var(--bg-hover);
+.class-tab:hover {
+    color: var(--text-dark);
 }
 
-.class-action-btn.primary {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
+.class-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
 }
 
-.class-action-btn.primary:hover {
-    background: var(--primary-hover);
-}
-
-.class-action-btn svg {
+.class-tab svg {
     width: 16px;
     height: 16px;
 }
 
-/* Search */
-.class-search-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
+.class-tab .badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
 }
 
-.class-search-bar svg {
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Content Cards */
+.content-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-header h3 svg {
     width: 18px;
     height: 18px;
-    color: var(--text-muted);
-    flex-shrink: 0;
+    color: var(--primary);
 }
 
-.class-search-bar input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    color: var(--text);
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Class Info Grid */
+.class-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    padding: 1rem;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+}
+
+.info-item label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.info-item span {
     font-size: 0.9rem;
-    outline: none;
+    color: var(--text-dark);
+    font-weight: 500;
 }
 
-.class-search-bar input::placeholder {
-    color: var(--text-muted);
-}
-
-/* Notes List */
-.notes-simple-list {
-    display: flex;
-    flex-direction: column;
-}
-
-.note-simple-item {
+/* Syllabus Section */
+.syllabus-section {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 0;
-    border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.05));
-    text-decoration: none;
-    transition: background 0.15s;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
 }
 
-.note-simple-item:hover {
-    background: var(--bg-hover);
-    margin: 0 -0.75rem;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    border-radius: 6px;
-}
-
-.note-simple-item:last-child {
-    border-bottom: none;
-}
-
-.note-simple-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    background: var(--bg-secondary);
+.syllabus-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: var(--primary-light);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
 
-.note-simple-icon svg {
-    width: 16px;
-    height: 16px;
+.syllabus-icon svg {
+    width: 24px;
+    height: 24px;
+    color: var(--primary);
+}
+
+.syllabus-info {
+    flex: 1;
+}
+
+.syllabus-info h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.syllabus-info p {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
     color: var(--text-muted);
 }
 
-.note-simple-item.pinned .note-simple-icon {
-    background: rgba(245, 158, 11, 0.15);
+/* Notes List */
+.notes-list {
+    display: flex;
+    flex-direction: column;
 }
 
-.note-simple-item.pinned .note-simple-icon svg {
+.note-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.note-item:hover {
+    background: var(--bg-hover);
+}
+
+.note-item:last-child {
+    border-bottom: none;
+}
+
+.note-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.note-icon svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+}
+
+.note-item.pinned .note-icon {
+    background: var(--warning-light);
+}
+
+.note-item.pinned .note-icon svg {
     color: var(--warning);
 }
 
-.note-simple-content {
+.note-content {
     flex: 1;
     min-width: 0;
 }
 
-.note-simple-title {
+.note-title {
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--text);
+    color: var(--text-dark);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.note-simple-preview {
+.note-preview {
     font-size: 0.8rem;
     color: var(--text-muted);
     white-space: nowrap;
@@ -223,188 +309,578 @@
     margin-top: 0.125rem;
 }
 
-.note-simple-date {
+.note-date {
     font-size: 0.75rem;
-    color: var(--text-light, #6c7086);
+    color: var(--text-muted);
     flex-shrink: 0;
 }
 
-/* Empty State */
-.empty-state-simple {
-    padding: 3rem 1.5rem;
-    text-align: center;
+/* Assignments */
+.assignment-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.assignment-item:last-child {
+    border-bottom: none;
+}
+
+.assignment-checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.assignment-checkbox.completed {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.assignment-checkbox.completed svg {
+    width: 12px;
+    height: 12px;
+    color: white;
+}
+
+.assignment-info {
+    flex: 1;
+}
+
+.assignment-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.assignment-item.completed .assignment-title {
+    text-decoration: line-through;
     color: var(--text-muted);
 }
 
-.empty-state-simple svg {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 1rem;
-    opacity: 0.5;
+.assignment-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.125rem;
 }
 
-.empty-state-simple h5 {
-    color: var(--text);
-    margin-bottom: 0.5rem;
+.assignment-due {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    flex-shrink: 0;
 }
 
-.empty-state-simple p {
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
+.assignment-due.overdue {
+    background: var(--danger-light);
+    color: var(--danger);
 }
 
-/* Dropdown */
-.dropdown-menu {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.5rem;
-    min-width: 180px;
+.assignment-due.upcoming {
+    background: var(--warning-light);
+    color: #b45309;
 }
 
-.dropdown-item {
+.assignment-due.later {
+    background: var(--bg);
+    color: var(--text-muted);
+}
+
+/* Resources Grid */
+.resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.resource-card {
+    padding: 1rem;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: all 0.15s;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.625rem 0.75rem;
-    border-radius: 6px;
-    color: var(--text);
-    font-size: 0.875rem;
-    text-decoration: none;
 }
 
-.dropdown-item:hover {
+.resource-card:hover {
     background: var(--bg-hover);
-    color: var(--text);
 }
 
-.dropdown-item svg {
-    width: 16px;
-    height: 16px;
+.resource-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.resource-icon.flashcards {
+    background: var(--info-light);
+}
+
+.resource-icon.flashcards svg {
+    color: var(--info);
+}
+
+.resource-icon.study-guide {
+    background: var(--success-light);
+}
+
+.resource-icon.study-guide svg {
+    color: var(--success);
+}
+
+.resource-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.resource-info h4 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.resource-info span {
+    font-size: 0.75rem;
     color: var(--text-muted);
 }
 
-.dropdown-divider {
-    margin: 0.5rem 0;
-    border-color: var(--border);
+/* Empty State */
+.empty-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
 }
 
-.dropdown-item.text-danger {
-    color: #ef4444;
+.empty-state svg {
+    width: 48px;
+    height: 48px;
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-bottom: 1rem;
 }
 
-.dropdown-item.text-danger svg {
-    color: #ef4444;
+.empty-state h4 {
+    margin: 0 0 0.5rem;
+    color: var(--text-dark);
+    font-size: 1rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin: 0 0 1rem;
+}
+
+/* Search Bar */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.search-bar svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.search-bar input::placeholder {
+    color: var(--text-muted);
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="class-page">
+<div class="class-detail-page">
     <!-- Header -->
-    <div class="class-page-header">
-        <div class="class-page-header-left">
+    <div class="class-header">
+        <div class="class-header-left">
             <a href="{{ url_for('classes.list_classes') }}" class="class-back-btn">
                 <span data-feather="arrow-left"></span>
             </a>
-            <div>
-                <div class="class-page-title">
+            <div class="class-info">
+                <h1>
                     <span class="class-color-dot" style="background-color: {{ class_data.color }};"></span>
-                    <h1>{{ class_data.name }}</h1>
+                    {{ class_data.name }}
+                </h1>
+                <div class="class-meta">
+                    {{ class_data.code or '' }}{% if class_data.code and class_data.instructor %} &middot; {% endif %}{{ class_data.instructor or '' }}{% if class_data.semester %} &middot; {{ class_data.semester }}{% endif %}
                 </div>
-                {% if class_data.code or class_data.instructor %}
-                <div class="class-page-subtitle">
-                    {{ class_data.code or '' }}{% if class_data.code and class_data.instructor %} &middot; {% endif %}{{ class_data.instructor or '' }}
-                </div>
-                {% endif %}
             </div>
         </div>
-        <div class="class-page-actions">
+        <div class="class-actions">
             <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" style="margin: 0;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <button type="submit" class="class-action-btn primary">
+                <button type="submit" class="btn btn-primary">
                     <span data-feather="plus"></span>
                     New Note
                 </button>
             </form>
             <div class="dropdown">
-                <button class="class-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="dropdown">
                     <span data-feather="more-horizontal"></span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="{{ url_for('flashcards.list_decks') }}?class_id={{ class_data.id }}">
-                        <span data-feather="layers"></span>
-                        Flashcards
-                    </a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('study_guides.list_guides') }}?class_id={{ class_data.id }}">
-                        <span data-feather="book-open"></span>
-                        Study Guides
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal">
+                        <span data-feather="edit-2"></span> Edit Class
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal">
-                        <span data-feather="settings"></span>
-                        Settings
-                    </a></li>
                     <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <span data-feather="trash-2"></span>
-                        Delete Class
+                        <span data-feather="trash-2"></span> Delete Class
                     </a></li>
                 </ul>
             </div>
         </div>
     </div>
 
-    <!-- Search -->
-    <div class="class-search-bar">
-        <span data-feather="search"></span>
-        <input type="text" id="noteSearch" placeholder="Search notes..." onkeyup="filterNotes()">
+    <!-- Tabs -->
+    <div class="class-tabs">
+        <a href="#" class="class-tab active" data-tab="overview">
+            <span data-feather="info"></span>
+            Overview
+        </a>
+        <a href="#" class="class-tab" data-tab="notes">
+            <span data-feather="file-text"></span>
+            Notes
+            {% if notes %}<span class="badge">{{ notes|length }}</span>{% endif %}
+        </a>
+        <a href="#" class="class-tab" data-tab="assignments">
+            <span data-feather="check-square"></span>
+            Assignments
+            {% if assignments %}<span class="badge">{{ assignments|length }}</span>{% endif %}
+        </a>
+        <a href="#" class="class-tab" data-tab="resources">
+            <span data-feather="folder"></span>
+            Resources
+        </a>
     </div>
 
-    <!-- Notes List -->
-    <div class="notes-simple-list" id="notesList">
-        {% if notes %}
-            {% for note in notes %}
-            <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="note-simple-item {% if note.is_pinned %}pinned{% endif %}">
-                <div class="note-simple-icon">
-                    {% if note.is_pinned %}
-                    <span data-feather="bookmark"></span>
-                    {% else %}
-                    <span data-feather="file-text"></span>
-                    {% endif %}
+    <!-- Overview Tab -->
+    <div class="tab-content active" id="tab-overview">
+        <div class="content-card">
+            <div class="card-header">
+                <h3><span data-feather="info"></span> Class Information</h3>
+                <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal">Edit</a>
+            </div>
+            <div class="card-body">
+                <div class="class-info-grid">
+                    <div class="info-item">
+                        <label>Course Code</label>
+                        <span>{{ class_data.code or 'Not set' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Instructor</label>
+                        <span>{{ class_data.instructor or 'Not set' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Semester</label>
+                        <span>{{ class_data.semester or 'Not set' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Total Notes</label>
+                        <span>{{ notes|length }}</span>
+                    </div>
                 </div>
-                <div class="note-simple-content">
-                    <div class="note-simple-title">{{ note.title or 'Untitled' }}</div>
-                    <div class="note-simple-preview">{{ note.content|striptags|truncate(80) if note.content else 'Empty note' }}</div>
+                {% if class_data.description %}
+                <div class="info-item" style="margin-top: 1rem;">
+                    <label>Description</label>
+                    <span>{{ class_data.description }}</span>
                 </div>
-                <span class="note-simple-date">{{ (note.updated_at|string)[:10] if note.updated_at else '' }}</span>
-            </a>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state-simple">
-                <span data-feather="file-text"></span>
-                <h5>No notes yet</h5>
-                <p>Create your first note to get started</p>
-                <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" style="display: inline;">
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Syllabus -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3><span data-feather="file"></span> Syllabus</h3>
+            </div>
+            <div class="card-body">
+                {% if class_data.syllabus_filename %}
+                <div class="syllabus-section">
+                    <div class="syllabus-icon">
+                        <span data-feather="file-text"></span>
+                    </div>
+                    <div class="syllabus-info">
+                        <h4>Syllabus Uploaded</h4>
+                        <p>Click to view or download your syllabus</p>
+                    </div>
+                    <a href="{{ url_for('classes.view_syllabus', class_id=class_data.id) }}" class="btn btn-sm btn-primary" target="_blank">View</a>
+                    <form method="POST" action="{{ url_for('classes.delete_syllabus', class_id=class_data.id) }}" style="margin: 0;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="syllabus-section">
+                    <div class="syllabus-icon">
+                        <span data-feather="upload"></span>
+                    </div>
+                    <div class="syllabus-info">
+                        <h4>No Syllabus</h4>
+                        <p>Upload your syllabus to auto-import assignments and events</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#syllabusModal">Upload</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3><span data-feather="bar-chart-2"></span> Quick Stats</h3>
+            </div>
+            <div class="card-body">
+                <div class="class-info-grid">
+                    <div class="info-item">
+                        <label>Notes</label>
+                        <span>{{ notes|length }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Assignments</label>
+                        <span>{{ assignments|length }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Flashcard Decks</label>
+                        <span>{{ flashcard_decks|length }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Study Guides</label>
+                        <span>{{ study_guides|length }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Tab -->
+    <div class="tab-content" id="tab-notes">
+        <div class="search-bar">
+            <span data-feather="search"></span>
+            <input type="text" id="noteSearch" placeholder="Search notes..." onkeyup="filterNotes()">
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h3><span data-feather="file-text"></span> Notes</h3>
+                <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" style="margin: 0;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="class-action-btn primary">
-                        <span data-feather="plus"></span>
-                        Create Note
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <span data-feather="plus"></span> New Note
                     </button>
                 </form>
             </div>
+            {% if notes %}
+            <div class="notes-list" id="notesList">
+                {% for note in notes %}
+                <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="note-item {% if note.is_pinned %}pinned{% endif %}">
+                    <div class="note-icon">
+                        {% if note.is_pinned %}
+                        <span data-feather="bookmark"></span>
+                        {% else %}
+                        <span data-feather="file-text"></span>
+                        {% endif %}
+                    </div>
+                    <div class="note-content">
+                        <div class="note-title">{{ note.title or 'Untitled' }}</div>
+                        <div class="note-preview">{{ note.content|striptags|truncate(80) if note.content else 'Empty note' }}</div>
+                    </div>
+                    <span class="note-date">{{ note.updated_at.strftime('%Y-%m-%d') if note.updated_at else '' }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <span data-feather="file-text"></span>
+                <h4>No notes yet</h4>
+                <p>Create your first note to get started</p>
+                <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-primary">
+                        <span data-feather="plus"></span> Create Note
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Assignments Tab -->
+    <div class="tab-content" id="tab-assignments">
+        <div class="content-card">
+            <div class="card-header">
+                <h3><span data-feather="check-square"></span> Assignments</h3>
+            </div>
+            {% if assignments %}
+            <div class="assignments-list">
+                {% for assignment in assignments %}
+                {% set is_completed = assignment.status == 'completed' %}
+                {% set due_date = assignment.due_date %}
+                <div class="assignment-item {% if is_completed %}completed{% endif %}">
+                    <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}" style="margin: 0;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="status" value="{{ 'pending' if is_completed else 'completed' }}">
+                        <button type="submit" class="assignment-checkbox {% if is_completed %}completed{% endif %}">
+                            {% if is_completed %}<span data-feather="check"></span>{% endif %}
+                        </button>
+                    </form>
+                    <div class="assignment-info">
+                        <div class="assignment-title">{{ assignment.title }}</div>
+                        {% if assignment.description %}
+                        <div class="assignment-meta">{{ assignment.description|truncate(60) }}</div>
+                        {% endif %}
+                    </div>
+                    {% if due_date %}
+                    <span class="assignment-due {% if is_completed %}later{% elif due_date < today %}overdue{% elif (due_date - today).days <= 3 %}upcoming{% else %}later{% endif %}">
+                        {{ due_date.strftime('%b %d') if due_date else '' }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <span data-feather="check-square"></span>
+                <h4>No assignments</h4>
+                <p>Upload a syllabus to auto-import assignments, or they'll appear here when added</p>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if calendar_events %}
+        <div class="content-card">
+            <div class="card-header">
+                <h3><span data-feather="calendar"></span> Upcoming Events</h3>
+            </div>
+            <div class="assignments-list">
+                {% for event in calendar_events %}
+                <div class="assignment-item">
+                    <div class="assignment-checkbox" style="background: var(--info); border-color: var(--info);">
+                        <span data-feather="calendar" style="width: 12px; height: 12px; color: white;"></span>
+                    </div>
+                    <div class="assignment-info">
+                        <div class="assignment-title">{{ event.title }}</div>
+                        {% if event.description %}
+                        <div class="assignment-meta">{{ event.description|truncate(60) }}</div>
+                        {% endif %}
+                    </div>
+                    {% if event.event_date %}
+                    <span class="assignment-due later">{{ event.event_date.strftime('%b %d') if event.event_date else '' }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
         {% endif %}
+    </div>
+
+    <!-- Resources Tab -->
+    <div class="tab-content" id="tab-resources">
+        <div class="content-card">
+            <div class="card-header">
+                <h3><span data-feather="layers"></span> Flashcard Decks</h3>
+                <a href="{{ url_for('flashcards.create_deck') }}?class_id={{ class_data.id }}" class="btn btn-sm btn-primary">
+                    <span data-feather="plus"></span> New Deck
+                </a>
+            </div>
+            <div class="card-body">
+                {% if flashcard_decks %}
+                <div class="resources-grid">
+                    {% for deck in flashcard_decks %}
+                    <a href="{{ url_for('flashcards.view_deck', deck_id=deck.id) }}" class="resource-card">
+                        <div class="resource-icon flashcards">
+                            <span data-feather="layers"></span>
+                        </div>
+                        <div class="resource-info">
+                            <h4>{{ deck.title }}</h4>
+                            <span>{{ deck.card_count or 0 }} cards</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding: 2rem;">
+                    <span data-feather="layers"></span>
+                    <h4>No flashcard decks</h4>
+                    <p>Create flashcards to study this class</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h3><span data-feather="book-open"></span> Study Guides</h3>
+                <a href="{{ url_for('study_guides.create_guide') }}?class_id={{ class_data.id }}" class="btn btn-sm btn-primary">
+                    <span data-feather="plus"></span> New Guide
+                </a>
+            </div>
+            <div class="card-body">
+                {% if study_guides %}
+                <div class="resources-grid">
+                    {% for guide in study_guides %}
+                    <a href="{{ url_for('study_guides.view_guide', guide_id=guide.id) }}" class="resource-card">
+                        <div class="resource-icon study-guide">
+                            <span data-feather="book-open"></span>
+                        </div>
+                        <div class="resource-info">
+                            <h4>{{ guide.title }}</h4>
+                            <span>{{ guide.created_at.strftime('%b %d, %Y') if guide.created_at else '' }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding: 2rem;">
+                    <span data-feather="book-open"></span>
+                    <h4>No study guides</h4>
+                    <p>Generate study guides from your notes</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Edit Modal -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+<div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('classes.update_class', class_id=class_data.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Edit Class</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">Edit Class</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -425,6 +901,14 @@
                         <label for="edit-instructor" class="form-label">Instructor</label>
                         <input type="text" class="form-control" id="edit-instructor" name="instructor" value="{{ class_data.instructor or '' }}">
                     </div>
+                    <div class="mb-3">
+                        <label for="edit-semester" class="form-label">Semester</label>
+                        <input type="text" class="form-control" id="edit-semester" name="semester" value="{{ class_data.semester or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit-description" name="description" rows="2">{{ class_data.description or '' }}</textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -435,17 +919,42 @@
     </div>
 </div>
 
+<!-- Syllabus Upload Modal -->
+<div class="modal fade" id="syllabusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('classes.upload_syllabus', class_id=class_data.id) }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload Syllabus</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Upload your syllabus (PDF, DOC, DOCX, or TXT) to automatically import assignments and events.</p>
+                    <div class="mb-3">
+                        <input type="file" class="form-control" name="syllabus" accept=".pdf,.doc,.docx,.txt" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Delete Class</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Delete Class</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete <strong>{{ class_data.name }}</strong>?</p>
-                <p class="text-danger small">This will permanently delete all notes in this class.</p>
+                <p class="text-danger small">This will permanently delete all notes, assignments, and resources in this class.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -463,16 +972,44 @@
 <script>
     feather.replace();
 
+    // Tab switching
+    const tabs = document.querySelectorAll('.class-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tabId = tab.dataset.tab;
+
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Show tab content
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === 'tab-' + tabId) {
+                    content.classList.add('active');
+                }
+            });
+        });
+    });
+
+    // Note search
     function filterNotes() {
         const searchText = document.getElementById('noteSearch').value.toLowerCase();
-        const noteItems = document.querySelectorAll('.note-simple-item');
+        const noteItems = document.querySelectorAll('.note-item');
 
         noteItems.forEach(item => {
-            const title = item.querySelector('.note-simple-title').textContent.toLowerCase();
-            const preview = item.querySelector('.note-simple-preview').textContent.toLowerCase();
+            const title = item.querySelector('.note-title').textContent.toLowerCase();
+            const preview = item.querySelector('.note-preview').textContent.toLowerCase();
             const matches = title.includes(searchText) || preview.includes(searchText);
             item.style.display = matches ? 'flex' : 'none';
         });
     }
+
+    // Today's date for assignment comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 </script>
 {% endblock %}

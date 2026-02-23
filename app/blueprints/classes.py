@@ -167,7 +167,8 @@ def view_class(class_id):
         calendar_events=calendar_events,
         notes=notes,
         flashcard_decks=flashcard_decks,
-        study_guides=study_guides
+        study_guides=study_guides,
+        today=today
     )
 
 

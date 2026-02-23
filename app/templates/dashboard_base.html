@@ -247,6 +247,12 @@
                             </a>
                         </li>
                         <li>
+                            <a class="nav-item {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">
+                                <span data-feather="calendar"></span>
+                                Calendar
+                            </a>
+                        </li>
+                        <li>
                             <a class="nav-item {% if request.endpoint == 'settings.preferences' %}active{% endif %}" href="{{ url_for('settings.preferences') }}">
                                 <span data-feather="settings"></span>
                                 Settings
