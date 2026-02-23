@@ -303,6 +303,7 @@ def init_db():
             theme VARCHAR(20) DEFAULT 'light',
             default_class_color VARCHAR(20) DEFAULT '#6366f1',
             ai_features_enabled TINYINT(1) DEFAULT 1,
+            profile_picture VARCHAR(255) DEFAULT NULL,
             pomodoro_work_duration INT DEFAULT 25,
             pomodoro_short_break INT DEFAULT 5,
             pomodoro_long_break INT DEFAULT 15,
@@ -312,6 +313,13 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
+
+    # Add profile_picture column if it doesn't exist (for existing databases)
+    try:
+        cursor.execute('ALTER TABLE user_settings ADD COLUMN profile_picture VARCHAR(255) DEFAULT NULL')
+        db.commit()
+    except pymysql.err.OperationalError:
+        pass  # Column already exists
 
     # Create pomodoro sessions table
     cursor.execute('''

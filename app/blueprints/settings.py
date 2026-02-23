@@ -1,12 +1,21 @@
 """Settings Blueprint - User preferences and settings."""
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, Response
+import os
+import secrets
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, Response, current_app, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from app.db_connect import get_db
 from app.blueprints.auth import login_required
 from app.services.export_service import export_notes_markdown, export_flashcards_csv, export_full_backup
 
 settings = Blueprint('settings', __name__)
+
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+
+def allowed_image_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
 
 
 @settings.route('/')
@@ -197,6 +206,106 @@ def update_preferences():
 
     flash('Preferences saved.', 'success')
     return redirect(url_for('settings.preferences'))
+
+
+@settings.route('/upload-profile-picture', methods=['POST'])
+@login_required
+def upload_profile_picture():
+    """Upload a profile picture."""
+    db = get_db()
+    user_id = session['user_id']
+
+    if 'profile_picture' not in request.files:
+        flash('No file selected.', 'error')
+        return redirect(url_for('settings.preferences'))
+
+    file = request.files['profile_picture']
+
+    if file.filename == '':
+        flash('No file selected.', 'error')
+        return redirect(url_for('settings.preferences'))
+
+    if file and allowed_image_file(file.filename):
+        # Get current profile picture to delete
+        cursor = db.execute(
+            'SELECT profile_picture FROM user_settings WHERE user_id = %s',
+            (user_id,)
+        )
+        current_settings = cursor.fetchone()
+
+        # Delete old profile picture if exists
+        if current_settings and current_settings.get('profile_picture'):
+            try:
+                old_filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars', current_settings['profile_picture'])
+                if os.path.exists(old_filepath):
+                    os.remove(old_filepath)
+            except Exception:
+                pass
+
+        # Create avatars directory if it doesn't exist
+        avatars_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars')
+        os.makedirs(avatars_dir, exist_ok=True)
+
+        # Save new profile picture with cryptographic random filename
+        ext = secure_filename(file.filename).rsplit('.', 1)[1].lower()
+        unique_filename = f"{user_id}_{secrets.token_hex(16)}.{ext}"
+        filepath = os.path.join(avatars_dir, unique_filename)
+        file.save(filepath)
+
+        # Update database
+        db.execute(
+            'UPDATE user_settings SET profile_picture = %s, updated_at = CURRENT_TIMESTAMP WHERE user_id = %s',
+            (unique_filename, user_id)
+        )
+        db.commit()
+
+        flash('Profile picture updated successfully!', 'success')
+    else:
+        flash('Invalid file type. Allowed: PNG, JPG, JPEG, GIF, WEBP', 'error')
+
+    return redirect(url_for('settings.preferences'))
+
+
+@settings.route('/remove-profile-picture', methods=['POST'])
+@login_required
+def remove_profile_picture():
+    """Remove profile picture."""
+    db = get_db()
+    user_id = session['user_id']
+
+    # Get current profile picture to delete
+    cursor = db.execute(
+        'SELECT profile_picture FROM user_settings WHERE user_id = %s',
+        (user_id,)
+    )
+    current_settings = cursor.fetchone()
+
+    if current_settings and current_settings.get('profile_picture'):
+        try:
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars', current_settings['profile_picture'])
+            if os.path.exists(filepath):
+                os.remove(filepath)
+        except Exception:
+            pass
+
+        db.execute(
+            'UPDATE user_settings SET profile_picture = NULL, updated_at = CURRENT_TIMESTAMP WHERE user_id = %s',
+            (user_id,)
+        )
+        db.commit()
+        flash('Profile picture removed.', 'success')
+    else:
+        flash('No profile picture to remove.', 'error')
+
+    return redirect(url_for('settings.preferences'))
+
+
+@settings.route('/avatar/<filename>')
+@login_required
+def serve_avatar(filename):
+    """Serve avatar images."""
+    avatars_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars')
+    return send_from_directory(avatars_dir, filename)
 
 
 @settings.route('/delete-account', methods=['POST'])

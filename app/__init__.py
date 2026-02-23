@@ -130,21 +130,22 @@ def inject_sidebar_classes():
         return {'sidebar_classes': []}
 
 
-# Context processor to inject user theme into all templates
+# Context processor to inject user theme and profile picture into all templates
 @app.context_processor
-def inject_user_theme():
+def inject_user_settings():
     from flask import session
     try:
         if 'user_id' not in session:
-            return {'user_theme': 'light'}
+            return {'user_theme': 'light', 'user_profile_picture': None}
 
         db = get_db()
         cursor = db.execute(
-            'SELECT theme FROM user_settings WHERE user_id = %s',
+            'SELECT theme, profile_picture FROM user_settings WHERE user_id = %s',
             (session['user_id'],)
         )
         settings = cursor.fetchone()
         theme = settings['theme'] if settings and settings.get('theme') else 'light'
-        return {'user_theme': theme}
+        profile_picture = settings.get('profile_picture') if settings else None
+        return {'user_theme': theme, 'user_profile_picture': profile_picture}
     except Exception:
-        return {'user_theme': 'light'}
+        return {'user_theme': 'light', 'user_profile_picture': None}

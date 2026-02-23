@@ -723,13 +723,7 @@
             <div class="empty-state">
                 <span data-feather="file-text"></span>
                 <h4>No notes yet</h4>
-                <p>Create your first note to get started</p>
-                <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" style="display: inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn btn-primary">
-                        <span data-feather="plus"></span> Create Note
-                    </button>
-                </form>
+                <p>Create your first note using the button above</p>
             </div>
             {% endif %}
         </div>

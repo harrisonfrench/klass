@@ -365,9 +365,9 @@ body {
 .card-header {
     padding: 0.75rem 1.25rem;
     border-bottom: 1px solid var(--border);
-    background: #f8f9fc;
+    background: var(--bg);
     font-weight: 600;
-    color: var(--primary);
+    color: var(--text-dark);
 }
 
 .card-body {
@@ -377,7 +377,7 @@ body {
 .card-footer {
     padding: 0.75rem 1.25rem;
     border-top: 1px solid var(--border);
-    background: #f8f9fc;
+    background: var(--bg);
 }
 
 /* Stat Cards - SB Admin style colored left border */
@@ -860,7 +860,12 @@ body {
 .class-card-header {
     padding: 0.75rem 1rem;
     color: #fff;
-    font-weight: 500;
+    font-weight: 600;
+}
+
+.class-card-header strong {
+    color: #fff;
+    font-weight: 700;
 }
 
 .class-card-body {
@@ -1423,6 +1428,14 @@ strong {
     font-weight: 600;
     font-size: 1rem;
     color: white;
+    flex-shrink: 0;
+}
+
+.sidebar-user-avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
     flex-shrink: 0;
 }
 

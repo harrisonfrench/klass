@@ -15,13 +15,36 @@
             <h3>Profile</h3>
 
             <div class="user-info">
+                {% if settings['profile_picture'] %}
+                <img src="{{ url_for('settings.serve_avatar', filename=settings['profile_picture']) }}" alt="Profile" class="user-avatar-img">
+                {% else %}
                 <div class="user-avatar">
                     {{ user['username'][0]|upper if user['username'] else 'U' }}
                 </div>
+                {% endif %}
                 <div class="user-details">
                     <div class="user-name-display">{{ user['username'] }}</div>
                     <div class="user-joined">Member since {{ user['created_at'].strftime('%Y-%m-%d') if user['created_at'] else 'Unknown' }}</div>
                 </div>
+            </div>
+
+            <!-- Profile Picture Upload -->
+            <div class="profile-picture-section mb-4">
+                <label class="form-label">Profile Picture</label>
+                <div class="d-flex align-items-center gap-3">
+                    <form action="{{ url_for('settings.upload_profile_picture') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="file" class="form-control form-control-sm" name="profile_picture" accept="image/*" style="max-width: 200px;">
+                        <button type="submit" class="btn btn-sm btn-primary">Upload</button>
+                    </form>
+                    {% if settings['profile_picture'] %}
+                    <form action="{{ url_for('settings.remove_profile_picture') }}" method="POST" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="form-text">Allowed: PNG, JPG, GIF, WEBP (max 2MB)</div>
             </div>
 
             <form action="{{ url_for('settings.update_profile') }}" method="POST">
@@ -236,6 +259,13 @@
     color: white;
     font-size: 1.25rem;
     font-weight: 600;
+}
+
+.user-avatar-img {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .user-name-display {

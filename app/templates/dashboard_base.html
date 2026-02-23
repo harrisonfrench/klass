@@ -303,9 +303,13 @@
                 <!-- User Profile -->
                 {% if g.user %}
                 <div class="sidebar-user">
+                    {% if user_profile_picture %}
+                    <img src="{{ url_for('settings.serve_avatar', filename=user_profile_picture) }}" alt="Profile" class="sidebar-user-avatar-img">
+                    {% else %}
                     <div class="sidebar-user-avatar">
                         {{ g.user.username[0]|upper }}
                     </div>
+                    {% endif %}
                     <div class="sidebar-user-info">
                         <div class="sidebar-user-name">{{ g.user.username }}</div>
                         <div class="sidebar-user-email">{{ g.user.email[:20] }}{% if g.user.email|length > 20 %}...{% endif %}</div>
