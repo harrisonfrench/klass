@@ -190,7 +190,7 @@
 
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="theme-{{ user_theme|default('light') }}">
     <!-- Hidden top navbar (minimal) -->
     <header class="top-navbar" style="display: none;">
         <a class="navbar-brand" href="{{ url_for('dashboard') }}">Klass</a>
@@ -244,6 +244,12 @@
                             <a class="nav-item {% if request.endpoint == 'classes.list_classes' %}active{% endif %}" href="{{ url_for('classes.list_classes') }}">
                                 <span data-feather="folder"></span>
                                 Classes
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-item {% if request.endpoint == 'settings.index' %}active{% endif %}" href="{{ url_for('settings.index') }}">
+                                <span data-feather="settings"></span>
+                                Settings
                             </a>
                         </li>
                         {% if is_admin %}

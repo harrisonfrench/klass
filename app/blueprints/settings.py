@@ -182,14 +182,17 @@ def update_preferences():
     db = get_db()
     user_id = session['user_id']
 
+    theme = request.form.get('theme', 'light')
+    if theme not in ('light', 'dark'):
+        theme = 'light'
     default_class_color = request.form.get('default_class_color', '#6366f1')
     ai_features_enabled = 1 if request.form.get('ai_features_enabled') else 0
 
     db.execute('''
         UPDATE user_settings
-        SET default_class_color = %s, ai_features_enabled = %s, updated_at = CURRENT_TIMESTAMP
+        SET theme = %s, default_class_color = %s, ai_features_enabled = %s, updated_at = CURRENT_TIMESTAMP
         WHERE user_id = %s
-    ''', (default_class_color, ai_features_enabled, user_id))
+    ''', (theme, default_class_color, ai_features_enabled, user_id))
     db.commit()
 
     flash('Preferences saved.', 'success')

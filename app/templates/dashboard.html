@@ -2,131 +2,146 @@
 
 {% block title %}Dashboard{% endblock %}
 
-{% block content %}
-<div class="notion-dashboard">
-    <!-- Header -->
-    <div class="dashboard-header">
-        <h1>Welcome back</h1>
-        <a href="{{ url_for('classes.create_class') }}" class="btn btn-sm btn-primary">
-            <span data-feather="plus"></span>
-            New Class
-        </a>
-    </div>
-
-    <!-- Recent Classes Section -->
-    <div class="dashboard-section">
-        <div class="section-header-minimal">
-            <h2>Classes</h2>
-            <a href="{{ url_for('classes.list_classes') }}">View all</a>
-        </div>
-
-        {% if classes %}
-        <div class="class-grid">
-            {% for class in classes %}
-            <a href="{{ url_for('classes.view_class', class_id=class.id) }}" class="class-item">
-                <div class="class-dot" style="background-color: {{ class.color }};"></div>
-                <div class="class-info">
-                    <span class="class-name">{{ class.name }}</span>
-                    {% if class.code %}
-                    <span class="class-code">{{ class.code }}</span>
-                    {% endif %}
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="empty-state-minimal">
-            <p>No classes yet. <a href="{{ url_for('classes.create_class') }}">Create your first class</a></p>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Recent Notes Section -->
-    <div class="dashboard-section">
-        <div class="section-header-minimal">
-            <h2>Recent Notes</h2>
-            <a href="{{ url_for('notes.list_notes') }}">View all</a>
-        </div>
-
-        {% if recent_notes %}
-        <div class="notes-list">
-            {% for note in recent_notes %}
-            <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="note-item">
-                <div class="note-dot" style="background-color: {{ note.class_color }};"></div>
-                <div class="note-content">
-                    <span class="note-title">{{ note.title or 'Untitled' }}</span>
-                    <span class="note-preview">{{ note.content|striptags|truncate(60) if note.content else 'Empty note' }}</span>
-                </div>
-                <span class="note-date">{{ (note.updated_at|string)[:10] if note.updated_at else '' }}</span>
-            </a>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="empty-state-minimal">
-            <p>No notes yet. Create a class and start taking notes.</p>
-        </div>
-        {% endif %}
-    </div>
-
-</div>
-
+{% block extra_css %}
 <style>
-.notion-dashboard {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
+.dashboard-page {
+    padding: 1.5rem;
 }
 
 .dashboard-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
 }
 
 .dashboard-header h1 {
     font-size: 1.75rem;
-    font-weight: 600;
-    color: var(--text);
+    font-weight: 400;
+    color: var(--text-dark);
     margin: 0;
 }
 
-.dashboard-section {
-    margin-bottom: 2.5rem;
+/* Stats Cards Row */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-.section-header-minimal {
+.stat-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary);
+    box-shadow: var(--shadow);
+    padding: 1.25rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    transition: transform 0.15s;
 }
 
-.section-header-minimal h2 {
-    font-size: 0.875rem;
-    font-weight: 600;
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-card.primary { border-left-color: var(--primary); }
+.stat-card.success { border-left-color: var(--success); }
+.stat-card.info { border-left-color: var(--info); }
+.stat-card.warning { border-left-color: var(--warning); }
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    margin: 0;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
 }
 
-.section-header-minimal a {
-    font-size: 0.8rem;
+.stat-card.primary .stat-label { color: var(--primary); }
+.stat-card.success .stat-label { color: var(--success); }
+.stat-card.info .stat-label { color: var(--info); }
+.stat-card.warning .stat-label { color: var(--warning); }
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.3;
+}
+
+.stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.stat-card.primary .stat-icon { color: var(--primary); }
+.stat-card.success .stat-icon { color: var(--success); }
+.stat-card.info .stat-icon { color: var(--info); }
+.stat-card.warning .stat-icon { color: var(--warning); }
+
+/* Content Row */
+.content-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Cards */
+.content-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
     color: var(--primary);
+}
+
+.card-header a {
+    font-size: 0.8rem;
+    color: var(--text-muted);
     text-decoration: none;
 }
 
-.section-header-minimal a:hover {
-    text-decoration: underline;
+.card-header a:hover {
+    color: var(--primary);
+}
+
+.card-body {
+    padding: 1.25rem;
 }
 
 /* Class Grid */
 .class-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 0.75rem;
 }
 
@@ -135,7 +150,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.875rem 1rem;
-    background: var(--bg-secondary);
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 8px;
     text-decoration: none;
@@ -144,7 +159,7 @@
 
 .class-item:hover {
     background: var(--bg-hover);
-    border-color: var(--text-muted);
+    border-color: var(--primary);
 }
 
 .class-dot {
@@ -163,7 +178,7 @@
 .class-name {
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--text);
+    color: var(--text-dark);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -185,17 +200,16 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border);
     text-decoration: none;
     transition: background 0.15s;
 }
 
 .note-item:hover {
     background: var(--bg-hover);
-    margin: 0 -0.5rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    border-radius: 4px;
+    margin: 0 -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
 }
 
 .note-item:last-child {
@@ -220,7 +234,7 @@
 .note-title {
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--text);
+    color: var(--text-dark);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -236,22 +250,144 @@
 
 .note-date {
     font-size: 0.75rem;
-    color: var(--text-light);
+    color: var(--text-muted);
     flex-shrink: 0;
 }
 
 /* Empty States */
-.empty-state-minimal {
-    padding: 1.5rem;
+.empty-state {
+    padding: 2rem 1rem;
     text-align: center;
     color: var(--text-muted);
     font-size: 0.9rem;
 }
 
-.empty-state-minimal a {
+.empty-state a {
     color: var(--primary);
 }
+
+@media (max-width: 768px) {
+    .content-row {
+        grid-template-columns: 1fr;
+    }
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1>Welcome back</h1>
+        <a href="{{ url_for('classes.create_class') }}" class="btn btn-primary">
+            <span data-feather="plus"></span>
+            New Class
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+        <div class="stat-card primary">
+            <div class="stat-content">
+                <div class="stat-label">Classes</div>
+                <div class="stat-value">{{ class_count }}</div>
+            </div>
+            <div class="stat-icon">
+                <span data-feather="folder"></span>
+            </div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-content">
+                <div class="stat-label">Notes</div>
+                <div class="stat-value">{{ notes_count }}</div>
+            </div>
+            <div class="stat-icon">
+                <span data-feather="file-text"></span>
+            </div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-content">
+                <div class="stat-label">Flashcard Decks</div>
+                <div class="stat-value">{{ flashcard_count }}</div>
+            </div>
+            <div class="stat-icon">
+                <span data-feather="layers"></span>
+            </div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-content">
+                <div class="stat-label">Upcoming Tasks</div>
+                <div class="stat-value">{{ upcoming_count }}</div>
+            </div>
+            <div class="stat-icon">
+                <span data-feather="calendar"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="content-row">
+        <!-- Classes Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h5>My Classes</h5>
+                <a href="{{ url_for('classes.list_classes') }}">View All</a>
+            </div>
+            <div class="card-body">
+                {% if classes %}
+                <div class="class-grid">
+                    {% for class in classes %}
+                    <a href="{{ url_for('classes.view_class', class_id=class.id) }}" class="class-item">
+                        <div class="class-dot" style="background-color: {{ class.color }};"></div>
+                        <div class="class-info">
+                            <span class="class-name">{{ class.name }}</span>
+                            {% if class.code %}
+                            <span class="class-code">{{ class.code }}</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>No classes yet. <a href="{{ url_for('classes.create_class') }}">Create your first class</a></p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Notes Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h5>Recent Notes</h5>
+                <a href="{{ url_for('notes.list_notes') }}">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_notes %}
+                <div class="notes-list">
+                    {% for note in recent_notes %}
+                    <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="note-item">
+                        <div class="note-dot" style="background-color: {{ note.class_color }};"></div>
+                        <div class="note-content">
+                            <span class="note-title">{{ note.title or 'Untitled' }}</span>
+                            <span class="note-preview">{{ note.content|striptags|truncate(60) if note.content else 'Empty note' }}</span>
+                        </div>
+                        <span class="note-date">{{ (note.updated_at|string)[:10] if note.updated_at else '' }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>No notes yet. Create a class and start taking notes.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

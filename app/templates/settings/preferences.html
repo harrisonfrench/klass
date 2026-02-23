@@ -63,10 +63,37 @@
 
     <!-- Right Column - Preferences & Stats -->
     <div class="col-lg-6">
-        <!-- Preferences -->
+        <!-- Appearance -->
         <div class="settings-section">
-            <h3>Preferences</h3>
+            <h3>Appearance</h3>
             <form action="{{ url_for('settings.update_preferences') }}" method="POST">
+                <div class="mb-4">
+                    <label class="form-label">Theme</label>
+                    <div class="theme-options">
+                        <label class="theme-option {% if settings['theme'] == 'light' or not settings['theme'] %}selected{% endif %}">
+                            <input type="radio" name="theme" value="light"
+                                   {% if settings['theme'] == 'light' or not settings['theme'] %}checked{% endif %}>
+                            <div class="theme-preview theme-preview-light">
+                                <div class="theme-preview-sidebar"></div>
+                                <div class="theme-preview-content">
+                                    <div class="theme-preview-card"></div>
+                                </div>
+                            </div>
+                            <span>Light</span>
+                        </label>
+                        <label class="theme-option {% if settings['theme'] == 'dark' %}selected{% endif %}">
+                            <input type="radio" name="theme" value="dark"
+                                   {% if settings['theme'] == 'dark' %}checked{% endif %}>
+                            <div class="theme-preview theme-preview-dark">
+                                <div class="theme-preview-sidebar"></div>
+                                <div class="theme-preview-content">
+                                    <div class="theme-preview-card"></div>
+                                </div>
+                            </div>
+                            <span>Dark</span>
+                        </label>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label for="default_class_color" class="form-label">Default Class Color</label>
                     <div class="color-picker-row">
@@ -272,11 +299,100 @@
     color: var(--danger);
     border-bottom-color: rgba(224, 62, 62, 0.2);
 }
+
+/* Theme Options */
+.theme-options {
+    display: flex;
+    gap: 1rem;
+}
+
+.theme-option {
+    cursor: pointer;
+    text-align: center;
+}
+
+.theme-option input {
+    display: none;
+}
+
+.theme-preview {
+    width: 100px;
+    height: 70px;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    border: 2px solid var(--border);
+    transition: border-color 0.2s;
+    margin-bottom: 0.5rem;
+}
+
+.theme-option.selected .theme-preview,
+.theme-option:hover .theme-preview {
+    border-color: var(--primary);
+}
+
+.theme-preview-sidebar {
+    width: 25px;
+    flex-shrink: 0;
+}
+
+.theme-preview-content {
+    flex: 1;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-preview-card {
+    width: 100%;
+    height: 30px;
+    border-radius: 4px;
+}
+
+.theme-preview-light {
+    background: #f8f9fc;
+}
+
+.theme-preview-light .theme-preview-sidebar {
+    background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+}
+
+.theme-preview-light .theme-preview-card {
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.theme-preview-dark {
+    background: #1a1a2e;
+}
+
+.theme-preview-dark .theme-preview-sidebar {
+    background: #16213e;
+}
+
+.theme-preview-dark .theme-preview-card {
+    background: #0f3460;
+}
+
+.theme-option span {
+    font-size: 0.85rem;
+    color: var(--text);
+    font-weight: 500;
+}
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
     feather.replace();
+
+    // Theme option selection
+    document.querySelectorAll('.theme-option input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('selected'));
+            this.closest('.theme-option').classList.add('selected');
+        });
+    });
 </script>
 {% endblock %}

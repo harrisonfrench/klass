@@ -128,3 +128,23 @@ def inject_sidebar_classes():
         return {'sidebar_classes': sidebar_classes}
     except Exception:
         return {'sidebar_classes': []}
+
+
+# Context processor to inject user theme into all templates
+@app.context_processor
+def inject_user_theme():
+    from flask import session
+    try:
+        if 'user_id' not in session:
+            return {'user_theme': 'light'}
+
+        db = get_db()
+        cursor = db.execute(
+            'SELECT theme FROM user_settings WHERE user_id = %s',
+            (session['user_id'],)
+        )
+        settings = cursor.fetchone()
+        theme = settings['theme'] if settings and settings.get('theme') else 'light'
+        return {'user_theme': theme}
+    except Exception:
+        return {'user_theme': 'light'}
