@@ -2,417 +2,403 @@
 
 {% block title %}{{ class_data.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+.class-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.class-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.class-page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.class-back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+
+.class-back-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+}
+
+.class-back-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.class-page-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.class-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.class-page-title h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text);
+}
+
+.class-page-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.class-page-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.class-action-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+}
+
+.class-action-btn:hover {
+    background: var(--bg-hover);
+}
+
+.class-action-btn.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.class-action-btn.primary:hover {
+    background: var(--primary-hover);
+}
+
+.class-action-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Search */
+.class-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.class-search-bar svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.class-search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.class-search-bar input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Notes List */
+.notes-simple-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.note-simple-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.05));
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.note-simple-item:hover {
+    background: var(--bg-hover);
+    margin: 0 -0.75rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    border-radius: 6px;
+}
+
+.note-simple-item:last-child {
+    border-bottom: none;
+}
+
+.note-simple-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.note-simple-icon svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+}
+
+.note-simple-item.pinned .note-simple-icon {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.note-simple-item.pinned .note-simple-icon svg {
+    color: var(--warning);
+}
+
+.note-simple-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.note-simple-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.note-simple-preview {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 0.125rem;
+}
+
+.note-simple-date {
+    font-size: 0.75rem;
+    color: var(--text-light, #6c7086);
+    flex-shrink: 0;
+}
+
+/* Empty State */
+.empty-state-simple {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state-simple svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state-simple h5 {
+    color: var(--text);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-simple p {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+/* Dropdown */
+.dropdown-menu {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem;
+    min-width: 180px;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 0.875rem;
+    text-decoration: none;
+}
+
+.dropdown-item:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+}
+
+.dropdown-item svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-color: var(--border);
+}
+
+.dropdown-item.text-danger {
+    color: #ef4444;
+}
+
+.dropdown-item.text-danger svg {
+    color: #ef4444;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<!-- Purple Header -->
-<div class="class-header">
-    <div class="class-header-left">
-        <a href="{{ url_for('classes.list_classes') }}" class="class-header-back">
-            <span data-feather="arrow-left"></span>
-        </a>
-        <div class="class-header-info">
-            <h1>{{ class_data.name }}</h1>
-            <div class="class-header-subtitle">
-                {{ class_data.code or '' }}{% if class_data.code and class_data.instructor %} &middot; {% endif %}{{ class_data.instructor or '' }}
-            </div>
-        </div>
-    </div>
-    <div class="class-header-right">
-        <button type="button" class="class-header-btn" data-bs-toggle="modal" data-bs-target="#editModal" title="Settings">
-            <span data-feather="settings"></span>
-        </button>
-    </div>
-</div>
-
-<!-- Two-Panel Layout -->
-<div class="class-content" style="display: flex; margin: 0 -2rem; min-height: calc(100vh - 200px);">
-    <!-- Notes Panel (Left) -->
-    <div class="class-notes-panel">
-        <!-- Search -->
-        <div class="class-search">
-            <span data-feather="search"></span>
-            <input type="text" id="noteSearch" placeholder="Search in notebook..." onkeyup="filterNotes()">
-        </div>
-
-        <!-- New Page Button -->
-        <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" style="margin: 0;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <button type="submit" class="class-new-page-btn">
-                <span data-feather="plus"></span>
-                New Page
-            </button>
-        </form>
-
-        <!-- Filter Tabs -->
-        <div class="class-tabs">
-            <button class="class-tab active" onclick="filterByType('all', this)">All</button>
-            <button class="class-tab" onclick="filterByType('general', this)">General</button>
-            <button class="class-tab" onclick="filterByType('lecture', this)">Lectures</button>
-            <button class="class-tab" onclick="filterByType('assignment', this)">Assignments</button>
-        </div>
-
-        <!-- Notes List -->
-        <div class="class-notes-list" id="notesList">
-            {% if notes %}
-                {% for note in notes %}
-                <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="class-note-item {% if note.is_pinned %}pinned{% endif %}" data-type="{{ note.note_type|default('general') }}">
-                    <div class="class-note-title">
-                        {% if note.is_pinned %}
-                        <span class="class-note-pin"><span data-feather="bookmark"></span></span>
-                        {% endif %}
-                        {{ note.title or 'Untitled' }}
-                    </div>
-                    <div class="class-note-preview">
-                        {{ note.content|striptags|truncate(80) if note.content else 'Empty note' }}
-                    </div>
-                    <div class="class-note-date">
-                        {{ (note.updated_at|string)[:16].replace('T', ' ').replace('-', '/') if note.updated_at else '' }}
-                    </div>
-                </a>
-                {% endfor %}
-            {% else %}
-                <div class="class-empty-state" style="padding: 2rem;">
-                    <p>No notes yet. Click "New Page" to create one.</p>
+<div class="class-page">
+    <!-- Header -->
+    <div class="class-page-header">
+        <div class="class-page-header-left">
+            <a href="{{ url_for('classes.list_classes') }}" class="class-back-btn">
+                <span data-feather="arrow-left"></span>
+            </a>
+            <div>
+                <div class="class-page-title">
+                    <span class="class-color-dot" style="background-color: {{ class_data.color }};"></span>
+                    <h1>{{ class_data.name }}</h1>
                 </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Main Panel (Right) - Empty State / Selected Note Preview -->
-    <div class="class-main-panel">
-        <div class="class-empty-state">
-            <div class="class-empty-state-icon">
-                <span data-feather="file-text"></span>
-            </div>
-            <p>Select a note or create a new one</p>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Tools Section -->
-<div style="padding: 1.5rem 0; margin: 0 -2rem; padding-left: 2rem; padding-right: 2rem; border-top: 1px solid var(--border); background: var(--bg);">
-    <h4 style="margin-bottom: 1rem; font-size: 1rem; color: var(--text);">Quick Tools</h4>
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <div class="card h-100" style="border-left: 4px solid #10b981;">
-                <div class="card-body d-flex align-items-center">
-                    <span data-feather="book-open" class="me-3" style="width: 32px; height: 32px; color: #10b981;"></span>
-                    <div class="flex-grow-1">
-                        <h5 class="mb-1">Study Guide</h5>
-                        <p class="text-muted small mb-0">Generate an AI-powered study guide</p>
-                    </div>
-                    <a href="{{ url_for('study_guides.generate_guide', class_id=class_data.id) }}" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
-                        <span data-feather="zap"></span> Generate
-                    </a>
+                {% if class_data.code or class_data.instructor %}
+                <div class="class-page-subtitle">
+                    {{ class_data.code or '' }}{% if class_data.code and class_data.instructor %} &middot; {% endif %}{{ class_data.instructor or '' }}
                 </div>
+                {% endif %}
             </div>
         </div>
-        <div class="col-md-6 mb-3">
-            <div class="card h-100" style="border-left: 4px solid #8b5cf6;">
-                <div class="card-body d-flex align-items-center">
-                    <span data-feather="layers" class="me-3" style="width: 32px; height: 32px; color: #8b5cf6;"></span>
-                    <div class="flex-grow-1">
-                        <h5 class="mb-1">Quick Flashcards</h5>
-                        <p class="text-muted small mb-0">Generate flashcards from notes</p>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;" data-bs-toggle="modal" data-bs-target="#quickFlashcardsModal">
-                        <span data-feather="zap"></span> Generate
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% if class_data.d2l_course_url %}
-    <div class="row">
-        <div class="col-12">
-            <div class="card" style="border-left: 4px solid #ef4444;">
-                <div class="card-body d-flex align-items-center">
-                    <span data-feather="external-link" class="me-3" style="width: 32px; height: 32px; color: #ef4444;"></span>
-                    <div class="flex-grow-1">
-                        <h5 class="mb-1">D2L / GAView</h5>
-                        <p class="text-muted small mb-0">Open in D2L</p>
-                    </div>
-                    <a href="{{ class_data.d2l_course_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary" style="background: #ef4444; border: none;">
-                        <span data-feather="external-link"></span> Open
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Notes Section (hidden, keeping for backwards compatibility) -->
-<div id="notes-section" class="mb-4" style="display: none;">
-<div id="notes-section" class="mb-4">
-    <div class="section-header">
-        <h4>Notes</h4>
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-secondary">{{ notes|length }}</span>
-            <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
+        <div class="class-page-actions">
+            <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" style="margin: 0;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <button type="submit" class="btn btn-sm btn-outline-primary">
-                    <span data-feather="plus"></span> New
+                <button type="submit" class="class-action-btn primary">
+                    <span data-feather="plus"></span>
+                    New Note
                 </button>
             </form>
+            <div class="dropdown">
+                <button class="class-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span data-feather="more-horizontal"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('flashcards.list_decks') }}?class_id={{ class_data.id }}">
+                        <span data-feather="layers"></span>
+                        Flashcards
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('study_guides.list_guides') }}?class_id={{ class_data.id }}">
+                        <span data-feather="book-open"></span>
+                        Study Guides
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal">
+                        <span data-feather="settings"></span>
+                        Settings
+                    </a></li>
+                    <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <span data-feather="trash-2"></span>
+                        Delete Class
+                    </a></li>
+                </ul>
+            </div>
         </div>
     </div>
-    {% if notes %}
-    <div class="row">
-        {% for note in notes %}
-        <div class="col-md-4 mb-3">
-            <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="text-decoration-none">
-                <div class="note-card {% if note.is_pinned %}note-pinned{% endif %}">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        {% if note.is_pinned %}
-                        <span data-feather="bookmark" style="width: 14px; height: 14px; color: var(--warning);"></span>
-                        {% endif %}
-                    </div>
-                    <div class="note-card-title">{{ note.title or 'Untitled' }}</div>
-                    <div class="note-card-preview">
-                        {{ note.content|striptags|truncate(100) if note.content else 'Empty note' }}
-                    </div>
-                    <div class="note-card-meta">
-                        {{ (note.updated_at|string)[:10] if note.updated_at else '' }}
-                    </div>
+
+    <!-- Search -->
+    <div class="class-search-bar">
+        <span data-feather="search"></span>
+        <input type="text" id="noteSearch" placeholder="Search notes..." onkeyup="filterNotes()">
+    </div>
+
+    <!-- Notes List -->
+    <div class="notes-simple-list" id="notesList">
+        {% if notes %}
+            {% for note in notes %}
+            <a href="{{ url_for('notes.view_note', note_id=note.id) }}" class="note-simple-item {% if note.is_pinned %}pinned{% endif %}">
+                <div class="note-simple-icon">
+                    {% if note.is_pinned %}
+                    <span data-feather="bookmark"></span>
+                    {% else %}
+                    <span data-feather="file-text"></span>
+                    {% endif %}
                 </div>
-            </a>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state" style="padding: 2rem;">
-        <span data-feather="file-text"></span>
-        <h5>No notes yet</h5>
-        <p class="text-muted">Create your first note to get started</p>
-        <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" class="d-inline">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <button type="submit" class="btn btn-sm btn-primary">
-                <span data-feather="plus"></span> Create Note
-            </button>
-        </form>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Flashcard Decks Section -->
-<div id="flashcards-section" class="mb-4">
-    <div class="section-header">
-        <h4>Flashcard Decks</h4>
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-secondary">{{ flashcard_decks|length }}</span>
-            <button type="button" class="btn btn-sm btn-outline-primary" style="border-color: #8b5cf6; color: #8b5cf6;" data-bs-toggle="modal" data-bs-target="#createDeckModal">
-                <span data-feather="plus"></span> New
-            </button>
-        </div>
-    </div>
-    {% if flashcard_decks %}
-    <div class="row">
-        {% for deck in flashcard_decks %}
-        <div class="col-md-4 mb-3">
-            <a href="{{ url_for('flashcards.view_deck', deck_id=deck.id) }}" class="text-decoration-none">
-                <div class="card h-100" style="border-left: 4px solid #8b5cf6;">
-                    <div class="card-body">
-                        <h6 class="card-title text-dark">{{ deck.title }}</h6>
-                        <p class="card-text text-muted small mb-2">
-                            {{ deck.card_count }} card{% if deck.card_count != 1 %}s{% endif %}
-                        </p>
-                        {% if deck.card_count > 0 %}
-                        <a href="{{ url_for('flashcards.study_deck', deck_id=deck.id) }}" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;">
-                            <span data-feather="play"></span> Study
-                        </a>
-                        {% endif %}
-                    </div>
+                <div class="note-simple-content">
+                    <div class="note-simple-title">{{ note.title or 'Untitled' }}</div>
+                    <div class="note-simple-preview">{{ note.content|striptags|truncate(80) if note.content else 'Empty note' }}</div>
                 </div>
+                <span class="note-simple-date">{{ (note.updated_at|string)[:10] if note.updated_at else '' }}</span>
             </a>
-        </div>
-        {% endfor %}
+            {% endfor %}
+        {% else %}
+            <div class="empty-state-simple">
+                <span data-feather="file-text"></span>
+                <h5>No notes yet</h5>
+                <p>Create your first note to get started</p>
+                <form method="POST" action="{{ url_for('notes.create_note', class_id=class_data.id) }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="class-action-btn primary">
+                        <span data-feather="plus"></span>
+                        Create Note
+                    </button>
+                </form>
+            </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="empty-state" style="padding: 2rem;">
-        <span data-feather="layers" style="color: #8b5cf6;"></span>
-        <h5>No flashcard decks yet</h5>
-        <p class="text-muted">Create a deck to start studying</p>
-        <button type="button" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;" data-bs-toggle="modal" data-bs-target="#createDeckModal">
-            <span data-feather="plus"></span> Create Deck
-        </button>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Study Guides Section -->
-<div id="study-guides-section" class="mb-4">
-    <div class="section-header">
-        <h4>Study Guides</h4>
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-secondary">{{ study_guides|length }}</span>
-            <a href="{{ url_for('study_guides.generate_guide', class_id=class_data.id) }}" class="btn btn-sm btn-outline-primary" style="border-color: #10b981; color: #10b981;">
-                <span data-feather="zap"></span> Generate
-            </a>
-        </div>
-    </div>
-    {% if study_guides %}
-    <div class="row">
-        {% for guide in study_guides %}
-        <div class="col-md-4 mb-3">
-            <a href="{{ url_for('study_guides.view_guide', guide_id=guide.id) }}" class="text-decoration-none">
-                <div class="card h-100" style="border-left: 4px solid #10b981;">
-                    <div class="card-body">
-                        <h6 class="card-title text-dark">{{ guide.title }}</h6>
-                        <p class="card-text text-muted small mb-0">
-                            Created {{ (guide.created_at|string)[:10] if guide.created_at else '' }}
-                        </p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state" style="padding: 2rem;">
-        <span data-feather="book-open" style="color: #10b981;"></span>
-        <h5>No study guides yet</h5>
-        <p class="text-muted">Generate a study guide from your notes</p>
-        <a href="{{ url_for('study_guides.generate_guide', class_id=class_data.id) }}" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
-            <span data-feather="zap"></span> Generate Guide
-        </a>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Assignments Section -->
-<div id="assignments-section" class="mb-4">
-    <div class="section-header">
-        <h4>Assignments</h4>
-        <span class="badge bg-secondary">{{ assignments|length }}</span>
-    </div>
-    {% if assignments %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Type</th>
-                    <th>Due Date</th>
-                    <th>Points</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for assignment in assignments %}
-                <tr>
-                    <td>
-                        <strong>{{ assignment.title }}</strong>
-                        {% if assignment.description %}
-                        <br><small class="text-muted">{{ assignment.description[:100] }}{% if assignment.description|length > 100 %}...{% endif %}</small>
-                        {% endif %}
-                    </td>
-                    <td><span class="badge bg-light text-dark">{{ assignment.type or 'other' }}</span></td>
-                    <td>{{ assignment.due_date or 'No date' }}</td>
-                    <td>{{ assignment.points or '-' }}</td>
-                    <td>
-                        <div class="dropdown">
-                            <button class="btn btn-sm dropdown-toggle
-                                {% if assignment.status == 'completed' %}btn-success
-                                {% elif assignment.status == 'reminder' %}btn-info
-                                {% else %}btn-warning{% endif %}"
-                                type="button" data-bs-toggle="dropdown">
-                                {% if assignment.status == 'completed' %}Completed
-                                {% elif assignment.status == 'reminder' %}Reminder
-                                {% else %}Pending{% endif %}
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                        <input type="hidden" name="status" value="pending">
-                                        <button type="submit" class="dropdown-item">Pending</button>
-                                    </form>
-                                </li>
-                                <li>
-                                    <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                        <input type="hidden" name="status" value="completed">
-                                        <button type="submit" class="dropdown-item">Completed</button>
-                                    </form>
-                                </li>
-                                <li>
-                                    <form method="POST" action="{{ url_for('classes.update_assignment_status', class_id=class_data.id, assignment_id=assignment.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                        <input type="hidden" name="status" value="reminder">
-                                        <button type="submit" class="dropdown-item">Reminder</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state" style="padding: 2rem;">
-        <span data-feather="check-square"></span>
-        <h5>No assignments yet</h5>
-        <p class="text-muted">Upload a syllabus to automatically extract assignments</p>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Calendar Events Section -->
-<div id="calendar-section" class="mb-4">
-    <div class="section-header">
-        <h4>Calendar Events</h4>
-        <span class="badge bg-secondary">{{ calendar_events|length }}</span>
-    </div>
-    {% if calendar_events %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Event</th>
-                    <th>Type</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for event in calendar_events %}
-                <tr>
-                    <td>
-                        <strong>{{ event.title }}</strong>
-                        {% if event.description %}
-                        <br><small class="text-muted">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</small>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if event.event_type == 'exam' %}
-                        <span class="badge bg-danger">Exam</span>
-                        {% elif event.event_type == 'deadline' %}
-                        <span class="badge bg-warning text-dark">Deadline</span>
-                        {% elif event.event_type == 'holiday' %}
-                        <span class="badge bg-success">Holiday</span>
-                        {% else %}
-                        <span class="badge bg-light text-dark">{{ event.event_type or 'other' }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ event.event_date or 'No date' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state" style="padding: 2rem;">
-        <span data-feather="calendar"></span>
-        <h5>No calendar events yet</h5>
-        <p class="text-muted">Upload a syllabus to automatically extract important dates</p>
-    </div>
-    {% endif %}
 </div>
 
 <!-- Edit Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('classes.update_class', class_id=class_data.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -422,7 +408,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="edit-name" class="form-label">Class Name <span class="text-danger">*</span></label>
+                        <label for="edit-name" class="form-label">Class Name</label>
                         <input type="text" class="form-control" id="edit-name" name="name" value="{{ class_data.name }}" required>
                     </div>
                     <div class="row">
@@ -431,28 +417,13 @@
                             <input type="text" class="form-control" id="edit-code" name="code" value="{{ class_data.code or '' }}">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-semester" class="form-label">Semester</label>
-                            <input type="text" class="form-control" id="edit-semester" name="semester" value="{{ class_data.semester or '' }}">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            <label for="edit-instructor" class="form-label">Instructor</label>
-                            <input type="text" class="form-control" id="edit-instructor" name="instructor" value="{{ class_data.instructor or '' }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
                             <label for="edit-color" class="form-label">Color</label>
-                            <input type="color" class="form-control form-control-color w-100" id="edit-color" name="color" value="{{ class_data.color or '#0d6efd' }}">
+                            <input type="color" class="form-control form-control-color w-100" id="edit-color" name="color" value="{{ class_data.color or '#6366f1' }}">
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-description" class="form-label">Description</label>
-                        <textarea class="form-control" id="edit-description" name="description" rows="3">{{ class_data.description or '' }}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit-d2l_course_url" class="form-label">D2L/GAView Course URL</label>
-                        <input type="url" class="form-control" id="edit-d2l_course_url" name="d2l_course_url" value="{{ class_data.d2l_course_url or '' }}" placeholder="https://gaview.uga.edu/d2l/home/...">
-                        <div class="form-text">Optional: Link to this class in D2L for quick access</div>
+                        <label for="edit-instructor" class="form-label">Instructor</label>
+                        <input type="text" class="form-control" id="edit-instructor" name="instructor" value="{{ class_data.instructor or '' }}">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -474,7 +445,7 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete <strong>{{ class_data.name }}</strong>?</p>
-                <p class="text-danger small">This action cannot be undone. All notes and materials in this class will be permanently deleted.</p>
+                <p class="text-danger small">This will permanently delete all notes in this class.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -486,201 +457,22 @@
         </div>
     </div>
 </div>
-<!-- Upload Syllabus Modal -->
-<div class="modal fade" id="uploadSyllabusModal" tabindex="-1" aria-labelledby="uploadSyllabusModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ url_for('classes.upload_syllabus', class_id=class_data.id) }}" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadSyllabusModalLabel">Upload Syllabus</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="syllabus" class="form-label">Select File</label>
-                        <input type="file" class="form-control" id="syllabus" name="syllabus" accept=".pdf,.doc,.docx,.txt" required>
-                        <div class="form-text">Allowed formats: PDF, DOC, DOCX, TXT (max 16MB)</div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Upload</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Syllabus Modal -->
-<div class="modal fade" id="deleteSyllabusModal" tabindex="-1" aria-labelledby="deleteSyllabusModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteSyllabusModalLabel">Delete Syllabus</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the syllabus?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form method="POST" action="{{ url_for('classes.delete_syllabus', class_id=class_data.id) }}" class="d-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Create Flashcard Deck Modal -->
-<div class="modal fade" id="createDeckModal" tabindex="-1" aria-labelledby="createDeckModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ url_for('flashcards.create_deck') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <input type="hidden" name="class_id" value="{{ class_data.id }}">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createDeckModalLabel">
-                        <span data-feather="layers" style="color: #8b5cf6;"></span>
-                        Create Flashcard Deck
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="deckTitle" class="form-label">Deck Title</label>
-                        <input type="text" class="form-control" id="deckTitle" name="title" placeholder="e.g., Chapter 5 Vocabulary" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;">
-                        Create Deck
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Flashcards Modal -->
-<div class="modal fade" id="quickFlashcardsModal" tabindex="-1" aria-labelledby="quickFlashcardsModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="quickFlashcardsModalLabel">
-                    <span data-feather="zap" style="color: #8b5cf6;"></span>
-                    Quick Generate Flashcards
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted">Generate flashcards from all notes in <strong>{{ class_data.name }}</strong>.</p>
-                <div class="mb-3">
-                    <label for="quickDeckTitle" class="form-label">Deck Title</label>
-                    <input type="text" class="form-control" id="quickDeckTitle" value="{{ class_data.name }} - All Notes" placeholder="e.g., Biology Final Review">
-                </div>
-                <div class="mb-3">
-                    <label for="quickNumCards" class="form-label">Cards to Generate</label>
-                    <select class="form-select" id="quickNumCards">
-                        <option value="10">10 cards</option>
-                        <option value="15" selected>15 cards</option>
-                        <option value="20">20 cards</option>
-                        <option value="30">30 cards</option>
-                    </select>
-                </div>
-                {% if notes %}
-                <p class="small text-muted mb-0">
-                    <span data-feather="info" style="width: 14px; height: 14px;"></span>
-                    Will use content from {{ notes|length }} note{% if notes|length != 1 %}s{% endif %}
-                </p>
-                {% else %}
-                <div class="alert alert-warning mb-0">
-                    <span data-feather="alert-triangle" style="width: 16px; height: 16px;"></span>
-                    No notes in this class. Add some notes first!
-                </div>
-                {% endif %}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="quickFlashcardsBtn" onclick="generateQuickFlashcards()" {% if not notes %}disabled{% endif %} style="background: linear-gradient(135deg, #6940a5 0%, #8b5cf6 100%); border: none;">
-                    <span data-feather="zap"></span> Generate
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
     feather.replace();
 
-    const classId = {{ class_data.id }};
-    let currentTypeFilter = 'all';
-
-    // Filter notes by search text
     function filterNotes() {
         const searchText = document.getElementById('noteSearch').value.toLowerCase();
-        const noteItems = document.querySelectorAll('.class-note-item');
+        const noteItems = document.querySelectorAll('.note-simple-item');
 
         noteItems.forEach(item => {
-            const title = item.querySelector('.class-note-title').textContent.toLowerCase();
-            const preview = item.querySelector('.class-note-preview').textContent.toLowerCase();
-            const noteType = item.dataset.type || 'general';
-            const matchesSearch = title.includes(searchText) || preview.includes(searchText);
-            const matchesType = currentTypeFilter === 'all' || noteType === currentTypeFilter;
-
-            item.style.display = (matchesSearch && matchesType) ? 'block' : 'none';
+            const title = item.querySelector('.note-simple-title').textContent.toLowerCase();
+            const preview = item.querySelector('.note-simple-preview').textContent.toLowerCase();
+            const matches = title.includes(searchText) || preview.includes(searchText);
+            item.style.display = matches ? 'flex' : 'none';
         });
-    }
-
-    // Filter notes by type
-    function filterByType(type, btn) {
-        currentTypeFilter = type;
-
-        // Update active tab
-        document.querySelectorAll('.class-tab').forEach(tab => tab.classList.remove('active'));
-        btn.classList.add('active');
-
-        // Apply filter
-        filterNotes();
-    }
-
-    async function generateQuickFlashcards() {
-        const title = document.getElementById('quickDeckTitle').value;
-        const numCards = document.getElementById('quickNumCards').value;
-        const btn = document.getElementById('quickFlashcardsBtn');
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
-
-        try {
-            const response = await fetch(`/flashcards/class/${classId}/generate-all`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken()
-                },
-                body: JSON.stringify({ title: title, num_cards: parseInt(numCards) })
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                bootstrap.Modal.getInstance(document.getElementById('quickFlashcardsModal')).hide();
-                window.location.href = `/flashcards/deck/${data.deck_id}`;
-            } else {
-                alert('Error: ' + data.error);
-            }
-        } catch (error) {
-            alert('Error: ' + error.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<span data-feather="zap"></span> Generate';
-            feather.replace();
-        }
     }
 </script>
 {% endblock %}

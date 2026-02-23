@@ -68,30 +68,6 @@
         {% endif %}
     </div>
 
-    <!-- Quick Access -->
-    <div class="dashboard-section">
-        <div class="section-header-minimal">
-            <h2>Quick Access</h2>
-        </div>
-        <div class="quick-links">
-            <a href="{{ url_for('flashcards.list_decks') }}" class="quick-link">
-                <span data-feather="layers"></span>
-                Flashcards
-            </a>
-            <a href="{{ url_for('study_guides.list_guides') }}" class="quick-link">
-                <span data-feather="book-open"></span>
-                Study Guides
-            </a>
-            <a href="{{ url_for('quizzes.list_quizzes') }}" class="quick-link">
-                <span data-feather="check-square"></span>
-                Quizzes
-            </a>
-            <a href="javascript:void(0)" onclick="toggleAiChat()" class="quick-link">
-                <span data-feather="message-circle"></span>
-                AI Tutor
-            </a>
-        </div>
-    </div>
 </div>
 
 <style>
@@ -262,38 +238,6 @@
     font-size: 0.75rem;
     color: var(--text-light);
     flex-shrink: 0;
-}
-
-/* Quick Links */
-.quick-links {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.quick-link {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 0.85rem;
-    color: var(--text);
-    text-decoration: none;
-    transition: background 0.15s, border-color 0.15s;
-}
-
-.quick-link:hover {
-    background: var(--bg-hover);
-    border-color: var(--text-muted);
-}
-
-.quick-link svg {
-    width: 16px;
-    height: 16px;
-    color: var(--text-muted);
 }
 
 /* Empty States */
