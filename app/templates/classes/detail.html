@@ -809,7 +809,7 @@
         <div class="content-card">
             <div class="card-header">
                 <h3><span data-feather="layers"></span> Flashcard Decks</h3>
-                <a href="{{ url_for('flashcards.create_deck') }}?class_id={{ class_data.id }}" class="btn btn-sm btn-primary">
+                <a href="{{ url_for('flashcards.list_decks') }}?class_id={{ class_data.id }}" class="btn btn-sm btn-primary">
                     <span data-feather="plus"></span> New Deck
                 </a>
             </div>
@@ -841,7 +841,7 @@
         <div class="content-card">
             <div class="card-header">
                 <h3><span data-feather="book-open"></span> Study Guides</h3>
-                <a href="{{ url_for('study_guides.create_guide') }}?class_id={{ class_data.id }}" class="btn btn-sm btn-primary">
+                <a href="{{ url_for('study_guides.generate_guide', class_id=class_data.id) }}" class="btn btn-sm btn-primary">
                     <span data-feather="plus"></span> New Guide
                 </a>
             </div>
