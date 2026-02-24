@@ -444,24 +444,25 @@ def generate_quiz_from_note(note_id):
         return jsonify({'success': False, 'error': 'Note is empty'}), 400
 
     try:
-        # Use AI to generate quiz questions
-        prompt = f"""Based on the following notes, create 5 multiple choice quiz questions.
-Format each question as:
-Q: [question text]
-A: [correct answer]
-B: [wrong answer]
-C: [wrong answer]
-D: [wrong answer]
-Correct: [letter of correct answer]
+        from app.services.ai_service import generate_quiz
+        import json
 
-Notes:
-{clean_content[:3000]}"""
+        # Generate quiz questions using AI
+        questions = generate_quiz(clean_content[:5000], num_questions=10, question_types=['multiple_choice', 'true_false'])
 
-        from app.services.ai_service import chat_with_tutor
-        quiz_text = chat_with_tutor(prompt, None, [], note['class_name'])
+        # Create quiz title from note title
+        quiz_title = f"Quiz: {note['title']}"
 
-        # For now, return success - in a full implementation, parse and save to quizzes table
-        return jsonify({'success': True, 'message': 'Quiz generated', 'quiz_content': quiz_text})
+        # Insert quiz into database
+        cursor = db.execute('''
+            INSERT INTO quizzes (user_id, class_id, title, questions, time_limit)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (user_id, note['class_id'], quiz_title, json.dumps(questions), 15))
+        db.commit()
+
+        quiz_id = cursor.lastrowid
+
+        return jsonify({'success': True, 'quiz_id': quiz_id})
     except Exception as e:
         return jsonify({'success': False, 'error': f'AI service error: {str(e)}'}), 500
 
@@ -696,3 +697,63 @@ def extract_from_image(note_id):
         return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': f'AI service error: {str(e)}'}), 500
+
+
+@notes.route('/<int:note_id>/transcribe', methods=['POST'])
+@login_required
+def transcribe_audio_to_note(note_id):
+    """Transcribe audio to text using Groq Whisper API."""
+    db = get_db()
+
+    # Verify note ownership
+    cursor = db.execute('''
+        SELECT n.* FROM notes n
+        JOIN classes c ON n.class_id = c.id
+        WHERE n.id = %s AND c.user_id = %s
+    ''', (note_id, session['user_id']))
+    note = cursor.fetchone()
+
+    if not note:
+        return jsonify({'success': False, 'error': 'Note not found'}), 404
+
+    # Check for file upload
+    if 'audio' not in request.files:
+        return jsonify({'success': False, 'error': 'No audio file provided'}), 400
+
+    file = request.files['audio']
+    if not file or not file.filename:
+        return jsonify({'success': False, 'error': 'No audio file provided'}), 400
+
+    # Validate file type
+    allowed_extensions = {'mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm'}
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    if ext not in allowed_extensions:
+        return jsonify({'success': False, 'error': 'Invalid audio type. Allowed: mp3, mp4, m4a, wav, webm'}), 400
+
+    # Validate file size (max 25MB for Groq Whisper)
+    file.seek(0, 2)  # Seek to end
+    file_size = file.tell()
+    file.seek(0)  # Reset to beginning
+
+    if file_size > 25 * 1024 * 1024:
+        return jsonify({'success': False, 'error': 'Audio file too large. Maximum size is 25MB.'}), 400
+
+    try:
+        from app.services.ai_service import transcribe_audio
+
+        # Get optional language parameter
+        language = request.form.get('language', None)
+
+        # Read file content
+        audio_bytes = file.read()
+
+        # Transcribe
+        result = transcribe_audio(audio_bytes, file.filename, language)
+
+        return jsonify({
+            'success': True,
+            'text': result['text'],
+            'duration': result.get('duration')
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Transcription error: {str(e)}'}), 500

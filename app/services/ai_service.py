@@ -743,3 +743,32 @@ Keep the summary clear and scannable."""
     )
 
     return response.choices[0].message.content
+
+
+@with_retry(max_retries=3, base_delay=1)
+def transcribe_audio(audio_file, filename, language=None):
+    """
+    Transcribe audio using Groq Whisper API.
+
+    Args:
+        audio_file: File-like object or bytes of the audio
+        filename: Original filename (used for format detection)
+        language: Optional language code (e.g., 'en', 'es'). Auto-detects if None.
+
+    Returns:
+        dict: Contains 'text' (transcription) and optionally 'segments' (timestamped chunks)
+    """
+    client = get_groq_client()
+
+    transcription = client.audio.transcriptions.create(
+        file=(filename, audio_file),
+        model="whisper-large-v3-turbo",
+        response_format="verbose_json",
+        language=language
+    )
+
+    return {
+        'text': transcription.text,
+        'segments': getattr(transcription, 'segments', None),
+        'duration': getattr(transcription, 'duration', None)
+    }

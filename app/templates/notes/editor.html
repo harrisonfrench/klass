@@ -636,6 +636,91 @@
         line-height: 1.6;
         font-size: 0.95rem;
     }
+
+    /* Voice Transcription Styles */
+    .transcribe-section h6 {
+        color: var(--text);
+        font-weight: 600;
+    }
+
+    .recording-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #dc3545;
+        font-size: 0.9rem;
+    }
+
+    .recording-dot {
+        width: 10px;
+        height: 10px;
+        background: #dc3545;
+        border-radius: 50%;
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .upload-zone {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--bg-secondary);
+    }
+
+    .upload-zone:hover, .upload-zone.dragover {
+        border-color: var(--primary);
+        background: rgba(79, 70, 229, 0.05);
+    }
+
+    .upload-zone .upload-icon {
+        width: 48px;
+        height: 48px;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .divider-text {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .divider-text::before,
+    .divider-text::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .divider-text span {
+        padding: 0 1rem;
+        font-size: 0.85rem;
+    }
+
+    .transcription-content {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        line-height: 1.6;
+        font-size: 0.95rem;
+        color: var(--text);
+    }
+
+    #recordingTime {
+        font-family: monospace;
+        font-size: 1.1rem;
+    }
 </style>
 {% endblock %}
 
@@ -703,6 +788,10 @@
             <button type="button" class="ai-tools-menu-item" onclick="simplifyNote(); closeAiToolsMenu();">
                 <span data-feather="message-square"></span>
                 Simplify & Explain
+            </button>
+            <button type="button" class="ai-tools-menu-item" onclick="openTranscribeModal(); closeAiToolsMenu();">
+                <span data-feather="mic"></span>
+                Voice Transcribe
             </button>
         </div>
     </div>
@@ -953,6 +1042,89 @@
                     <span data-feather="save"></span>
                     Create Deck
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Voice Transcription Modal -->
+<div class="modal fade" id="transcribeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span data-feather="mic" class="me-2"></span>
+                    Voice Transcribe
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Recording Section -->
+                <div class="transcribe-section mb-4">
+                    <h6 class="mb-3">Record Audio</h6>
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="button" class="btn btn-danger" id="recordBtn" onclick="toggleRecording()">
+                            <span data-feather="mic" id="recordIcon"></span>
+                            <span id="recordBtnText">Start Recording</span>
+                        </button>
+                        <span id="recordingTime" class="text-muted" style="display: none;">00:00</span>
+                        <div id="recordingIndicator" class="recording-indicator" style="display: none;">
+                            <span class="recording-dot"></span>
+                            Recording...
+                        </div>
+                    </div>
+                    <div id="audioPreview" class="mt-3" style="display: none;">
+                        <audio id="recordedAudio" controls class="w-100"></audio>
+                    </div>
+                </div>
+
+                <div class="divider-text mb-4">
+                    <span>or</span>
+                </div>
+
+                <!-- Upload Section -->
+                <div class="transcribe-section mb-4">
+                    <h6 class="mb-3">Upload Audio File</h6>
+                    <div class="upload-zone" id="audioDropZone">
+                        <input type="file" id="audioFileInput" accept=".mp3,.mp4,.m4a,.wav,.webm,.mpeg,.mpga" style="display: none;">
+                        <div class="upload-zone-content">
+                            <span data-feather="upload-cloud" class="upload-icon"></span>
+                            <p class="mb-1">Drag & drop audio file here</p>
+                            <p class="text-muted small mb-2">or click to browse</p>
+                            <p class="text-muted small">Supports: MP3, M4A, WAV, WebM (max 25MB)</p>
+                        </div>
+                    </div>
+                    <div id="uploadedFileInfo" class="mt-2" style="display: none;">
+                        <span data-feather="file" class="me-2"></span>
+                        <span id="uploadedFileName"></span>
+                        <button type="button" class="btn btn-sm btn-link text-danger" onclick="clearUploadedFile()">Remove</button>
+                    </div>
+                </div>
+
+                <!-- Transcription Result -->
+                <div id="transcriptionResult" class="transcribe-section" style="display: none;">
+                    <h6 class="mb-3">Transcription</h6>
+                    <div class="transcription-content" id="transcriptionContent"></div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="transcribeLoading" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Transcribing...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Transcribing audio...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="transcribeBtn" onclick="transcribeAudio()" disabled>
+                    <span data-feather="zap"></span>
+                    Transcribe
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="insertTranscriptionBtn" onclick="insertTranscription()" style="display: none;">
+                    <span data-feather="plus"></span>
+                    Insert into Note
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -1553,7 +1725,7 @@
             hideAiOverlay(overlay);
 
             if (data.success && data.quiz_id) {
-                window.location.href = `/quizzes/quiz/${data.quiz_id}`;
+                window.location.href = `/quizzes/${data.quiz_id}`;
             } else if (data.success) {
                 showToast('Quiz questions generated! Check the Quizzes section.', 'success');
             } else {
@@ -2531,5 +2703,283 @@
             }
         }
     });
+
+    // ==========================================
+    // Voice Transcription Functionality
+    // ==========================================
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingStartTime = null;
+    let recordingTimer = null;
+    let recordedBlob = null;
+    let uploadedFile = null;
+    let transcriptionText = '';
+
+    function openTranscribeModal() {
+        // Reset state
+        resetTranscribeModal();
+        const modal = new bootstrap.Modal(document.getElementById('transcribeModal'));
+        modal.show();
+        feather.replace();
+    }
+
+    function resetTranscribeModal() {
+        // Reset recording state
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        }
+        mediaRecorder = null;
+        audioChunks = [];
+        recordedBlob = null;
+        uploadedFile = null;
+        transcriptionText = '';
+
+        // Reset UI
+        document.getElementById('recordBtn').classList.remove('btn-secondary');
+        document.getElementById('recordBtn').classList.add('btn-danger');
+        document.getElementById('recordBtnText').textContent = 'Start Recording';
+        document.getElementById('recordingTime').style.display = 'none';
+        document.getElementById('recordingIndicator').style.display = 'none';
+        document.getElementById('audioPreview').style.display = 'none';
+        document.getElementById('uploadedFileInfo').style.display = 'none';
+        document.getElementById('transcriptionResult').style.display = 'none';
+        document.getElementById('transcribeLoading').style.display = 'none';
+        document.getElementById('transcribeBtn').disabled = true;
+        document.getElementById('insertTranscriptionBtn').style.display = 'none';
+
+        if (recordingTimer) {
+            clearInterval(recordingTimer);
+            recordingTimer = null;
+        }
+    }
+
+    async function toggleRecording() {
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+            await startRecording();
+        } else {
+            stopRecording();
+        }
+    }
+
+    async function startRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // Try webm first, fall back to other formats
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
+                            MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
+                            MediaRecorder.isTypeSupported('audio/ogg') ? 'audio/ogg' : '';
+
+            const options = mimeType ? { mimeType } : {};
+            mediaRecorder = new MediaRecorder(stream, options);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    audioChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const mimeType = mediaRecorder.mimeType || 'audio/webm';
+                recordedBlob = new Blob(audioChunks, { type: mimeType });
+
+                // Show preview
+                const audioUrl = URL.createObjectURL(recordedBlob);
+                const audioElement = document.getElementById('recordedAudio');
+                audioElement.src = audioUrl;
+                document.getElementById('audioPreview').style.display = 'block';
+
+                // Enable transcribe button
+                document.getElementById('transcribeBtn').disabled = false;
+
+                // Stop all tracks
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start(1000); // Collect data every second
+            recordingStartTime = Date.now();
+
+            // Update UI
+            document.getElementById('recordBtn').classList.remove('btn-danger');
+            document.getElementById('recordBtn').classList.add('btn-secondary');
+            document.getElementById('recordBtnText').textContent = 'Stop Recording';
+            document.getElementById('recordingTime').style.display = 'inline';
+            document.getElementById('recordingIndicator').style.display = 'flex';
+            document.getElementById('audioPreview').style.display = 'none';
+
+            // Start timer
+            recordingTimer = setInterval(updateRecordingTime, 1000);
+            updateRecordingTime();
+
+            // Clear any uploaded file
+            uploadedFile = null;
+            document.getElementById('uploadedFileInfo').style.display = 'none';
+
+        } catch (error) {
+            alert('Could not access microphone: ' + error.message);
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+
+            // Update UI
+            document.getElementById('recordBtn').classList.remove('btn-secondary');
+            document.getElementById('recordBtn').classList.add('btn-danger');
+            document.getElementById('recordBtnText').textContent = 'Start Recording';
+            document.getElementById('recordingIndicator').style.display = 'none';
+
+            if (recordingTimer) {
+                clearInterval(recordingTimer);
+                recordingTimer = null;
+            }
+        }
+    }
+
+    function updateRecordingTime() {
+        const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const seconds = (elapsed % 60).toString().padStart(2, '0');
+        document.getElementById('recordingTime').textContent = `${minutes}:${seconds}`;
+    }
+
+    // File upload handling
+    const audioDropZone = document.getElementById('audioDropZone');
+    const audioFileInput = document.getElementById('audioFileInput');
+
+    if (audioDropZone) {
+        audioDropZone.addEventListener('click', () => audioFileInput.click());
+
+        audioDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            audioDropZone.classList.add('dragover');
+        });
+
+        audioDropZone.addEventListener('dragleave', () => {
+            audioDropZone.classList.remove('dragover');
+        });
+
+        audioDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            audioDropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleAudioFile(file);
+        });
+    }
+
+    if (audioFileInput) {
+        audioFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleAudioFile(file);
+        });
+    }
+
+    function handleAudioFile(file) {
+        const allowedTypes = ['audio/mp3', 'audio/mpeg', 'audio/mp4', 'audio/m4a', 'audio/wav', 'audio/webm', 'audio/x-m4a'];
+        const allowedExtensions = ['mp3', 'mp4', 'm4a', 'wav', 'webm', 'mpeg', 'mpga'];
+
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(ext)) {
+            alert('Invalid file type. Please upload MP3, M4A, WAV, or WebM audio.');
+            return;
+        }
+
+        if (file.size > 25 * 1024 * 1024) {
+            alert('File too large. Maximum size is 25MB.');
+            return;
+        }
+
+        uploadedFile = file;
+        recordedBlob = null; // Clear any recording
+
+        document.getElementById('uploadedFileName').textContent = file.name;
+        document.getElementById('uploadedFileInfo').style.display = 'block';
+        document.getElementById('audioPreview').style.display = 'none';
+        document.getElementById('transcribeBtn').disabled = false;
+    }
+
+    function clearUploadedFile() {
+        uploadedFile = null;
+        document.getElementById('uploadedFileInfo').style.display = 'none';
+        document.getElementById('transcribeBtn').disabled = !recordedBlob;
+        audioFileInput.value = '';
+    }
+
+    async function transcribeAudio() {
+        const audioData = uploadedFile || recordedBlob;
+        if (!audioData) {
+            alert('No audio to transcribe');
+            return;
+        }
+
+        // Show loading
+        document.getElementById('transcribeLoading').style.display = 'block';
+        document.getElementById('transcribeBtn').disabled = true;
+
+        try {
+            const formData = new FormData();
+
+            if (uploadedFile) {
+                formData.append('audio', uploadedFile);
+            } else {
+                // For recorded blob, determine extension from mime type
+                const ext = recordedBlob.type.includes('webm') ? 'webm' :
+                           recordedBlob.type.includes('mp4') ? 'mp4' :
+                           recordedBlob.type.includes('ogg') ? 'ogg' : 'webm';
+                formData.append('audio', recordedBlob, `recording.${ext}`);
+            }
+
+            const response = await fetch(`/notes/${noteId}/transcribe`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken() },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            document.getElementById('transcribeLoading').style.display = 'none';
+
+            if (data.success) {
+                transcriptionText = data.text;
+                document.getElementById('transcriptionContent').textContent = data.text;
+                document.getElementById('transcriptionResult').style.display = 'block';
+                document.getElementById('insertTranscriptionBtn').style.display = 'inline-block';
+
+                if (data.duration) {
+                    const mins = Math.floor(data.duration / 60);
+                    const secs = Math.round(data.duration % 60);
+                    showToast(`Transcribed ${mins}m ${secs}s of audio`, 'success');
+                }
+            } else {
+                alert('Transcription failed: ' + data.error);
+                document.getElementById('transcribeBtn').disabled = false;
+            }
+        } catch (error) {
+            document.getElementById('transcribeLoading').style.display = 'none';
+            document.getElementById('transcribeBtn').disabled = false;
+            alert('Error: ' + error.message);
+        }
+    }
+
+    function insertTranscription() {
+        if (!transcriptionText) return;
+
+        const range = quill.getSelection() || { index: quill.getLength() };
+
+        // Insert transcription as a new paragraph
+        const insertText = '\n\n' + transcriptionText + '\n';
+        quill.insertText(range.index, insertText);
+
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('transcribeModal')).hide();
+
+        // Trigger save
+        debouncedSave();
+
+        showToast('Transcription inserted into note', 'success');
+    }
 </script>
 {% endblock %}
