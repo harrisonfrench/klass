@@ -2720,8 +2720,8 @@
     function openTranscribeModal() {
         // Reset state
         resetTranscribeModal();
-        const modal = new bootstrap.Modal(document.getElementById('transcribeModal'));
-        modal.show();
+        transcribeModalInstance = new bootstrap.Modal(document.getElementById('transcribeModal'));
+        transcribeModalInstance.show();
         feather.replace();
     }
 
@@ -2909,6 +2909,8 @@
         audioFileInput.value = '';
     }
 
+    let transcribeModalInstance = null;
+
     async function transcribeAudio() {
         const audioData = uploadedFile || recordedBlob;
         if (!audioData) {
@@ -2917,11 +2919,28 @@
         }
 
         // Close the modal so user can continue working
-        const modal = bootstrap.Modal.getInstance(document.getElementById('transcribeModal'));
-        if (modal) modal.hide();
+        const modalEl = document.getElementById('transcribeModal');
+        if (modalEl) {
+            // Try multiple ways to close the modal
+            const modal = bootstrap.Modal.getInstance(modalEl) || transcribeModalInstance;
+            if (modal) {
+                modal.hide();
+            } else {
+                // Fallback: manually hide
+                modalEl.classList.remove('show');
+                modalEl.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+            }
+        }
 
         // Show the floating widget and mark as processing
-        startTranscriptionWidget(noteId);
+        if (typeof startTranscriptionWidget === 'function') {
+            startTranscriptionWidget(noteId);
+        } else {
+            console.error('startTranscriptionWidget not defined');
+        }
 
         try {
             const formData = new FormData();
