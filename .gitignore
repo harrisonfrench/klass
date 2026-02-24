@@ -62,4 +62,10 @@ instance/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.dbvenv/
+Thumbs.db
+
+# Virtual environment
+venv/
+
+# Desktop app downloads (large binary files)
+app/static/downloads/

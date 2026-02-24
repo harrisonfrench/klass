@@ -124,6 +124,17 @@
             background: rgba(16, 185, 129, 0.15);
             color: #10b981;
         }
+        .download-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .download-link:hover {
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -168,7 +179,15 @@
         </form>
 
         <div class="auth-footer">
-            <p class="mb-0">Don't have an account? <a href="{{ url_for('auth.register') }}">Create one</a></p>
+            <p class="mb-2">Don't have an account? <a href="{{ url_for('auth.register') }}">Create one</a></p>
+            <a href="{{ url_for('download') }}" class="download-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Desktop App
+            </a>
         </div>
     </div>
 

@@ -434,6 +434,9 @@
                         <div class="sidebar-user-name">{{ g.user.username }}</div>
                         <div class="sidebar-user-email">{{ g.user.email[:20] }}{% if g.user.email|length > 20 %}...{% endif %}</div>
                     </div>
+                    <a href="{{ url_for('download') }}" class="sidebar-download-btn" title="Download Desktop App">
+                        <span data-feather="download"></span>
+                    </a>
                     <a href="{{ url_for('auth.logout') }}" class="sidebar-logout-btn" title="Sign out">
                         <span data-feather="log-out"></span>
                     </a>

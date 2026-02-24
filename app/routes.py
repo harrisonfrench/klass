@@ -341,3 +341,9 @@ def ai_assistant():
     classes = cursor.fetchall()
 
     return render_template('ai_assistant.html', classes=classes)
+
+
+@app.route('/download')
+def download():
+    """Desktop app download page."""
+    return render_template('download.html')
