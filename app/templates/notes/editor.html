@@ -2763,9 +2763,12 @@
         }
     }
 
+    let currentStream = null;
+
     async function startRecording() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            currentStream = stream;
 
             // Try webm first, fall back to other formats
             const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
@@ -2786,37 +2789,33 @@
                 const mimeType = mediaRecorder.mimeType || 'audio/webm';
                 recordedBlob = new Blob(audioChunks, { type: mimeType });
 
-                // Show preview
-                const audioUrl = URL.createObjectURL(recordedBlob);
-                const audioElement = document.getElementById('recordedAudio');
-                audioElement.src = audioUrl;
-                document.getElementById('audioPreview').style.display = 'block';
-
-                // Enable transcribe button
-                document.getElementById('transcribeBtn').disabled = false;
+                // Stop widget timer
+                stopWidgetRecordingTimer();
 
                 // Stop all tracks
-                stream.getTracks().forEach(track => track.stop());
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
+
+                // Auto-transcribe after recording stops
+                transcribeAudio();
             };
 
             mediaRecorder.start(1000); // Collect data every second
             recordingStartTime = Date.now();
 
-            // Update UI
-            document.getElementById('recordBtn').classList.remove('btn-danger');
-            document.getElementById('recordBtn').classList.add('btn-secondary');
-            document.getElementById('recordBtnText').textContent = 'Stop Recording';
-            document.getElementById('recordingTime').style.display = 'inline';
-            document.getElementById('recordingIndicator').style.display = 'flex';
-            document.getElementById('audioPreview').style.display = 'none';
+            // Close the modal and show widget
+            if (transcribeModalInstance) {
+                transcribeModalInstance.hide();
+            }
 
-            // Start timer
-            recordingTimer = setInterval(updateRecordingTime, 1000);
-            updateRecordingTime();
+            // Show widget in recording state
+            showTranscriptionWidget('recording');
+            startWidgetRecordingTimer();
 
             // Clear any uploaded file
             uploadedFile = null;
-            document.getElementById('uploadedFileInfo').style.display = 'none';
 
         } catch (error) {
             alert('Could not access microphone: ' + error.message);
@@ -2826,19 +2825,14 @@
     function stopRecording() {
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
-
-            // Update UI
-            document.getElementById('recordBtn').classList.remove('btn-secondary');
-            document.getElementById('recordBtn').classList.add('btn-danger');
-            document.getElementById('recordBtnText').textContent = 'Start Recording';
-            document.getElementById('recordingIndicator').style.display = 'none';
-
-            if (recordingTimer) {
-                clearInterval(recordingTimer);
-                recordingTimer = null;
-            }
+            // onstop handler will auto-transcribe
         }
     }
+
+    // Override global function to stop recording from widget
+    window.stopWidgetRecording = function() {
+        stopRecording();
+    };
 
     function updateRecordingTime() {
         const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);

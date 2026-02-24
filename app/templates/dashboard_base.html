@@ -183,6 +183,38 @@
             color: var(--text-muted, #6b7280);
         }
 
+        .transcription-recording {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .recording-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text, #1f2937);
+        }
+
+        .recording-dot-pulse {
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse-recording 1s infinite;
+        }
+
+        @keyframes pulse-recording {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .transcription-widget.recording .transcription-widget-icon {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
         .transcription-preview {
             background: var(--bg-secondary, #f9fafb);
             border-radius: 8px;
@@ -477,10 +509,10 @@
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- Transcription Widget (appears globally when transcribing) -->
+    <!-- Transcription Widget (appears globally when recording/transcribing) -->
     <div id="transcriptionWidget" class="transcription-widget" style="display: none;">
         <div class="transcription-widget-header">
-            <span class="transcription-widget-icon">
+            <span class="transcription-widget-icon" id="transcriptionWidgetIcon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
             </span>
             <span class="transcription-widget-title" id="transcriptionWidgetTitle">Transcribing...</span>
@@ -489,10 +521,23 @@
             </button>
         </div>
         <div class="transcription-widget-body">
-            <div class="transcription-progress" id="transcriptionProgress">
+            <!-- Recording State -->
+            <div class="transcription-recording" id="transcriptionRecording" style="display: none;">
+                <div class="recording-status">
+                    <span class="recording-dot-pulse"></span>
+                    <span id="widgetRecordingTime">00:00</span>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="stopWidgetRecording()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="me-1"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+                    Stop & Transcribe
+                </button>
+            </div>
+            <!-- Processing State -->
+            <div class="transcription-progress" id="transcriptionProgress" style="display: none;">
                 <div class="spinner-border spinner-border-sm" role="status"></div>
                 <span>Processing audio...</span>
             </div>
+            <!-- Result State -->
             <div id="transcriptionResultWidget" style="display: none;">
                 <div class="transcription-preview" id="transcriptionPreviewText"></div>
                 <div class="transcription-actions">
@@ -590,25 +635,68 @@
 
         function showTranscriptionWidget(status, text = '', noteId = null) {
             const widget = document.getElementById('transcriptionWidget');
+            const recording = document.getElementById('transcriptionRecording');
             const progress = document.getElementById('transcriptionProgress');
             const result = document.getElementById('transcriptionResultWidget');
             const preview = document.getElementById('transcriptionPreviewText');
             const title = document.getElementById('transcriptionWidgetTitle');
+            const icon = document.getElementById('transcriptionWidgetIcon');
 
             widget.style.display = 'block';
 
-            if (status === 'processing') {
+            // Hide all states first
+            recording.style.display = 'none';
+            progress.style.display = 'none';
+            result.style.display = 'none';
+            widget.classList.remove('recording');
+
+            if (status === 'recording') {
+                title.textContent = 'Recording...';
+                recording.style.display = 'flex';
+                widget.classList.add('recording');
+            } else if (status === 'processing') {
                 title.textContent = 'Transcribing...';
                 progress.style.display = 'flex';
-                result.style.display = 'none';
             } else if (status === 'complete') {
                 title.textContent = 'Transcription Ready';
-                progress.style.display = 'none';
                 result.style.display = 'block';
                 // Show preview (truncate if too long)
                 const previewText = text.length > 300 ? text.substring(0, 300) + '...' : text;
                 preview.textContent = previewText;
             }
+        }
+
+        // Widget recording timer
+        let widgetRecordingTimer = null;
+        let widgetRecordingStart = null;
+
+        function updateWidgetRecordingTime() {
+            if (!widgetRecordingStart) return;
+            const elapsed = Math.floor((Date.now() - widgetRecordingStart) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            const timeEl = document.getElementById('widgetRecordingTime');
+            if (timeEl) timeEl.textContent = `${minutes}:${seconds}`;
+        }
+
+        function startWidgetRecordingTimer() {
+            widgetRecordingStart = Date.now();
+            widgetRecordingTimer = setInterval(updateWidgetRecordingTime, 1000);
+            updateWidgetRecordingTime();
+        }
+
+        function stopWidgetRecordingTimer() {
+            if (widgetRecordingTimer) {
+                clearInterval(widgetRecordingTimer);
+                widgetRecordingTimer = null;
+            }
+            widgetRecordingStart = null;
+        }
+
+        // Called from editor.html to stop recording from widget
+        function stopWidgetRecording() {
+            // This will be overridden in editor.html
+            console.log('stopWidgetRecording called - should be overridden in editor');
         }
 
         function hideTranscriptionWidget() {
