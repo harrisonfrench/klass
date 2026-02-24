@@ -188,6 +188,8 @@ body {
     border-right: none;
     flex-shrink: 0;
     overflow-y: auto;
+    position: sticky;
+    top: 0;
 }
 
 .sidebar-content {
