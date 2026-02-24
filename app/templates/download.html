@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download Klass Desktop App</title>
+    <title>Install Klass App</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Klass">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon.svg') }}">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,6 +35,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 1rem;
         }
         .download-card {
             background: var(--bg-secondary);
@@ -61,10 +71,7 @@
             height: 40px;
             color: white;
         }
-        .download-options {
-            margin-top: 2rem;
-        }
-        .download-btn {
+        .install-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -74,38 +81,80 @@
             border-radius: 12px;
             font-weight: 600;
             font-size: 1rem;
-            text-decoration: none;
-            transition: all 0.2s;
-            margin-bottom: 1rem;
-        }
-        .download-btn-primary {
             background: var(--primary);
             color: white;
             border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
         }
-        .download-btn-primary:hover {
+        .install-btn:hover {
             background: var(--primary-hover);
-            color: white;
         }
-        .download-btn-secondary {
-            background: var(--bg);
-            color: var(--text);
-            border: 1px solid var(--border);
+        .install-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        .download-btn-secondary:hover {
-            background: var(--bg-hover);
-            color: var(--text);
-        }
-        .download-btn svg {
+        .install-btn svg {
             width: 24px;
             height: 24px;
         }
-        .download-info {
+        .instructions {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: left;
             margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border);
+        }
+        .instructions h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+        .instructions ol {
+            margin: 0;
+            padding-left: 1.25rem;
             color: var(--text-muted);
+        }
+        .instructions li {
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+        .instructions code {
+            background: var(--bg-hover);
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
             font-size: 0.85rem;
+            color: var(--primary);
+        }
+        .platform-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .platform-tab {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .platform-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .platform-instructions {
+            display: none;
+        }
+        .platform-instructions.active {
+            display: block;
         }
         .back-link {
             display: inline-block;
@@ -118,21 +167,41 @@
             text-decoration: underline;
             color: var(--primary-hover);
         }
-        .os-detected {
-            background: rgba(99, 102, 241, 0.15);
-            color: var(--primary);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
+        .badge-free {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
             font-size: 0.85rem;
-            margin-bottom: 1.5rem;
+        }
+        .feature svg {
+            width: 16px;
+            height: 16px;
+            color: #10b981;
         }
     </style>
 </head>
 <body>
     <div class="download-card">
         <div class="download-header">
-            <h1>Download Klass</h1>
-            <p>Get the desktop app for a faster experience</p>
+            <h1>Install Klass <span class="badge-free">Free</span></h1>
+            <p>Add to your device as a native app</p>
         </div>
 
         <div class="download-icon">
@@ -143,43 +212,117 @@
             </svg>
         </div>
 
-        <div id="osDetected" class="os-detected" style="display: none;"></div>
+        <button id="installBtn" class="install-btn" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Install Klass
+        </button>
 
-        <div class="download-options">
-            <a href="https://github.com/harrisonfrench/klass/releases/download/v1.0.0/Klass-1.0.0-arm64.dmg" class="download-btn download-btn-primary" id="macDownload">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                </svg>
-                Download for Mac
-            </a>
-
-            <a href="#" class="download-btn download-btn-secondary" id="windowsDownload" style="opacity: 0.5; pointer-events: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
-                </svg>
-                Windows (Coming Soon)
-            </a>
+        <div class="features">
+            <div class="feature">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Works offline
+            </div>
+            <div class="feature">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                No app store needed
+            </div>
+            <div class="feature">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Works on all devices
+            </div>
+            <div class="feature">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Auto updates
+            </div>
         </div>
 
-        <div class="download-info">
-            <p>Version 1.0.0 | macOS 10.12+ | 91 MB</p>
-            <p>The desktop app runs the same Klass experience as a native application.</p>
+        <div class="instructions">
+            <h3>Manual Installation</h3>
+
+            <div class="platform-tabs">
+                <button class="platform-tab active" data-platform="chrome">Chrome</button>
+                <button class="platform-tab" data-platform="safari">Safari</button>
+                <button class="platform-tab" data-platform="mobile">Mobile</button>
+            </div>
+
+            <div id="chrome-instructions" class="platform-instructions active">
+                <ol>
+                    <li>Click the <strong>install icon</strong> in the address bar (right side)</li>
+                    <li>Or click <code>...</code> menu > <strong>"Install Klass"</strong></li>
+                    <li>Click <strong>Install</strong> in the popup</li>
+                    <li>Klass will appear in your Applications</li>
+                </ol>
+            </div>
+
+            <div id="safari-instructions" class="platform-instructions">
+                <ol>
+                    <li>Click <strong>File</strong> in the menu bar</li>
+                    <li>Select <strong>"Add to Dock"</strong></li>
+                    <li>Klass will appear in your Dock</li>
+                </ol>
+            </div>
+
+            <div id="mobile-instructions" class="platform-instructions">
+                <ol>
+                    <li><strong>iOS:</strong> Tap Share > "Add to Home Screen"</li>
+                    <li><strong>Android:</strong> Tap menu > "Add to Home Screen"</li>
+                    <li>The app icon will appear on your home screen</li>
+                </ol>
+            </div>
         </div>
 
         <a href="{{ url_for('auth.login') }}" class="back-link">Back to Login</a>
     </div>
 
     <script>
-        // Detect OS and highlight appropriate download
-        const platform = navigator.platform.toLowerCase();
-        const osDetected = document.getElementById('osDetected');
+        // Handle platform tab switching
+        document.querySelectorAll('.platform-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.platform-instructions').forEach(i => i.classList.remove('active'));
 
-        if (platform.includes('mac')) {
-            osDetected.textContent = 'Mac detected - Download recommended';
-            osDetected.style.display = 'block';
-        } else if (platform.includes('win')) {
-            osDetected.textContent = 'Windows detected - Coming soon!';
-            osDetected.style.display = 'block';
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.platform + '-instructions').classList.add('active');
+            });
+        });
+
+        // PWA Install prompt
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'flex';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+
+            if (outcome === 'accepted') {
+                installBtn.textContent = 'Installed!';
+                installBtn.disabled = true;
+            }
+
+            deferredPrompt = null;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installBtn.textContent = 'Installed!';
+            installBtn.disabled = true;
+            deferredPrompt = null;
+        });
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js');
         }
     </script>
 </body>
