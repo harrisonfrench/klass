@@ -46,6 +46,11 @@
     transform: translateY(-2px);
 }
 
+a.stat-card {
+    text-decoration: none;
+    cursor: pointer;
+}
+
 .stat-card.primary { border-left-color: var(--primary); }
 .stat-card.success { border-left-color: var(--success); }
 .stat-card.info { border-left-color: var(--info); }
@@ -400,7 +405,7 @@
 
     <!-- Stats Cards -->
     <div class="stats-row">
-        <div class="stat-card primary">
+        <a href="{{ url_for('classes.list_classes') }}" class="stat-card primary">
             <div class="stat-content">
                 <div class="stat-label">Classes</div>
                 <div class="stat-value">{{ class_count }}</div>
@@ -408,8 +413,8 @@
             <div class="stat-icon">
                 <span data-feather="folder"></span>
             </div>
-        </div>
-        <div class="stat-card success">
+        </a>
+        <a href="{{ url_for('notes.list_notes') }}" class="stat-card success">
             <div class="stat-content">
                 <div class="stat-label">Notes</div>
                 <div class="stat-value">{{ notes_count }}</div>
@@ -417,17 +422,8 @@
             <div class="stat-icon">
                 <span data-feather="file-text"></span>
             </div>
-        </div>
-        <div class="stat-card info">
-            <div class="stat-content">
-                <div class="stat-label">Flashcard Decks</div>
-                <div class="stat-value">{{ flashcard_count }}</div>
-            </div>
-            <div class="stat-icon">
-                <span data-feather="layers"></span>
-            </div>
-        </div>
-        <div class="stat-card warning">
+        </a>
+        <a href="{{ url_for('calendar') }}" class="stat-card warning">
             <div class="stat-content">
                 <div class="stat-label">Upcoming Tasks</div>
                 <div class="stat-value">{{ upcoming_count }}</div>
@@ -435,7 +431,7 @@
             <div class="stat-icon">
                 <span data-feather="calendar"></span>
             </div>
-        </div>
+        </a>
     </div>
 
     <!-- Streak Widget -->
