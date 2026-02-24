@@ -112,6 +112,94 @@
             opacity: 1;
         }
 
+        /* Transcription Widget */
+        .transcription-widget {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 340px;
+            background: var(--card-bg, #fff);
+            border: 1px solid var(--border, #e5e7eb);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1050;
+            animation: slideIn 0.3s ease;
+        }
+
+        .transcription-widget-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border, #e5e7eb);
+            background: var(--bg-secondary, #f9fafb);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .transcription-widget-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .transcription-widget-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .transcription-widget-title {
+            flex: 1;
+            font-weight: 600;
+            color: var(--text, #1f2937);
+        }
+
+        .transcription-widget-close {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--text-muted, #6b7280);
+            border-radius: 4px;
+        }
+
+        .transcription-widget-close:hover {
+            background: var(--bg-secondary, #f3f4f6);
+            color: var(--text, #1f2937);
+        }
+
+        .transcription-widget-body {
+            padding: 16px;
+        }
+
+        .transcription-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted, #6b7280);
+        }
+
+        .transcription-preview {
+            background: var(--bg-secondary, #f9fafb);
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: var(--text, #1f2937);
+            margin-bottom: 12px;
+        }
+
+        .transcription-actions {
+            display: flex;
+            gap: 8px;
+        }
+
         /* Confirm Modal */
         .confirm-modal-backdrop {
             position: fixed;
@@ -389,6 +477,38 @@
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
+    <!-- Transcription Widget (appears globally when transcribing) -->
+    <div id="transcriptionWidget" class="transcription-widget" style="display: none;">
+        <div class="transcription-widget-header">
+            <span class="transcription-widget-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+            </span>
+            <span class="transcription-widget-title" id="transcriptionWidgetTitle">Transcribing...</span>
+            <button type="button" class="transcription-widget-close" onclick="dismissTranscription()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="transcription-widget-body">
+            <div class="transcription-progress" id="transcriptionProgress">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+                <span>Processing audio...</span>
+            </div>
+            <div id="transcriptionResultWidget" style="display: none;">
+                <div class="transcription-preview" id="transcriptionPreviewText"></div>
+                <div class="transcription-actions">
+                    <button class="btn btn-sm btn-primary" onclick="copyTranscriptionResult()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                        Copy
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="goToNoteWithTranscription()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                        Insert into Note
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Utility Functions -->
     <script>
         // Toast notification system
@@ -439,6 +559,109 @@
                 options.body = JSON.stringify(options.body);
             }
             return fetch(url, { ...options, headers });
+        }
+
+        // ==========================================
+        // Global Transcription Widget Functions
+        // ==========================================
+
+        // Check for pending transcription on page load
+        document.addEventListener('DOMContentLoaded', checkPendingTranscription);
+
+        function checkPendingTranscription() {
+            const pending = localStorage.getItem('pendingTranscription');
+            if (pending) {
+                try {
+                    const data = JSON.parse(pending);
+                    if (data.status === 'complete' && data.text) {
+                        showTranscriptionWidget('complete', data.text, data.noteId);
+                    }
+                    // Note: 'processing' status means it was interrupted by navigation
+                    // We clear it since we can't resume the fetch
+                    else if (data.status === 'processing') {
+                        // Clear stale processing state
+                        localStorage.removeItem('pendingTranscription');
+                    }
+                } catch (e) {
+                    localStorage.removeItem('pendingTranscription');
+                }
+            }
+        }
+
+        function showTranscriptionWidget(status, text = '', noteId = null) {
+            const widget = document.getElementById('transcriptionWidget');
+            const progress = document.getElementById('transcriptionProgress');
+            const result = document.getElementById('transcriptionResultWidget');
+            const preview = document.getElementById('transcriptionPreviewText');
+            const title = document.getElementById('transcriptionWidgetTitle');
+
+            widget.style.display = 'block';
+
+            if (status === 'processing') {
+                title.textContent = 'Transcribing...';
+                progress.style.display = 'flex';
+                result.style.display = 'none';
+            } else if (status === 'complete') {
+                title.textContent = 'Transcription Ready';
+                progress.style.display = 'none';
+                result.style.display = 'block';
+                // Show preview (truncate if too long)
+                const previewText = text.length > 300 ? text.substring(0, 300) + '...' : text;
+                preview.textContent = previewText;
+            }
+        }
+
+        function hideTranscriptionWidget() {
+            document.getElementById('transcriptionWidget').style.display = 'none';
+        }
+
+        function dismissTranscription() {
+            hideTranscriptionWidget();
+            localStorage.removeItem('pendingTranscription');
+        }
+
+        function copyTranscriptionResult() {
+            const pending = localStorage.getItem('pendingTranscription');
+            if (pending) {
+                const data = JSON.parse(pending);
+                navigator.clipboard.writeText(data.text).then(() => {
+                    showToast('Transcription copied to clipboard', 'success');
+                });
+            }
+        }
+
+        function goToNoteWithTranscription() {
+            const pending = localStorage.getItem('pendingTranscription');
+            if (pending) {
+                const data = JSON.parse(pending);
+                if (data.noteId) {
+                    // Navigate to the note - the editor will handle insertion
+                    window.location.href = `/notes/${data.noteId}`;
+                } else {
+                    showToast('Please open a note to insert the transcription', 'info');
+                }
+            }
+        }
+
+        // Called from editor.html when transcription completes
+        function saveTranscriptionResult(text, noteId) {
+            localStorage.setItem('pendingTranscription', JSON.stringify({
+                status: 'complete',
+                text: text,
+                noteId: noteId,
+                timestamp: Date.now()
+            }));
+            showTranscriptionWidget('complete', text, noteId);
+        }
+
+        // Called from editor.html when transcription starts
+        function startTranscriptionWidget(noteId) {
+            localStorage.setItem('pendingTranscription', JSON.stringify({
+                status: 'processing',
+                noteId: noteId,
+                timestamp: Date.now()
+            }));
+            showTranscriptionWidget('processing');
         }
 
     </script>

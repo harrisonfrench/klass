@@ -2916,9 +2916,12 @@
             return;
         }
 
-        // Show loading
-        document.getElementById('transcribeLoading').style.display = 'block';
-        document.getElementById('transcribeBtn').disabled = true;
+        // Close the modal so user can continue working
+        const modal = bootstrap.Modal.getInstance(document.getElementById('transcribeModal'));
+        if (modal) modal.hide();
+
+        // Show the floating widget and mark as processing
+        startTranscriptionWidget(noteId);
 
         try {
             const formData = new FormData();
@@ -2941,13 +2944,11 @@
 
             const data = await response.json();
 
-            document.getElementById('transcribeLoading').style.display = 'none';
-
             if (data.success) {
                 transcriptionText = data.text;
-                document.getElementById('transcriptionContent').textContent = data.text;
-                document.getElementById('transcriptionResult').style.display = 'block';
-                document.getElementById('insertTranscriptionBtn').style.display = 'inline-block';
+
+                // Save to localStorage and update widget
+                saveTranscriptionResult(data.text, noteId);
 
                 if (data.duration) {
                     const mins = Math.floor(data.duration / 60);
@@ -2955,32 +2956,76 @@
                     showToast(`Transcribed ${mins}m ${secs}s of audio`, 'success');
                 }
             } else {
-                alert('Transcription failed: ' + data.error);
-                document.getElementById('transcribeBtn').disabled = false;
+                hideTranscriptionWidget();
+                localStorage.removeItem('pendingTranscription');
+                showToast('Transcription failed: ' + data.error, 'error');
             }
         } catch (error) {
-            document.getElementById('transcribeLoading').style.display = 'none';
-            document.getElementById('transcribeBtn').disabled = false;
-            alert('Error: ' + error.message);
+            hideTranscriptionWidget();
+            localStorage.removeItem('pendingTranscription');
+            showToast('Transcription error: ' + error.message, 'error');
         }
     }
 
     function insertTranscription() {
-        if (!transcriptionText) return;
+        // Check local variable first, then localStorage
+        let textToInsert = transcriptionText;
+
+        if (!textToInsert) {
+            const pending = localStorage.getItem('pendingTranscription');
+            if (pending) {
+                const data = JSON.parse(pending);
+                if (data.text) {
+                    textToInsert = data.text;
+                }
+            }
+        }
+
+        if (!textToInsert) return;
 
         const range = quill.getSelection() || { index: quill.getLength() };
 
         // Insert transcription as a new paragraph
-        const insertText = '\n\n' + transcriptionText + '\n';
+        const insertText = '\n\n' + textToInsert + '\n';
         quill.insertText(range.index, insertText);
 
-        // Close modal
-        bootstrap.Modal.getInstance(document.getElementById('transcribeModal')).hide();
+        // Close modal if open
+        const modal = bootstrap.Modal.getInstance(document.getElementById('transcribeModal'));
+        if (modal) modal.hide();
+
+        // Clear the transcription state
+        transcriptionText = '';
+        localStorage.removeItem('pendingTranscription');
+        hideTranscriptionWidget();
 
         // Trigger save
         debouncedSave();
 
         showToast('Transcription inserted into note', 'success');
     }
+
+    // Override the global function to insert directly when on note editor
+    window.goToNoteWithTranscription = function() {
+        const pending = localStorage.getItem('pendingTranscription');
+        if (pending) {
+            const data = JSON.parse(pending);
+            // If we're on the same note or any note, insert directly
+            insertTranscription();
+        }
+    };
+
+    // Check on page load if there's a transcription result for this note
+    (function checkTranscriptionOnLoad() {
+        const pending = localStorage.getItem('pendingTranscription');
+        if (pending) {
+            try {
+                const data = JSON.parse(pending);
+                if (data.status === 'complete' && data.text) {
+                    // Store in local variable for easy access
+                    transcriptionText = data.text;
+                }
+            } catch (e) {}
+        }
+    })();
 </script>
 {% endblock %}
