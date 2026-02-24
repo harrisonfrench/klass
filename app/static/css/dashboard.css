@@ -861,12 +861,16 @@ body {
 
 .class-card-header {
     padding: 0.75rem 1rem;
-    color: #fff;
+    color: #ffffff !important;
     font-weight: 600;
 }
 
+.class-card-header * {
+    color: #ffffff !important;
+}
+
 .class-card-header strong {
-    color: #fff;
+    color: #ffffff !important;
     font-weight: 700;
 }
 
