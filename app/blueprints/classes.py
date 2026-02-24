@@ -358,6 +358,10 @@ def update_assignment_status(class_id, assignment_id):
     )
     db.commit()
 
+    # Stay on the same page the user was on
+    referrer = request.referrer
+    if referrer:
+        return redirect(referrer)
     return redirect(url_for('classes.view_class', class_id=class_id))
 
 
