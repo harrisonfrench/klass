@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, session
 from . import app
 from .db_connect import get_db
 from .blueprints.auth import login_required
+from .services.streak_service import get_user_streak, get_today_stats, get_weekly_activity, has_studied_today
 from datetime import datetime, date
 import calendar as cal
 
@@ -66,6 +67,12 @@ def index():
     ''', (user_id,))
     recent_notes = cursor.fetchall()
 
+    # Get streak data
+    streak = get_user_streak(user_id)
+    today_stats = get_today_stats(user_id)
+    weekly_activity = get_weekly_activity(user_id)
+    studied_today = has_studied_today(user_id)
+
     return render_template('dashboard.html',
         classes=classes,
         class_count=class_count,
@@ -73,7 +80,11 @@ def index():
         notes_count=notes_count,
         flashcard_count=flashcard_count,
         study_guide_count=study_guide_count,
-        recent_notes=recent_notes
+        recent_notes=recent_notes,
+        streak=streak,
+        today_stats=today_stats,
+        weekly_activity=weekly_activity,
+        studied_today=studied_today
     )
 
 
@@ -142,6 +153,12 @@ def dashboard():
     ''', (user_id,))
     recent_notes = cursor.fetchall()
 
+    # Get streak data
+    streak = get_user_streak(user_id)
+    today_stats = get_today_stats(user_id)
+    weekly_activity = get_weekly_activity(user_id)
+    studied_today = has_studied_today(user_id)
+
     return render_template('dashboard.html',
         classes=classes,
         class_count=class_count,
@@ -149,7 +166,11 @@ def dashboard():
         notes_count=notes_count,
         flashcard_count=flashcard_count,
         study_guide_count=study_guide_count,
-        recent_notes=recent_notes
+        recent_notes=recent_notes,
+        streak=streak,
+        today_stats=today_stats,
+        weekly_activity=weekly_activity,
+        studied_today=studied_today
     )
 
 

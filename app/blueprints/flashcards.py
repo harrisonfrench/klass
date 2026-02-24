@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app.db_connect import get_db
 from app.services.ai_service import generate_flashcards as ai_generate_flashcards
+from app.services.streak_service import update_streak
 from app.blueprints.auth import login_required
 
 flashcards = Blueprint('flashcards', __name__)
@@ -359,13 +360,18 @@ def review_card(card_id):
         ''', (session['user_id'], deck['class_id']))
         db.commit()
 
+    # Update user's study streak
+    streak_info = update_streak(session['user_id'])
+
     return jsonify({
         'success': True,
         'times_reviewed': times_reviewed,
         'times_correct': times_correct,
         'ease_factor': round(sm2_result['ease_factor'], 2),
         'interval': sm2_result['interval'],
-        'next_review': sm2_result['next_review'].isoformat()
+        'next_review': sm2_result['next_review'].isoformat(),
+        'streak': streak_info['current_streak'],
+        'streak_increased': streak_info.get('streak_increased', False)
     })
 
 

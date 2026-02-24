@@ -5,6 +5,7 @@ import json
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app.db_connect import get_db
 from app.services.ai_service import generate_quiz, grade_short_answer
+from app.services.streak_service import update_streak
 from app.blueprints.auth import login_required
 
 quizzes = Blueprint('quizzes', __name__)
@@ -203,13 +204,25 @@ def submit_quiz(quiz_id):
     ''', (session['user_id'], quiz_id, score, len(questions), json.dumps(answers), time_taken))
     db.commit()
 
+    # Record study session for analytics and update streak
+    db.execute('''
+        INSERT INTO study_sessions (user_id, class_id, activity_type, duration)
+        VALUES (%s, %s, 'quiz', %s)
+    ''', (session['user_id'], quiz['class_id'], time_taken or 5))
+    db.commit()
+
+    # Update user's study streak
+    streak_info = update_streak(session['user_id'])
+
     return jsonify({
         'success': True,
         'score': score,
         'total': len(questions),
         'percentage': round(score / len(questions) * 100) if questions else 0,
         'results': results,
-        'attempt_id': cursor.lastrowid
+        'attempt_id': cursor.lastrowid,
+        'streak': streak_info['current_streak'],
+        'streak_increased': streak_info.get('streak_increased', False)
     })
 
 

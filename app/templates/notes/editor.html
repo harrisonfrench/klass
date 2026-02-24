@@ -793,6 +793,10 @@
                 <span data-feather="mic"></span>
                 Voice Transcribe
             </button>
+            <button type="button" class="ai-tools-menu-item" onclick="openImportDocModal(); closeAiToolsMenu();">
+                <span data-feather="upload"></span>
+                Import Document
+            </button>
         </div>
     </div>
 
@@ -1122,6 +1126,66 @@
                     Transcribe
                 </button>
                 <button type="button" class="btn btn-outline-primary" id="insertTranscriptionBtn" onclick="insertTranscription()" style="display: none;">
+                    <span data-feather="plus"></span>
+                    Insert into Note
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Document Modal -->
+<div class="modal fade" id="importDocModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span data-feather="upload" class="me-2"></span>
+                    Import Document
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Upload Section -->
+                <div class="transcribe-section mb-4">
+                    <h6 class="mb-3">Upload PDF or Image</h6>
+                    <div class="upload-zone" id="docDropZone">
+                        <input type="file" id="docFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp" style="display: none;">
+                        <div class="upload-zone-content">
+                            <span data-feather="file-text" class="upload-icon"></span>
+                            <p class="mb-1">Drag & drop document here</p>
+                            <p class="text-muted small mb-2">or click to browse</p>
+                            <p class="text-muted small">Supports: PDF, PNG, JPG, WebP (max 10MB)</p>
+                        </div>
+                    </div>
+                    <div id="docFileInfo" class="mt-2" style="display: none;">
+                        <span data-feather="file" class="me-2"></span>
+                        <span id="docFileName"></span>
+                        <button type="button" class="btn btn-sm btn-link text-danger" onclick="clearDocFile()">Remove</button>
+                    </div>
+                </div>
+
+                <!-- Extracted Text Result -->
+                <div id="docExtractionResult" class="transcribe-section" style="display: none;">
+                    <h6 class="mb-3">Extracted Content</h6>
+                    <div class="transcription-content" id="docExtractionContent" style="max-height: 300px; overflow-y: auto;"></div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="docExtractLoading" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Extracting...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Extracting text from document...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="extractDocBtn" onclick="extractDocument()" disabled>
+                    <span data-feather="zap"></span>
+                    Extract Text
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="insertDocBtn" onclick="insertDocText()" style="display: none;">
                     <span data-feather="plus"></span>
                     Insert into Note
                 </button>
@@ -3040,5 +3104,167 @@
             } catch (e) {}
         }
     })();
+
+    // ============= Document Import Functions =============
+    let docFile = null;
+    let extractedDocText = '';
+    let importDocModalInstance = null;
+
+    function openImportDocModal() {
+        clearDocFile();
+        importDocModalInstance = new bootstrap.Modal(document.getElementById('importDocModal'));
+        importDocModalInstance.show();
+    }
+
+    // Document file upload handling
+    const docDropZone = document.getElementById('docDropZone');
+    const docFileInput = document.getElementById('docFileInput');
+
+    if (docDropZone) {
+        docDropZone.addEventListener('click', () => docFileInput.click());
+
+        docDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            docDropZone.classList.add('dragover');
+        });
+
+        docDropZone.addEventListener('dragleave', () => {
+            docDropZone.classList.remove('dragover');
+        });
+
+        docDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            docDropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleDocFile(file);
+        });
+    }
+
+    if (docFileInput) {
+        docFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleDocFile(file);
+        });
+    }
+
+    function handleDocFile(file) {
+        const allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg', 'webp'];
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        if (!allowedExtensions.includes(ext)) {
+            alert('Invalid file type. Please upload PDF, PNG, JPG, or WebP.');
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File too large. Maximum size is 10MB.');
+            return;
+        }
+
+        docFile = file;
+        document.getElementById('docFileName').textContent = file.name;
+        document.getElementById('docFileInfo').style.display = 'block';
+        document.getElementById('extractDocBtn').disabled = false;
+
+        // Hide any previous extraction result
+        document.getElementById('docExtractionResult').style.display = 'none';
+        document.getElementById('insertDocBtn').style.display = 'none';
+    }
+
+    function clearDocFile() {
+        docFile = null;
+        extractedDocText = '';
+        document.getElementById('docFileInfo').style.display = 'none';
+        document.getElementById('extractDocBtn').disabled = true;
+        document.getElementById('docExtractionResult').style.display = 'none';
+        document.getElementById('insertDocBtn').style.display = 'none';
+        docFileInput.value = '';
+    }
+
+    async function extractDocument() {
+        if (!docFile) {
+            alert('Please select a document first');
+            return;
+        }
+
+        // Show loading state
+        document.getElementById('docExtractLoading').style.display = 'block';
+        document.getElementById('extractDocBtn').disabled = true;
+        document.getElementById('docExtractionResult').style.display = 'none';
+
+        try {
+            const formData = new FormData();
+            formData.append('document', docFile);
+            formData.append('csrf_token', '{{ csrf_token() }}');
+
+            const response = await fetch(`/notes/${noteId}/import-document`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to extract text');
+            }
+
+            extractedDocText = data.text;
+
+            // Show the result
+            document.getElementById('docExtractionContent').innerHTML =
+                '<pre style="white-space: pre-wrap; font-family: inherit;">' +
+                escapeHtml(extractedDocText) + '</pre>';
+            document.getElementById('docExtractionResult').style.display = 'block';
+            document.getElementById('insertDocBtn').style.display = 'inline-flex';
+
+            showToast('Text extracted successfully!', 'success');
+
+        } catch (error) {
+            console.error('Error extracting document:', error);
+            showToast(error.message || 'Failed to extract text from document', 'danger');
+        } finally {
+            document.getElementById('docExtractLoading').style.display = 'none';
+            document.getElementById('extractDocBtn').disabled = false;
+        }
+    }
+
+    function insertDocText() {
+        if (!extractedDocText) {
+            alert('No extracted text to insert');
+            return;
+        }
+
+        const range = quill.getSelection() || { index: quill.getLength() };
+
+        // Insert the extracted text as a new section
+        const insertText = '\n\n' + extractedDocText + '\n';
+        quill.insertText(range.index, insertText);
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('importDocModal'));
+        if (modal) modal.hide();
+
+        // Reset state
+        clearDocFile();
+
+        // Trigger save
+        debouncedSave();
+
+        showToast('Document text inserted into note', 'success');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Reset modal state when it's hidden
+    const importDocModal = document.getElementById('importDocModal');
+    if (importDocModal) {
+        importDocModal.addEventListener('hidden.bs.modal', () => {
+            clearDocFile();
+        });
+    }
 </script>
 {% endblock %}

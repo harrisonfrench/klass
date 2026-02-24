@@ -772,3 +772,68 @@ def transcribe_audio(audio_file, filename, language=None):
         'segments': getattr(transcription, 'segments', None),
         'duration': getattr(transcription, 'duration', None)
     }
+
+
+@with_retry(max_retries=3, base_delay=1)
+def extract_text_from_document(file_bytes, is_pdf=True):
+    """
+    Extract text from a PDF or image file.
+
+    Args:
+        file_bytes: Raw bytes of the file
+        is_pdf: True if PDF, False if image
+
+    Returns:
+        dict: Contains 'text' (extracted content) and 'pages' (page count for PDFs)
+    """
+    if is_pdf:
+        # Extract text from PDF using PyPDF2
+        import io
+        from PyPDF2 import PdfReader
+
+        pdf_file = io.BytesIO(file_bytes)
+        reader = PdfReader(pdf_file)
+
+        text_parts = []
+        for i, page in enumerate(reader.pages):
+            page_text = page.extract_text()
+            if page_text:
+                text_parts.append(f"--- Page {i + 1} ---\n{page_text}")
+
+        if not text_parts:
+            # PDF might be image-based, try OCR on first page
+            raise ValueError("PDF contains no extractable text. Try uploading images of each page.")
+
+        extracted_text = "\n\n".join(text_parts)
+
+        # Use AI to clean up and structure the text
+        client = get_groq_client()
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{
+                "role": "user",
+                "content": f"""Clean up and structure this extracted PDF text into well-formatted notes.
+
+Fix any formatting issues, organize into sections if applicable, and make it readable.
+Keep all the important information but improve the structure.
+
+Extracted text:
+{extracted_text[:8000]}"""
+            }],
+            temperature=0.3,
+            max_tokens=4000
+        )
+
+        return {
+            'text': response.choices[0].message.content,
+            'pages': len(reader.pages)
+        }
+    else:
+        # Extract text from image using vision model
+        image_data = base64.b64encode(file_bytes).decode('utf-8')
+        extracted_text = extract_image_info(image_data, extraction_type='text')
+
+        return {
+            'text': extracted_text,
+            'pages': 1
+        }

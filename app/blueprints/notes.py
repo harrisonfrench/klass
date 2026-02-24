@@ -757,3 +757,60 @@ def transcribe_audio_to_note(note_id):
         })
     except Exception as e:
         return jsonify({'success': False, 'error': f'Transcription error: {str(e)}'}), 500
+
+
+@notes.route('/<int:note_id>/import-document', methods=['POST'])
+@login_required
+def import_document(note_id):
+    """Import text from PDF or image into note."""
+    # Verify ownership
+    db = get_db()
+    cursor = db.execute('''
+        SELECT n.id FROM notes n
+        JOIN classes c ON n.class_id = c.id
+        WHERE n.id = %s AND c.user_id = %s
+    ''', (note_id, session['user_id']))
+
+    if not cursor.fetchone():
+        return jsonify({'success': False, 'error': 'Note not found'}), 404
+
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': 'No file provided'}), 400
+
+    file = request.files['file']
+    if not file.filename:
+        return jsonify({'success': False, 'error': 'No file selected'}), 400
+
+    # Check file type
+    filename = file.filename.lower()
+    allowed_extensions = ('.pdf', '.png', '.jpg', '.jpeg', '.webp')
+
+    if not filename.endswith(allowed_extensions):
+        return jsonify({
+            'success': False,
+            'error': f'Unsupported file type. Allowed: {", ".join(allowed_extensions)}'
+        }), 400
+
+    # Check file size (10MB max)
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+
+    if size > 10 * 1024 * 1024:
+        return jsonify({'success': False, 'error': 'File too large. Max 10MB.'}), 400
+
+    try:
+        from app.services.ai_service import extract_text_from_document
+
+        file_bytes = file.read()
+        is_pdf = filename.endswith('.pdf')
+
+        result = extract_text_from_document(file_bytes, is_pdf=is_pdf)
+
+        return jsonify({
+            'success': True,
+            'text': result['text'],
+            'pages': result.get('pages', 1)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Extraction error: {str(e)}'}), 500

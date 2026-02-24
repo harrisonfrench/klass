@@ -3,6 +3,7 @@
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app.db_connect import get_db
+from app.services.streak_service import update_streak
 from app.blueprints.auth import login_required
 
 pomodoro = Blueprint('pomodoro', __name__)
@@ -108,18 +109,26 @@ def complete_session(session_id):
     ''', (session_id,))
 
     # If it was a work session, also log to study_sessions for analytics
+    streak_info = None
     if pomo_session['session_type'] == 'work':
         db.execute('''
             INSERT INTO study_sessions (user_id, class_id, activity_type, duration)
             VALUES (%s, %s, 'pomodoro', %s)
         ''', (user_id, pomo_session['class_id'], pomo_session['duration']))
+        # Update study streak for work sessions
+        streak_info = update_streak(user_id)
 
     db.commit()
 
     # Check for achievements
     check_pomodoro_achievements(user_id)
 
-    return jsonify({'success': True})
+    response = {'success': True}
+    if streak_info:
+        response['streak'] = streak_info['current_streak']
+        response['streak_increased'] = streak_info.get('streak_increased', False)
+
+    return jsonify(response)
 
 
 @pomodoro.route('/cancel/<int:session_id>', methods=['POST'])
