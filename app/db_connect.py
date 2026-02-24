@@ -402,6 +402,67 @@ def init_db():
         )
     ''')
 
+    # Create friendships table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS friendships (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            friend_id INT NOT NULL,
+            status VARCHAR(20) DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            accepted_at TIMESTAMP NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_friendship (user_id, friend_id)
+        )
+    ''')
+
+    # Create friend invite links table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS friend_invites (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            invite_code VARCHAR(32) UNIQUE NOT NULL,
+            uses_remaining INT DEFAULT 1,
+            expires_at TIMESTAMP NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Create notifications table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            type VARCHAR(50) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            message TEXT,
+            link VARCHAR(500),
+            is_read TINYINT(1) DEFAULT 0,
+            from_user_id INT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+    ''')
+
+    # Create resource collaborators table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS resource_collaborators (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            resource_type VARCHAR(50) NOT NULL,
+            resource_id INT NOT NULL,
+            owner_id INT NOT NULL,
+            collaborator_id INT NOT NULL,
+            can_edit TINYINT(1) DEFAULT 0,
+            shared_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (collaborator_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_collaborator (resource_type, resource_id, collaborator_id)
+        )
+    ''')
+
     # Create indexes for frequently queried columns (Performance optimization)
     # Use try/except to handle if index already exists
     indexes = [
@@ -419,6 +480,11 @@ def init_db():
         'CREATE INDEX idx_study_sessions_created_at ON study_sessions(created_at)',
         'CREATE INDEX idx_chat_sessions_user_id ON chat_sessions(user_id)',
         'CREATE INDEX idx_chat_messages_session_id ON chat_messages(session_id)',
+        'CREATE INDEX idx_friendships_user_id ON friendships(user_id)',
+        'CREATE INDEX idx_friendships_friend_id ON friendships(friend_id)',
+        'CREATE INDEX idx_notifications_user_id ON notifications(user_id)',
+        'CREATE INDEX idx_notifications_is_read ON notifications(is_read)',
+        'CREATE INDEX idx_resource_collaborators_collaborator ON resource_collaborators(collaborator_id)',
     ]
 
     for index_sql in indexes:

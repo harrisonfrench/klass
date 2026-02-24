@@ -1,0 +1,456 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Friends{% endblock %}
+
+{% block extra_css %}
+<style>
+.friends-page {
+    padding: 1.5rem;
+    max-width: 900px;
+}
+
+.friends-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.friends-header h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.search-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.search-input-wrapper {
+    position: relative;
+}
+
+.search-input-wrapper input {
+    padding-left: 2.5rem;
+}
+
+.search-input-wrapper svg {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    width: 18px;
+    height: 18px;
+}
+
+.search-results {
+    margin-top: 1rem;
+    display: none;
+}
+
+.search-results.active {
+    display: block;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background: var(--bg);
+}
+
+.search-result-item:hover {
+    background: var(--bg-hover);
+}
+
+.friends-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title .badge {
+    font-size: 0.75rem;
+}
+
+.friend-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background: var(--bg);
+    transition: background 0.15s;
+}
+
+.friend-item:hover {
+    background: var(--bg-hover);
+}
+
+.friend-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.friend-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.friend-info {
+    flex: 1;
+}
+
+.friend-name {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.friend-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.friend-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.invite-section {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.invite-link-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.invite-link-wrapper input {
+    flex: 1;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+}
+
+.empty-state svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="friends-page">
+    <div class="friends-header">
+        <h1>Friends</h1>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <h6 class="section-title">
+            <span data-feather="search"></span>
+            Find Friends
+        </h6>
+        <div class="search-input-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input type="text" class="form-control" id="friendSearch" placeholder="Search by username..." autocomplete="off">
+        </div>
+        <div class="search-results" id="searchResults"></div>
+
+        <div class="invite-section">
+            <strong>Or share an invite link</strong>
+            <div class="invite-link-wrapper">
+                <input type="text" class="form-control" id="inviteLink" readonly placeholder="Click to generate invite link">
+                <button class="btn btn-primary" onclick="generateInvite()">
+                    <span data-feather="link"></span>
+                </button>
+                <button class="btn btn-outline-secondary" onclick="copyInviteLink()" id="copyInviteBtn" style="display: none;">
+                    <span data-feather="copy"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Requests -->
+    {% if pending_requests %}
+    <div class="friends-section">
+        <h6 class="section-title">
+            <span data-feather="user-plus"></span>
+            Friend Requests
+            <span class="badge bg-primary">{{ pending_requests|length }}</span>
+        </h6>
+        {% for request in pending_requests %}
+        <div class="friend-item" id="request-{{ request.friendship_id }}">
+            <div class="friend-avatar">
+                {% if request.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/profile/' + request.profile_picture) }}" alt="">
+                {% else %}
+                {{ request.username[0]|upper }}
+                {% endif %}
+            </div>
+            <div class="friend-info">
+                <div class="friend-name">{{ request.username }}</div>
+                <div class="friend-meta">Sent request {{ request.created_at.strftime('%b %d') if request.created_at else '' }}</div>
+            </div>
+            <div class="friend-actions">
+                <button class="btn btn-sm btn-primary" onclick="acceptRequest({{ request.friendship_id }})">Accept</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="declineRequest({{ request.friendship_id }})">Decline</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Sent Requests -->
+    {% if sent_requests %}
+    <div class="friends-section">
+        <h6 class="section-title">
+            <span data-feather="clock"></span>
+            Pending
+        </h6>
+        {% for request in sent_requests %}
+        <div class="friend-item">
+            <div class="friend-avatar">
+                {% if request.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/profile/' + request.profile_picture) }}" alt="">
+                {% else %}
+                {{ request.username[0]|upper }}
+                {% endif %}
+            </div>
+            <div class="friend-info">
+                <div class="friend-name">{{ request.username }}</div>
+                <div class="friend-meta">Request pending</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Friends List -->
+    <div class="friends-section">
+        <h6 class="section-title">
+            <span data-feather="users"></span>
+            My Friends
+            {% if friends %}<span class="badge bg-secondary">{{ friends|length }}</span>{% endif %}
+        </h6>
+        {% if friends %}
+        {% for friend in friends %}
+        <div class="friend-item" id="friend-{{ friend.id }}">
+            <div class="friend-avatar">
+                {% if friend.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/profile/' + friend.profile_picture) }}" alt="">
+                {% else %}
+                {{ friend.username[0]|upper }}
+                {% endif %}
+            </div>
+            <div class="friend-info">
+                <div class="friend-name">{{ friend.username }}</div>
+                <div class="friend-meta">Friends since {{ friend.friends_since.strftime('%b %Y') if friend.friends_since else 'recently' }}</div>
+            </div>
+            <div class="friend-actions">
+                <button class="btn btn-sm btn-outline-danger" onclick="removeFriend({{ friend.id }}, '{{ friend.username }}')">
+                    <span data-feather="user-x"></span>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <span data-feather="users"></span>
+            <p>No friends yet. Search for users or share an invite link!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+
+    const csrfToken = '{{ csrf_token() }}';
+    let searchTimeout;
+
+    // Search for friends
+    document.getElementById('friendSearch').addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+
+        if (query.length < 2) {
+            document.getElementById('searchResults').classList.remove('active');
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            const response = await fetch(`/friends/search?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '';
+
+            if (data.users.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-muted">No users found</p>';
+            } else {
+                data.users.forEach(user => {
+                    const initial = user.username[0].toUpperCase();
+                    const avatar = user.profile_picture
+                        ? `<img src="/static/uploads/profile/${user.profile_picture}" alt="">`
+                        : initial;
+
+                    let actionBtn = '';
+                    if (user.friendship_status === 'accepted') {
+                        actionBtn = '<span class="badge bg-success">Friends</span>';
+                    } else if (user.friendship_status === 'pending') {
+                        actionBtn = '<span class="badge bg-secondary">Pending</span>';
+                    } else {
+                        actionBtn = `<button class="btn btn-sm btn-primary" onclick="sendRequest(${user.id})">Add Friend</button>`;
+                    }
+
+                    resultsDiv.innerHTML += `
+                        <div class="search-result-item">
+                            <div class="friend-avatar">${avatar}</div>
+                            <div class="friend-info">
+                                <div class="friend-name">${user.username}</div>
+                            </div>
+                            <div class="friend-actions">${actionBtn}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            resultsDiv.classList.add('active');
+        }, 300);
+    });
+
+    async function sendRequest(userId) {
+        const response = await fetch(`/friends/request/${userId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Friend request sent!', 'success');
+            // Refresh search results
+            document.getElementById('friendSearch').dispatchEvent(new Event('input'));
+        } else {
+            showToast(data.error || 'Failed to send request', 'danger');
+        }
+    }
+
+    async function acceptRequest(friendshipId) {
+        const response = await fetch(`/friends/accept/${friendshipId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Friend request accepted!', 'success');
+            document.getElementById(`request-${friendshipId}`).remove();
+            setTimeout(() => location.reload(), 500);
+        } else {
+            showToast(data.error || 'Failed to accept request', 'danger');
+        }
+    }
+
+    async function declineRequest(friendshipId) {
+        const response = await fetch(`/friends/decline/${friendshipId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById(`request-${friendshipId}`).remove();
+            showToast('Request declined', 'info');
+        }
+    }
+
+    async function removeFriend(friendId, username) {
+        if (!confirm(`Remove ${username} from your friends?`)) return;
+
+        const response = await fetch(`/friends/remove/${friendId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById(`friend-${friendId}`).remove();
+            showToast('Friend removed', 'info');
+        }
+    }
+
+    async function generateInvite() {
+        const response = await fetch('/friends/invite/create', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('inviteLink').value = data.invite_url;
+            document.getElementById('copyInviteBtn').style.display = 'block';
+            showToast('Invite link generated!', 'success');
+        }
+    }
+
+    function copyInviteLink() {
+        const link = document.getElementById('inviteLink').value;
+        navigator.clipboard.writeText(link);
+        showToast('Link copied to clipboard!', 'success');
+    }
+
+    function showToast(message, type) {
+        // Simple toast implementation
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed`;
+        toast.style.cssText = 'bottom: 20px; right: 20px; z-index: 9999; min-width: 250px;';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+</script>
+{% endblock %}

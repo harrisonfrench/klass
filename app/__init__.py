@@ -58,6 +58,8 @@ from app.blueprints.settings import settings
 from app.blueprints.analytics import analytics
 from app.blueprints.pomodoro import pomodoro
 from app.blueprints.admin import admin
+from app.blueprints.friends import friends
+from app.blueprints.notifications import notifications
 
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(admin)
@@ -71,6 +73,8 @@ app.register_blueprint(notes, url_prefix='/notes')
 app.register_blueprint(flashcards, url_prefix='/flashcards')
 app.register_blueprint(study_guides, url_prefix='/study-guides')
 app.register_blueprint(quizzes, url_prefix='/quizzes')
+app.register_blueprint(friends, url_prefix='/friends')
+app.register_blueprint(notifications, url_prefix='/notifications')
 
 # Exempt beacon-save endpoint from CSRF (used by navigator.sendBeacon on page unload)
 # This is safe because the endpoint still validates user session and note ownership
@@ -91,6 +95,25 @@ def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+
+    # HSTS - Forces HTTPS, prevents downgrade attacks
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+
+    # Permissions Policy - Declares browser features used
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(self), camera=()'
+
+    # Content Security Policy - Whitelists allowed resources
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' code.jquery.com cdn.jsdelivr.net cdnjs.cloudflare.com cdn.quilljs.com; "
+        "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com cdn.jsdelivr.net cdn.quilljs.com; "
+        "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com; "
+        "img-src 'self' data: blob:; "
+        "connect-src 'self' api.groq.com; "
+        "media-src 'self' blob:; "
+        "frame-ancestors 'self'"
+    )
+
     return response
 
 

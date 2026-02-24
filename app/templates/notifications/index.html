@@ -1,0 +1,222 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block extra_css %}
+<style>
+.notifications-page {
+    padding: 1.5rem;
+    max-width: 700px;
+}
+
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.notifications-header h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.notifications-list {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.notification-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+
+.notification-item:hover {
+    background: var(--bg-hover);
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item.unread {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notification-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.notification-icon.friend { background: #10b981; }
+.notification-icon.share { background: #6366f1; }
+.notification-icon.edit { background: #f59e0b; }
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: 500;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+}
+
+.notification-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.notification-title a:hover {
+    color: var(--primary);
+}
+
+.notification-message {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.notification-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.notification-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-page">
+    <div class="notifications-header">
+        <h1>Notifications</h1>
+        {% if notifications %}
+        <button class="btn btn-outline-secondary btn-sm" onclick="markAllRead()">
+            Mark all as read
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="notifications-list">
+        {% if notifications %}
+            {% for notification in notifications %}
+            <div class="notification-item {{ 'unread' if not notification.is_read else '' }}" id="notification-{{ notification.id }}">
+                <div class="notification-icon {% if 'friend' in notification.type %}friend{% elif 'share' in notification.type %}share{% elif 'edit' in notification.type or 'update' in notification.type %}edit{% endif %}">
+                    {% if notification.type == 'friend_request' %}
+                    <span data-feather="user-plus"></span>
+                    {% elif notification.type == 'friend_accepted' %}
+                    <span data-feather="user-check"></span>
+                    {% elif notification.type == 'resource_shared' %}
+                    <span data-feather="share-2"></span>
+                    {% elif notification.type == 'resource_updated' %}
+                    <span data-feather="edit"></span>
+                    {% else %}
+                    <span data-feather="bell"></span>
+                    {% endif %}
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">
+                        {% if notification.link %}
+                        <a href="{{ notification.link }}" onclick="markRead({{ notification.id }})">{{ notification.title }}</a>
+                        {% else %}
+                        {{ notification.title }}
+                        {% endif %}
+                    </div>
+                    {% if notification.message %}
+                    <div class="notification-message">{{ notification.message }}</div>
+                    {% endif %}
+                    <div class="notification-time">
+                        {{ notification.created_at.strftime('%b %d at %I:%M %p') if notification.created_at else '' }}
+                    </div>
+                </div>
+                <div class="notification-actions">
+                    {% if not notification.is_read %}
+                    <button class="btn btn-sm btn-outline-primary" onclick="markRead({{ notification.id }})">
+                        <span data-feather="check"></span>
+                    </button>
+                    {% endif %}
+                    <button class="btn btn-sm btn-outline-secondary" onclick="deleteNotification({{ notification.id }})">
+                        <span data-feather="x"></span>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <span data-feather="bell-off"></span>
+            <p>No notifications yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+
+    const csrfToken = '{{ csrf_token() }}';
+
+    async function markRead(notificationId) {
+        await fetch(`/notifications/mark-read/${notificationId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        document.getElementById(`notification-${notificationId}`).classList.remove('unread');
+    }
+
+    async function markAllRead() {
+        await fetch('/notifications/mark-all-read', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        document.querySelectorAll('.notification-item.unread').forEach(el => {
+            el.classList.remove('unread');
+        });
+    }
+
+    async function deleteNotification(notificationId) {
+        await fetch(`/notifications/delete/${notificationId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        document.getElementById(`notification-${notificationId}`).remove();
+    }
+</script>
+{% endblock %}
