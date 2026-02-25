@@ -1,10 +1,16 @@
-from flask import render_template, request, redirect, url_for, session
+from flask import render_template, request, redirect, url_for, session, Response
 from . import app
 from .db_connect import get_db
 from .blueprints.auth import login_required
 from .services.streak_service import get_user_streak, get_today_stats, get_weekly_activity, has_studied_today
 from datetime import datetime, date
 import calendar as cal
+
+
+@app.route('/googlee23f5fa5f2501c4a.html')
+def google_verification():
+    """Google Search Console verification file."""
+    return Response('google-site-verification: googlee23f5fa5f2501c4a.html', mimetype='text/html')
 
 
 @app.route('/')

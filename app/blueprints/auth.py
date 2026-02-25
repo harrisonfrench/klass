@@ -1,8 +1,18 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from urllib.parse import urlparse, urljoin
 from app.db_connect import get_db
 from app import limiter
+
+
+def is_safe_url(target):
+    """Validate that redirect URL is safe (same origin only)."""
+    if not target:
+        return False
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
 auth = Blueprint('auth', __name__)
 
@@ -79,7 +89,7 @@ def login():
                 session.permanent = True
 
             next_page = request.args.get('next')
-            if next_page:
+            if next_page and is_safe_url(next_page):
                 return redirect(next_page)
             return redirect(url_for('dashboard'))
 
