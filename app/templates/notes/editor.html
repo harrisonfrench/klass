@@ -1886,12 +1886,7 @@
 
     // Clean up note
     async function cleanupNote() {
-        const btn = document.getElementById('cleanupBtn');
-        const originalHtml = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Cleaning...';
-
-        const overlay = showAiOverlay('Formatting notes...');
+        const overlay = showAiOverlay('Cleaning up notes...');
 
         try {
             const response = await fetch(`/notes/${noteId}/cleanup`, {
@@ -1905,7 +1900,7 @@
             if (data.success) {
                 currentAiResult = data.cleaned;
                 currentAiResultIsHtml = true;
-                document.getElementById('aiResultTitle').textContent = 'Formatted Notes';
+                document.getElementById('aiResultTitle').textContent = 'Cleaned Up Notes';
                 document.getElementById('aiResultContent').innerHTML = data.cleaned;
                 const modal = new bootstrap.Modal(document.getElementById('aiResultModal'));
                 modal.show();
@@ -1915,10 +1910,6 @@
         } catch (error) {
             hideAiOverlay(overlay);
             alert('Error: ' + error.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
-            feather.replace();
         }
     }
 
