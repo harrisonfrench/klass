@@ -5,8 +5,22 @@ from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from cachetools import TTLCache
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 from .app_factory import create_app
 from .db_connect import close_db, get_db, init_db
+
+# Initialize Sentry error monitoring (if DSN is configured)
+sentry_dsn = os.environ.get('SENTRY_DSN')
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        integrations=[FlaskIntegration()],
+        traces_sample_rate=0.1,  # 10% of requests for performance monitoring
+        profiles_sample_rate=0.1,
+        environment=os.environ.get('FLASK_ENV', 'development'),
+        send_default_pii=False,  # Don't send PII to Sentry
+    )
 
 app = create_app()
 

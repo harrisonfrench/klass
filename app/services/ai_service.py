@@ -6,6 +6,89 @@ import time
 import base64
 from functools import wraps
 from groq import Groq
+import bleach
+
+
+# HTML Sanitization Configuration
+# Allowlist of safe HTML tags for AI-generated content
+ALLOWED_TAGS = [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'br', 'hr',
+    'ul', 'ol', 'li',
+    'strong', 'b', 'em', 'i', 'u',
+    'span', 'div',
+    'blockquote',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'a', 'code', 'pre',
+]
+
+# Allowlist of safe attributes
+ALLOWED_ATTRIBUTES = {
+    '*': ['style', 'class'],
+    'a': ['href', 'title'],
+}
+
+# Allowlist of safe CSS properties (subset of common styling)
+ALLOWED_CSS_PROPERTIES = [
+    'color', 'background-color', 'background',
+    'font-weight', 'font-style', 'text-decoration',
+    'border-left', 'padding', 'padding-left', 'padding-right', 'padding-top', 'padding-bottom',
+    'margin', 'margin-left', 'margin-right', 'margin-top', 'margin-bottom',
+    'border-radius',
+]
+
+
+def sanitize_css(style_value):
+    """Sanitize CSS style attribute to only allow safe properties."""
+    if not style_value:
+        return ''
+
+    safe_styles = []
+    # Split by semicolon and filter
+    for declaration in style_value.split(';'):
+        declaration = declaration.strip()
+        if ':' in declaration:
+            prop, _, value = declaration.partition(':')
+            prop = prop.strip().lower()
+            value = value.strip()
+            # Check if property is allowed and value doesn't contain suspicious content
+            if prop in ALLOWED_CSS_PROPERTIES:
+                # Block javascript: and expression() in values
+                if 'javascript:' not in value.lower() and 'expression(' not in value.lower():
+                    safe_styles.append(f'{prop}: {value}')
+
+    return '; '.join(safe_styles)
+
+
+def sanitize_html(html_content):
+    """
+    Sanitize HTML content to prevent XSS attacks.
+    Uses allowlist approach - only permitted tags and attributes are kept.
+    """
+    if not html_content:
+        return ''
+
+    # Clean with bleach
+    cleaned = bleach.clean(
+        html_content,
+        tags=ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRIBUTES,
+        strip=True,
+    )
+
+    # Additionally sanitize style attributes
+    # bleach doesn't deeply validate CSS, so we do it ourselves
+    def clean_style(match):
+        style_value = match.group(1)
+        sanitized = sanitize_css(style_value)
+        if sanitized:
+            return f'style="{sanitized}"'
+        return ''
+
+    cleaned = re.sub(r'style="([^"]*)"', clean_style, cleaned)
+    cleaned = re.sub(r"style='([^']*)'", clean_style, cleaned)
+
+    return cleaned
 
 
 class AIServiceError(Exception):
@@ -235,7 +318,8 @@ Return ONLY the formatted HTML, no explanations or markdown."""
         max_tokens=3000
     )
 
-    return response.choices[0].message.content
+    # Sanitize HTML output to prevent XSS
+    return sanitize_html(response.choices[0].message.content)
 
 
 @with_retry(max_retries=3, base_delay=1)
@@ -427,7 +511,8 @@ Make the study guide scannable, organized, and exam-ready."""
         max_tokens=4000
     )
 
-    return response.choices[0].message.content
+    # Sanitize HTML output to prevent XSS
+    return sanitize_html(response.choices[0].message.content)
 
 
 @with_retry(max_retries=3, base_delay=1)

@@ -373,6 +373,21 @@ def init_db():
         )
     ''')
 
+    # Create AI usage logging table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS ai_usage_logs (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            endpoint VARCHAR(100) NOT NULL,
+            tokens_used INT DEFAULT 0,
+            model VARCHAR(50),
+            success TINYINT(1) DEFAULT 1,
+            error_message TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+
     # Create shared resources table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS shared_resources (
@@ -485,6 +500,7 @@ def init_db():
         'CREATE INDEX idx_notifications_user_id ON notifications(user_id)',
         'CREATE INDEX idx_notifications_is_read ON notifications(is_read)',
         'CREATE INDEX idx_resource_collaborators_collaborator ON resource_collaborators(collaborator_id)',
+        'CREATE INDEX idx_ai_usage_user_date ON ai_usage_logs(user_id, created_at)',
     ]
 
     for index_sql in indexes:

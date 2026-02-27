@@ -4,6 +4,7 @@ import re
 from flask import Blueprint, request, jsonify, session
 from app.db_connect import get_db
 from app.services.ai_service import chat_with_tutor
+from app.services.ai_usage import ai_rate_limit, log_ai_usage
 from app.blueprints.auth import login_required
 from app import limiter
 
@@ -73,6 +74,7 @@ def get_messages():
 @ai_chat.route('/message', methods=['POST'])
 @limiter.limit("20 per minute")
 @login_required
+@ai_rate_limit('ai_chat', tokens_estimate=1500)
 def send_message():
     """Send a message and get AI response."""
     db = get_db()

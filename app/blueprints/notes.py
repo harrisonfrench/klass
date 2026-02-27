@@ -2,7 +2,8 @@ import re
 import base64
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app.db_connect import get_db
-from app.services.ai_service import summarize_text, expand_text, cleanup_text, transform_text, generate_flashcards, chat_with_tutor, extract_image_info
+from app.services.ai_service import summarize_text, expand_text, cleanup_text, transform_text, generate_flashcards, chat_with_tutor, extract_image_info, sanitize_html
+from app.services.ai_usage import ai_rate_limit, log_ai_usage
 from app.blueprints.auth import login_required
 
 notes = Blueprint('notes', __name__)
@@ -140,6 +141,10 @@ def update_note(note_id):
         content = request.form.get('content', note['content'])
         new_class_id = request.form.get('class_id')
 
+    # Sanitize HTML content to prevent XSS
+    if content:
+        content = sanitize_html(content)
+
     # If changing class, verify new class belongs to user
     if new_class_id and int(new_class_id) != note['class_id']:
         cursor = db.execute(
@@ -209,6 +214,10 @@ def beacon_save_note(note_id):
     data = request.get_json(force=True, silent=True) or {}
     title = data.get('title', note['title'])
     content = data.get('content', note['content'])
+
+    # Sanitize HTML content to prevent XSS
+    if content:
+        content = sanitize_html(content)
 
     # Update note
     db.execute('''
@@ -317,6 +326,7 @@ def create_note(class_id):
 
 @notes.route('/<int:note_id>/summarize', methods=['POST'])
 @login_required
+@ai_rate_limit('summarize', tokens_estimate=1000)
 def summarize_note(note_id):
     """Summarize note content using AI."""
     db = get_db()
@@ -354,6 +364,7 @@ def summarize_note(note_id):
 
 @notes.route('/<int:note_id>/expand', methods=['POST'])
 @login_required
+@ai_rate_limit('expand', tokens_estimate=1500)
 def expand_note(note_id):
     """Expand selected text using AI."""
     db = get_db()
@@ -386,6 +397,7 @@ def expand_note(note_id):
 
 @notes.route('/<int:note_id>/cleanup', methods=['POST'])
 @login_required
+@ai_rate_limit('cleanup', tokens_estimate=3000)
 def cleanup_note(note_id):
     """Clean up note grammar and formatting using AI."""
     db = get_db()
@@ -418,6 +430,7 @@ def cleanup_note(note_id):
 
 @notes.route('/<int:note_id>/generate-quiz', methods=['POST'])
 @login_required
+@ai_rate_limit('generate_quiz', tokens_estimate=3000)
 def generate_quiz_from_note(note_id):
     """Generate a quiz from note content using AI."""
     db = get_db()
@@ -469,6 +482,7 @@ def generate_quiz_from_note(note_id):
 
 @notes.route('/<int:note_id>/simplify', methods=['POST'])
 @login_required
+@ai_rate_limit('simplify', tokens_estimate=2000)
 def simplify_note(note_id):
     """Simplify and explain note content using AI."""
     db = get_db()
@@ -501,6 +515,7 @@ def simplify_note(note_id):
 
 @notes.route('/<int:note_id>/ai-transform', methods=['POST'])
 @login_required
+@ai_rate_limit('transform', tokens_estimate=2000)
 def ai_transform(note_id):
     """Transform selected text using AI (improve, proofread, simplify, etc.)."""
     db = get_db()
@@ -536,6 +551,7 @@ def ai_transform(note_id):
 
 @notes.route('/<int:note_id>/generate-flashcards', methods=['POST'])
 @login_required
+@ai_rate_limit('generate_flashcards', tokens_estimate=2000)
 def generate_flashcards_from_note(note_id):
     """Generate flashcards from note content using AI."""
     db = get_db()
@@ -577,6 +593,7 @@ def generate_flashcards_from_note(note_id):
 
 @notes.route('/<int:note_id>/ask-ai', methods=['POST'])
 @login_required
+@ai_rate_limit('chat', tokens_estimate=1500)
 def ask_ai_about_note(note_id):
     """Ask AI a question about the current note."""
     db = get_db()
@@ -630,6 +647,7 @@ def ask_ai_about_note(note_id):
 
 @notes.route('/<int:note_id>/extract-image', methods=['POST'])
 @login_required
+@ai_rate_limit('extract_image', tokens_estimate=4000)
 def extract_from_image(note_id):
     """Extract information from an uploaded image using AI vision."""
     db = get_db()
@@ -701,6 +719,7 @@ def extract_from_image(note_id):
 
 @notes.route('/<int:note_id>/transcribe', methods=['POST'])
 @login_required
+@ai_rate_limit('transcribe', tokens_estimate=500)
 def transcribe_audio_to_note(note_id):
     """Transcribe audio to text using Groq Whisper API."""
     db = get_db()
@@ -761,6 +780,7 @@ def transcribe_audio_to_note(note_id):
 
 @notes.route('/<int:note_id>/import-document', methods=['POST'])
 @login_required
+@ai_rate_limit('import_document', tokens_estimate=4000)
 def import_document(note_id):
     """Import text from PDF or image into note."""
     # Verify ownership
