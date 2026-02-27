@@ -149,12 +149,75 @@
     </style>
 </head>
 <body>
-    <div class="auth-card">
-        <div class="auth-header">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Klass" style="width: 64px; height: 64px; margin-bottom: 1rem;">
-            <h1>Welcome Back</h1>
-            <p>Sign in to your Klass account</p>
-        </div>
+    <div class="container">
+        <div class="row align-items-center justify-content-center min-vh-100 py-4">
+            <!-- Features Column -->
+            <div class="col-lg-5 d-none d-lg-block pe-5">
+                <div class="mb-4">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Klass" style="width: 48px; height: 48px;">
+                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--text); margin-left: 12px;">Klass</span>
+                </div>
+                <h2 style="font-size: 2rem; font-weight: 700; color: var(--text); margin-bottom: 1rem;">
+                    Your AI-Powered Study Assistant
+                </h2>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">
+                    Study smarter, not harder. Klass uses AI to help you learn faster and retain more.
+                </p>
+
+                <div class="features-list">
+                    <div class="feature-item d-flex align-items-start mb-3">
+                        <div style="background: rgba(99, 102, 241, 0.2); border-radius: 8px; padding: 8px; margin-right: 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M12 3L2 12h3v9h6v-6h2v6h6v-9h3L12 3z"/></svg>
+                        </div>
+                        <div>
+                            <h6 style="color: var(--text); margin-bottom: 4px; font-weight: 600;">AI-Generated Flashcards</h6>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Turn your notes into flashcards instantly with AI</p>
+                        </div>
+                    </div>
+                    <div class="feature-item d-flex align-items-start mb-3">
+                        <div style="background: rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 8px; margin-right: 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                        </div>
+                        <div>
+                            <h6 style="color: var(--text); margin-bottom: 4px; font-weight: 600;">Smart Quizzes</h6>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Test yourself with AI-generated practice quizzes</p>
+                        </div>
+                    </div>
+                    <div class="feature-item d-flex align-items-start mb-3">
+                        <div style="background: rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 8px; margin-right: 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        </div>
+                        <div>
+                            <h6 style="color: var(--text); margin-bottom: 4px; font-weight: 600;">Study Streaks</h6>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Stay motivated with daily streak tracking</p>
+                        </div>
+                    </div>
+                    <div class="feature-item d-flex align-items-start">
+                        <div style="background: rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 8px; margin-right: 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <div>
+                            <h6 style="color: var(--text); margin-bottom: 4px; font-weight: 600;">AI Tutor Chat</h6>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Get instant help from your personal AI tutor</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">
+                        <strong style="color: var(--text);">Free to start</strong> - Upgrade anytime for unlimited AI
+                    </p>
+                </div>
+            </div>
+
+            <!-- Login Form Column -->
+            <div class="col-lg-5">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Klass" style="width: 64px; height: 64px; margin-bottom: 1rem;" class="d-lg-none">
+                        <h1>Welcome Back</h1>
+                        <p>Sign in to your Klass account</p>
+                    </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -200,6 +263,9 @@
                 </svg>
                 Download Desktop App
             </a>
+        </div>
+                </div>
+            </div>
         </div>
     </div>
 

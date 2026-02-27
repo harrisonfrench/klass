@@ -544,6 +544,19 @@
                                 Settings
                             </a>
                         </li>
+                        <li>
+                            <a class="nav-item {% if 'billing' in request.endpoint %}active{% endif %}" href="{{ url_for('billing.pricing_page') }}">
+                                <span data-feather="credit-card"></span>
+                                {% if is_pro_user %}
+                                Billing
+                                {% else %}
+                                <span style="display: flex; align-items: center; gap: 8px;">
+                                    Upgrade
+                                    <span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600;">PRO</span>
+                                </span>
+                                {% endif %}
+                            </a>
+                        </li>
                         {% if is_admin %}
                         <li>
                             <a class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
