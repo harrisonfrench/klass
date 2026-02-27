@@ -1,0 +1,167 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Refer Friends{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="fw-bold mb-2">Invite Friends, Earn Pro</h1>
+                <p class="text-secondary lead">Share Klass with friends and both of you get free Pro time!</p>
+            </div>
+
+            <!-- Rewards Info -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body text-center py-4">
+                            <div class="display-4 mb-2">{{ rewards.referrer.value }}</div>
+                            <h5 class="text-primary mb-2">Days of Pro for You</h5>
+                            <p class="text-secondary mb-0">For each friend who signs up</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center py-4">
+                            <div class="display-4 mb-2">{{ rewards.referred.value }}</div>
+                            <h5 class="mb-2">Days of Pro for Them</h5>
+                            <p class="text-secondary mb-0">As a welcome bonus</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referral Link -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Referral Link</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control form-control-lg" id="referralLink"
+                               value="{{ request.host_url }}auth/register?ref={{ referral_code }}" readonly>
+                        <button class="btn btn-primary px-4" type="button" onclick="copyLink()">
+                            <i class="bi bi-clipboard me-1"></i> Copy
+                        </button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="https://twitter.com/intent/tweet?text=Study%20smarter%20with%20Klass%20-%20AI-powered%20flashcards%2C%20quizzes%2C%20and%20more!%20Sign%20up%20with%20my%20link%20and%20get%20free%20Pro%3A&url={{ request.host_url }}auth/register?ref={{ referral_code }}"
+                           target="_blank" class="btn btn-outline-secondary">
+                            <i class="bi bi-twitter me-1"></i> Share on X
+                        </a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}auth/register?ref={{ referral_code }}"
+                           target="_blank" class="btn btn-outline-secondary">
+                            <i class="bi bi-facebook me-1"></i> Share on Facebook
+                        </a>
+                        <a href="mailto:?subject=Check out Klass - AI Study Assistant&body=Hey!%0A%0AI've been using Klass to study smarter with AI-powered flashcards and quizzes.%0A%0ASign up with my link and we both get free Pro access:%0A{{ request.host_url }}auth/register?ref={{ referral_code }}"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-envelope me-1"></i> Share via Email
+                        </a>
+                        <a href="sms:?body=Check out Klass - AI Study Assistant! Sign up with my link for free Pro: {{ request.host_url }}auth/register?ref={{ referral_code }}"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-chat me-1"></i> Share via SMS
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="display-6 fw-bold text-primary">{{ stats.total_referrals or 0 }}</div>
+                            <p class="text-secondary mb-0">Friends Invited</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="display-6 fw-bold text-success">{{ stats.completed_referrals or 0 }}</div>
+                            <p class="text-secondary mb-0">Successful Referrals</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="display-6 fw-bold">{{ total_days_earned }}</div>
+                            <p class="text-secondary mb-0">Pro Days Earned</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Referrals -->
+            {% if recent_referrals %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Referrals</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Friend</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Reward</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ref in recent_referrals %}
+                                <tr>
+                                    <td>{{ ref.username }}</td>
+                                    <td>{{ ref.created_at.strftime('%b %d, %Y') }}</td>
+                                    <td>
+                                        {% if ref.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if ref.reward_granted %}
+                                        <span class="text-success">+{{ rewards.referrer.value }} days</span>
+                                        {% else %}
+                                        <span class="text-secondary">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copyLink() {
+    const input = document.getElementById('referralLink');
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value);
+
+    // Show feedback
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check me-1"></i> Copied!';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-success');
+
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-primary');
+    }, 2000);
+}
+</script>
+{% endblock %}

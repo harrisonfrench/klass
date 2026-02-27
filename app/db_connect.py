@@ -421,6 +421,36 @@ def init_db():
         )
     ''')
 
+    # Create referrals table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS referrals (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            referrer_id INT NOT NULL,
+            referred_id INT NOT NULL,
+            referral_code VARCHAR(20) NOT NULL,
+            status VARCHAR(50) DEFAULT 'pending',
+            reward_granted TINYINT(1) DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            converted_at TIMESTAMP NULL,
+            FOREIGN KEY (referrer_id) REFERENCES users (id) ON DELETE CASCADE,
+            FOREIGN KEY (referred_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Add referral_code column to users if not exists
+    try:
+        cursor.execute('ALTER TABLE users ADD COLUMN referral_code VARCHAR(20) UNIQUE')
+        db.commit()
+    except pymysql.err.OperationalError:
+        pass  # Column already exists
+
+    # Add referred_by column to users if not exists
+    try:
+        cursor.execute('ALTER TABLE users ADD COLUMN referred_by INT')
+        db.commit()
+    except pymysql.err.OperationalError:
+        pass  # Column already exists
+
     # Create shared resources table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS shared_resources (

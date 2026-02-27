@@ -557,6 +557,12 @@
                                 {% endif %}
                             </a>
                         </li>
+                        <li>
+                            <a class="nav-item {% if 'referrals' in request.endpoint %}active{% endif %}" href="{{ url_for('referrals.index') }}">
+                                <span data-feather="gift"></span>
+                                Refer Friends
+                            </a>
+                        </li>
                         {% if is_admin %}
                         <li>
                             <a class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">

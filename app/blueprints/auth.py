@@ -177,12 +177,25 @@ def register():
             )
             db.commit()
 
+            # Process referral if code was provided
+            ref_code = request.form.get('ref') or request.args.get('ref')
+            if ref_code:
+                try:
+                    from app.blueprints.referrals import process_referral
+                    if process_referral(ref_code, user['id']):
+                        flash('Welcome! You got 7 days of Pro as a welcome bonus!', 'success')
+                    else:
+                        flash('Welcome! Your account has been created.', 'success')
+                except Exception:
+                    flash('Welcome! Your account has been created.', 'success')
+            else:
+                flash('Welcome! Your account has been created.', 'success')
+
             # Log them in
             session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']
 
-            flash('Welcome! Your account has been created.', 'success')
             return redirect(url_for('dashboard'))
 
         flash(error, 'error')
