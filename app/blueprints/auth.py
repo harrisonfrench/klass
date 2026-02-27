@@ -24,6 +24,15 @@ def login_required(f):
         if 'user_id' not in session:
             flash('Please log in to access this page.', 'error')
             return redirect(url_for('auth.login', next=request.url))
+
+        # Verify user still exists in database (handles stale sessions after DB reset)
+        db = get_db()
+        user = db.execute('SELECT id FROM users WHERE id = %s', (session['user_id'],)).fetchone()
+        if not user:
+            session.clear()
+            flash('Your session has expired. Please log in again.', 'error')
+            return redirect(url_for('auth.login'))
+
         return f(*args, **kwargs)
     return decorated_function
 
