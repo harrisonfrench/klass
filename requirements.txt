@@ -57,3 +57,6 @@ Pillow==11.0.0
 
 # Error monitoring
 sentry-sdk[flask]==2.22.0
+
+# Payments
+stripe==11.4.1

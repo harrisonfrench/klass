@@ -1,0 +1,148 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Manage Subscription{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="fw-bold mb-4">Subscription & Billing</h1>
+
+            <!-- Current Plan -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Current Plan</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1">
+                                {% if is_pro %}
+                                <span class="badge bg-primary me-2">PRO</span>
+                                {% endif %}
+                                {{ subscription.plan.replace('_', ' ').title() }}
+                            </h4>
+                            {% if subscription.status == 'active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif subscription.status == 'past_due' %}
+                            <span class="badge bg-warning">Past Due</span>
+                            {% elif subscription.status == 'canceled' %}
+                            <span class="badge bg-secondary">Canceled</span>
+                            {% endif %}
+
+                            {% if subscription.cancel_at_period_end %}
+                            <p class="text-warning mt-2 mb-0">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Your subscription will end on {{ subscription.current_period_end.strftime('%B %d, %Y') if subscription.current_period_end else 'the end of your billing period' }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="text-end">
+                            {% if is_pro %}
+                            <a href="{{ url_for('billing.portal') }}" class="btn btn-outline-primary">
+                                <i class="bi bi-gear me-1"></i> Manage
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('billing.pricing_page') }}" class="btn btn-primary">
+                                <i class="bi bi-arrow-up-circle me-1"></i> Upgrade
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if subscription.current_period_end and is_pro %}
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-md-6">
+                            <small class="text-secondary">Current Period Started</small>
+                            <p class="mb-0 fw-medium">{{ subscription.current_period_start.strftime('%B %d, %Y') if subscription.current_period_start else 'N/A' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-secondary">Next Billing Date</small>
+                            <p class="mb-0 fw-medium">{{ subscription.current_period_end.strftime('%B %d, %Y') if subscription.current_period_end else 'N/A' }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Usage Stats -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">AI Usage This Month</h5>
+                </div>
+                <div class="card-body">
+                    {% set daily_limit = 30 if not is_pro else 1000 %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Daily AI Calls</span>
+                            <span class="text-secondary">{{ daily_limit }} / day limit</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    {% if not is_pro %}
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Running low on AI calls?</strong>
+                        <a href="{{ url_for('billing.pricing_page') }}" class="alert-link">Upgrade to Pro</a> for unlimited access.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Payment History</h5>
+                    {% if is_pro %}
+                    <a href="{{ url_for('billing.portal') }}" class="btn btn-sm btn-outline-secondary">
+                        View All Invoices
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.created_at.strftime('%b %d, %Y') }}</td>
+                                    <td>{{ payment.description or 'Subscription payment' }}</td>
+                                    <td>${{ '%.2f'|format(payment.amount / 100) }}</td>
+                                    <td>
+                                        {% if payment.status == 'succeeded' %}
+                                        <span class="badge bg-success">Paid</span>
+                                        {% elif payment.status == 'failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ payment.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-secondary text-center mb-0 py-4">
+                        <i class="bi bi-receipt me-2"></i>
+                        No payment history yet.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

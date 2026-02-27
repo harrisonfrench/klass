@@ -1,0 +1,119 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Pricing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">Upgrade to Klass Pro</h1>
+        <p class="lead text-secondary">Unlock unlimited AI-powered study tools</p>
+    </div>
+
+    {% if is_pro %}
+    <div class="alert alert-success text-center mb-4">
+        <i class="bi bi-check-circle me-2"></i>
+        You're currently on the <strong>{{ subscription.plan.replace('_', ' ').title() }}</strong> plan.
+        <a href="{{ url_for('billing.manage') }}" class="alert-link">Manage subscription</a>
+    </div>
+    {% endif %}
+
+    <div class="row justify-content-center g-4">
+        <!-- Free Plan -->
+        <div class="col-md-4">
+            <div class="card h-100 {% if not is_pro %}border-primary{% endif %}">
+                <div class="card-header bg-transparent text-center py-4">
+                    <h3 class="fw-bold mb-0">Free</h3>
+                    <div class="display-4 fw-bold mt-3">$0</div>
+                    <p class="text-secondary mb-0">Forever free</p>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>15 AI calls per day</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Unlimited notes</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Basic flashcards</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Quiz generation</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Study streaks</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent border-0 pb-4">
+                    {% if not is_pro %}
+                    <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                    {% else %}
+                    <span class="text-secondary d-block text-center">Basic features</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pro Monthly -->
+        <div class="col-md-4">
+            <div class="card h-100 border-primary shadow">
+                <div class="position-absolute top-0 start-50 translate-middle">
+                    <span class="badge bg-primary px-3 py-2">Most Popular</span>
+                </div>
+                <div class="card-header bg-transparent text-center py-4">
+                    <h3 class="fw-bold mb-0">Pro Monthly</h3>
+                    <div class="display-4 fw-bold mt-3">$7.99</div>
+                    <p class="text-secondary mb-0">per month</p>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i><strong>Unlimited</strong> AI calls</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Unlimited flashcards</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Unlimited quizzes</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Advanced analytics</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Priority support</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>AI study guides</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent border-0 pb-4">
+                    {% if subscription.plan == 'pro_monthly' %}
+                    <button class="btn btn-success w-100" disabled><i class="bi bi-check-circle me-2"></i>Current Plan</button>
+                    {% elif is_pro %}
+                    <a href="{{ url_for('billing.portal') }}" class="btn btn-outline-primary w-100">Switch Plan</a>
+                    {% else %}
+                    <a href="{{ url_for('billing.checkout', plan='pro_monthly') }}" class="btn btn-primary w-100">Get Started</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pro Yearly -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="position-absolute top-0 start-50 translate-middle">
+                    <span class="badge bg-success px-3 py-2">Save 48%</span>
+                </div>
+                <div class="card-header bg-transparent text-center py-4">
+                    <h3 class="fw-bold mb-0">Pro Yearly</h3>
+                    <div class="display-4 fw-bold mt-3">$49.99</div>
+                    <p class="text-secondary mb-0">per year <span class="text-decoration-line-through">$95.88</span></p>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Everything in Pro Monthly</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i><strong>Save $45.89/year</strong></li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Early access to features</li>
+                        <li class="mb-3"><i class="bi bi-check-lg text-success me-2"></i>Exclusive beta features</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent border-0 pb-4">
+                    {% if subscription.plan == 'pro_yearly' %}
+                    <button class="btn btn-success w-100" disabled><i class="bi bi-check-circle me-2"></i>Current Plan</button>
+                    {% elif is_pro %}
+                    <a href="{{ url_for('billing.portal') }}" class="btn btn-outline-primary w-100">Switch Plan</a>
+                    {% else %}
+                    <a href="{{ url_for('billing.checkout', plan='pro_yearly') }}" class="btn btn-outline-primary w-100">Get Started</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <p class="text-secondary">
+            <i class="bi bi-shield-check me-1"></i>
+            Secure payment via Stripe. Cancel anytime.
+        </p>
+    </div>
+</div>
+{% endblock %}

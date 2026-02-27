@@ -388,6 +388,39 @@ def init_db():
         )
     ''')
 
+    # Create subscriptions table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS subscriptions (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL UNIQUE,
+            stripe_customer_id VARCHAR(255),
+            stripe_subscription_id VARCHAR(255),
+            plan VARCHAR(50) DEFAULT 'free',
+            status VARCHAR(50) DEFAULT 'active',
+            current_period_start TIMESTAMP NULL,
+            current_period_end TIMESTAMP NULL,
+            cancel_at_period_end TINYINT(1) DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Create payment history table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS payments (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            stripe_payment_intent_id VARCHAR(255),
+            amount INT NOT NULL,
+            currency VARCHAR(10) DEFAULT 'usd',
+            status VARCHAR(50),
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+
     # Create shared resources table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS shared_resources (

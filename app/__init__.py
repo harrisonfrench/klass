@@ -74,6 +74,7 @@ from app.blueprints.pomodoro import pomodoro
 from app.blueprints.admin import admin
 from app.blueprints.friends import friends
 from app.blueprints.notifications import notifications
+from app.blueprints.billing import billing
 
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(admin)
@@ -89,10 +90,14 @@ app.register_blueprint(study_guides, url_prefix='/study-guides')
 app.register_blueprint(quizzes, url_prefix='/quizzes')
 app.register_blueprint(friends, url_prefix='/friends')
 app.register_blueprint(notifications, url_prefix='/notifications')
+app.register_blueprint(billing, url_prefix='/billing')
 
 # Exempt beacon-save endpoint from CSRF (used by navigator.sendBeacon on page unload)
 # This is safe because the endpoint still validates user session and note ownership
 csrf.exempt(notes.name + '.beacon_save_note')
+
+# Exempt Stripe webhook from CSRF (validated via Stripe signature)
+csrf.exempt(billing.name + '.webhook')
 
 from . import routes
 
@@ -119,11 +124,12 @@ def add_security_headers(response):
     # Content Security Policy - Whitelists allowed resources
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' code.jquery.com cdn.jsdelivr.net cdnjs.cloudflare.com cdn.quilljs.com; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' code.jquery.com cdn.jsdelivr.net cdnjs.cloudflare.com cdn.quilljs.com js.stripe.com; "
         "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com cdn.jsdelivr.net cdn.quilljs.com; "
         "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com; "
-        "img-src 'self' data: blob:; "
-        "connect-src 'self' api.groq.com; "
+        "img-src 'self' data: blob: *.stripe.com; "
+        "connect-src 'self' api.groq.com api.stripe.com; "
+        "frame-src 'self' js.stripe.com hooks.stripe.com; "
         "media-src 'self' blob:; "
         "frame-ancestors 'self'"
     )
@@ -186,3 +192,24 @@ def inject_user_settings():
         return {'user_theme': theme, 'user_profile_picture': profile_picture}
     except Exception:
         return {'user_theme': 'light', 'user_profile_picture': None}
+
+
+# Context processor to inject subscription info for upgrade prompts
+@app.context_processor
+def inject_subscription_info():
+    from flask import session
+    try:
+        if 'user_id' not in session:
+            return {'is_pro_user': False, 'user_plan': 'free'}
+
+        db = get_db()
+        cursor = db.execute(
+            'SELECT plan, status FROM subscriptions WHERE user_id = %s',
+            (session['user_id'],)
+        )
+        sub = cursor.fetchone()
+        if sub and sub['status'] == 'active' and sub['plan'] in ('pro_monthly', 'pro_yearly'):
+            return {'is_pro_user': True, 'user_plan': sub['plan']}
+        return {'is_pro_user': False, 'user_plan': 'free'}
+    except Exception:
+        return {'is_pro_user': False, 'user_plan': 'free'}

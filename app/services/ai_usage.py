@@ -12,19 +12,40 @@ DEFAULT_LIMITS = {
     'tokens_daily': 100000,  # Max tokens per day
 }
 
-# Tier-specific limits (for future monetization)
+# Tier-specific limits
 TIER_LIMITS = {
     'free': {
-        'hourly': 20,
-        'daily': 50,
-        'tokens_daily': 25000,
+        'hourly': 15,
+        'daily': 30,
+        'tokens_daily': 15000,
     },
-    'pro': {
-        'hourly': 100,
-        'daily': 500,
-        'tokens_daily': 500000,
+    'pro_monthly': {
+        'hourly': 200,
+        'daily': 1000,
+        'tokens_daily': 1000000,
+    },
+    'pro_yearly': {
+        'hourly': 200,
+        'daily': 1000,
+        'tokens_daily': 1000000,
     },
 }
+
+
+def get_user_tier(user_id):
+    """Get the subscription tier for a user."""
+    from app.db_connect import get_db
+    db = get_db()
+
+    cursor = db.execute('''
+        SELECT plan, status FROM subscriptions WHERE user_id = %s
+    ''', (user_id,))
+    sub = cursor.fetchone()
+
+    if not sub or sub['status'] != 'active':
+        return 'free'
+
+    return sub['plan'] if sub['plan'] in TIER_LIMITS else 'free'
 
 
 def log_ai_usage(db, user_id, endpoint, tokens_used=0, model=None, success=True, error_message=None):
@@ -154,8 +175,11 @@ def ai_rate_limit(endpoint_name, tokens_estimate=500):
             user_id = session['user_id']
             db = get_db()
 
-            # Check if user is within limits (default to free tier for now)
-            is_allowed, message = check_usage_limit(db, user_id, tier='free')
+            # Get user's subscription tier
+            tier = get_user_tier(user_id)
+
+            # Check if user is within limits
+            is_allowed, message = check_usage_limit(db, user_id, tier=tier)
             if not is_allowed:
                 # Log the blocked attempt
                 log_ai_usage(db, user_id, endpoint_name, success=False, error_message='Rate limited')
