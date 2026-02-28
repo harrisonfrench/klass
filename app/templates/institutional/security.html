@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security & Compliance - Klass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #f9fafb;
+            --white: #ffffff;
+            --success: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .header {
+            background: var(--white);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 2rem;
+        }
+
+        .hero {
+            padding: 8rem 2rem 4rem;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e5e7ff 100%);
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .section {
+            margin-bottom: 4rem;
+        }
+
+        .section h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .section h3 {
+            font-size: 1.25rem;
+            margin: 2rem 0 1rem;
+        }
+
+        .section p {
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .badge-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .badge-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .badge-card h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-card p {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        .checklist {
+            list-style: none;
+            margin: 1.5rem 0;
+        }
+
+        .checklist li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .checklist li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .contact-box {
+            background: var(--primary);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .contact-box h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-box p {
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 1rem;
+        }
+
+        .contact-box a {
+            color: white;
+            font-weight: 600;
+        }
+
+        .footer {
+            padding: 2rem;
+            background: #111827;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('institutional.landing') }}" class="logo">Klass</a>
+            <nav class="nav-links">
+                <a href="{{ url_for('institutional.landing') }}">Home</a>
+                <a href="{{ url_for('institutional.request_demo') }}">Request Demo</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>Security & Compliance</h1>
+        <p>Protecting student data is our top priority. Learn how we keep your institution's information safe.</p>
+    </section>
+
+    <div class="content">
+        <section class="section">
+            <h2>Trust & Compliance</h2>
+            <div class="badge-grid">
+                <div class="badge-card">
+                    <div class="badge-icon">🔒</div>
+                    <h4>SOC 2 Type II</h4>
+                    <p>Certified security controls</p>
+                </div>
+                <div class="badge-card">
+                    <div class="badge-icon">🎓</div>
+                    <h4>FERPA Compliant</h4>
+                    <p>Student privacy protected</p>
+                </div>
+                <div class="badge-card">
+                    <div class="badge-icon">🌍</div>
+                    <h4>GDPR Ready</h4>
+                    <p>EU data protection</p>
+                </div>
+                <div class="badge-card">
+                    <div class="badge-icon">♿</div>
+                    <h4>WCAG 2.1 AA</h4>
+                    <p>Accessibility standards</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Data Protection</h2>
+
+            <h3>Encryption</h3>
+            <ul class="checklist">
+                <li>All data encrypted in transit using TLS 1.3</li>
+                <li>Data encrypted at rest using AES-256</li>
+                <li>Database connections encrypted end-to-end</li>
+                <li>Passwords hashed using bcrypt with salting</li>
+            </ul>
+
+            <h3>Infrastructure</h3>
+            <ul class="checklist">
+                <li>Hosted on enterprise-grade cloud infrastructure (AWS/Heroku)</li>
+                <li>Automatic daily backups with 30-day retention</li>
+                <li>Geographic redundancy for disaster recovery</li>
+                <li>99.9% uptime SLA for enterprise customers</li>
+            </ul>
+
+            <h3>Access Control</h3>
+            <ul class="checklist">
+                <li>Role-based access control (RBAC)</li>
+                <li>SSO/SAML integration for institutional authentication</li>
+                <li>Multi-factor authentication available</li>
+                <li>Session timeout and secure cookie policies</li>
+                <li>Rate limiting on all API endpoints</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>AI & Data Privacy</h2>
+            <p>Our AI features are designed with privacy in mind:</p>
+            <ul class="checklist">
+                <li>AI processing uses industry-standard models with data protection agreements</li>
+                <li>Student content is never used to train AI models</li>
+                <li>AI requests are processed in real-time and not stored long-term</li>
+                <li>Institutions can disable AI features if required by policy</li>
+                <li>All AI interactions are logged for audit purposes</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Security Practices</h2>
+
+            <h3>Application Security</h3>
+            <ul class="checklist">
+                <li>CSRF protection on all forms</li>
+                <li>SQL injection prevention via parameterized queries</li>
+                <li>XSS protection with content sanitization</li>
+                <li>Security headers (HSTS, CSP, X-Frame-Options)</li>
+                <li>Regular dependency vulnerability scanning</li>
+            </ul>
+
+            <h3>Monitoring & Incident Response</h3>
+            <ul class="checklist">
+                <li>24/7 automated security monitoring</li>
+                <li>Real-time alerting for suspicious activity</li>
+                <li>Documented incident response procedures</li>
+                <li>Security team on-call for emergencies</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Data Ownership & Portability</h2>
+            <ul class="checklist">
+                <li>Your institution owns all data created by your users</li>
+                <li>Full data export available in standard formats (JSON, CSV)</li>
+                <li>Data deletion upon contract termination per your requirements</li>
+                <li>No vendor lock-in - export your data anytime</li>
+            </ul>
+        </section>
+
+        <div class="contact-box">
+            <h3>Questions About Security?</h3>
+            <p>Our security team is happy to discuss your institution's requirements.</p>
+            <a href="mailto:security@klass.ai">security@klass.ai</a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Klass. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -76,6 +76,7 @@ from app.blueprints.friends import friends
 from app.blueprints.notifications import notifications
 from app.blueprints.billing import billing
 from app.blueprints.referrals import referrals
+from app.blueprints.institutional import institutional
 
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(admin)
@@ -93,6 +94,7 @@ app.register_blueprint(friends, url_prefix='/friends')
 app.register_blueprint(notifications, url_prefix='/notifications')
 app.register_blueprint(billing, url_prefix='/billing')
 app.register_blueprint(referrals, url_prefix='/referrals')
+app.register_blueprint(institutional, url_prefix='/campus')
 
 # Exempt beacon-save endpoint from CSRF (used by navigator.sendBeacon on page unload)
 # This is safe because the endpoint still validates user session and note ownership

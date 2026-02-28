@@ -268,6 +268,83 @@
         opacity: 0.7;
     }
 
+    /* AI Tools Dropdown */
+    .ai-tools-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .ai-tools-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .ai-tools-btn:hover {
+        background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+        transform: translateY(-1px);
+    }
+
+    .ai-tools-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .ai-tools-menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        min-width: 200px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        padding: 4px;
+        z-index: 1050;
+        display: none;
+    }
+
+    .ai-tools-menu.show {
+        display: block;
+    }
+
+    .ai-tools-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.15s;
+    }
+
+    .ai-tools-menu-item:hover {
+        background: var(--bg-hover);
+    }
+
+    .ai-tools-menu-item svg,
+    .ai-tools-menu-item [data-feather] {
+        width: 16px;
+        height: 16px;
+        color: var(--text-muted);
+    }
+
     /* Summary modal content */
     .summary-content {
         background: var(--bg);
@@ -291,13 +368,13 @@
 
     /* Floating Selection Toolbar (Notion-style) */
     .selection-toolbar {
-        position: absolute;
+        position: fixed;
         display: none;
         background: #37352f;
         border-radius: 6px;
         padding: 4px;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-        z-index: 1000;
+        z-index: 10000;
         gap: 1px;
         align-items: center;
         flex-wrap: nowrap;
@@ -369,18 +446,16 @@
 
     .sel-dropdown-menu {
         display: none;
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
+        position: fixed;
         background: var(--bg-secondary);
         border: 1px solid var(--border);
         border-radius: 8px;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
         padding: 6px;
-        margin-bottom: 8px;
         min-width: 200px;
-        z-index: 1001;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        z-index: 10001;
     }
 
     .sel-dropdown-menu.visible {
@@ -1954,12 +2029,21 @@
         const bounds = quill.getBounds(range.index, range.length);
         const editorRect = document.getElementById('editor').getBoundingClientRect();
 
-        // Position toolbar above selection
+        // Position toolbar above selection (using fixed positioning)
         const toolbarHeight = 44;
-        const left = editorRect.left + bounds.left + (bounds.width / 2);
-        const top = editorRect.top + bounds.top - toolbarHeight - 8 + window.scrollY;
+        const toolbarWidth = 300; // Approximate toolbar width
+        let left = editorRect.left + bounds.left + (bounds.width / 2) - (toolbarWidth / 2);
+        let top = editorRect.top + bounds.top - toolbarHeight - 8;
 
-        selectionToolbar.style.left = `${Math.max(10, left - 150)}px`;
+        // Keep toolbar within viewport horizontally
+        left = Math.max(10, Math.min(left, window.innerWidth - toolbarWidth - 10));
+
+        // If toolbar would go off top of screen, position below selection
+        if (top < 10) {
+            top = editorRect.top + bounds.top + bounds.height + 8;
+        }
+
+        selectionToolbar.style.left = `${left}px`;
         selectionToolbar.style.top = `${top}px`;
         selectionToolbar.classList.add('visible');
         toolbarVisible = true;
@@ -2045,6 +2129,26 @@
             const isVisible = menu.classList.contains('visible');
             closeAllDropdowns();
             if (!isVisible) {
+                // Position the dropdown menu
+                const rect = toggle.getBoundingClientRect();
+                const menuHeight = 300; // Estimated max height
+
+                // Check if there's room above
+                if (rect.top > menuHeight + 20) {
+                    // Open above
+                    menu.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+                    menu.style.top = 'auto';
+                } else {
+                    // Open below
+                    menu.style.top = (rect.bottom + 8) + 'px';
+                    menu.style.bottom = 'auto';
+                }
+
+                // Center horizontally, but keep within viewport
+                let left = rect.left + (rect.width / 2) - 100; // 100 = half of min-width 200
+                left = Math.max(16, Math.min(left, window.innerWidth - 220));
+                menu.style.left = left + 'px';
+
                 menu.classList.add('visible');
             }
         });

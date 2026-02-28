@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klass for Institutions - AI-Powered Learning for Your Campus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #f9fafb;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--white);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 8rem 2rem 4rem;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e5e7ff 100%);
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        .hero h1 span {
+            color: var(--primary);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            margin-top: 4rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Features */
+        .features {
+            padding: 5rem 2rem;
+            background: var(--white);
+        }
+
+        .features-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 4rem;
+        }
+
+        .features-header h2 {
+            font-size: 2.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .features-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            border-radius: 16px;
+            background: var(--bg);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* LMS Section */
+        .lms-section {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .lms-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .lms-content h2 {
+            font-size: 2.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .lms-content p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+        }
+
+        .lms-logos {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .lms-logo {
+            background: rgba(255,255,255,0.15);
+            padding: 1.5rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Pricing */
+        .pricing {
+            padding: 5rem 2rem;
+            background: var(--bg);
+        }
+
+        .pricing-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 4rem;
+        }
+
+        .pricing-header h2 {
+            font-size: 2.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        .pricing-card.popular {
+            border: 2px solid var(--primary);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-card .price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-card .price span {
+            font-size: 1rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .pricing-card .price-note {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .pricing-features li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        /* Quote Calculator */
+        .quote-section {
+            padding: 5rem 2rem;
+            background: var(--white);
+        }
+
+        .quote-content {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .quote-content h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .quote-content p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        .quote-form {
+            background: var(--bg);
+            padding: 2rem;
+            border-radius: 16px;
+        }
+
+        .quote-input {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .quote-input input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .quote-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .quote-result {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: var(--white);
+            border-radius: 12px;
+            display: none;
+        }
+
+        .quote-result.visible {
+            display: block;
+        }
+
+        .quote-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* CTA */
+        .cta {
+            padding: 5rem 2rem;
+            background: var(--text);
+            color: white;
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 2.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            opacity: 0.8;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 3rem 2rem;
+            background: #111827;
+            color: white;
+            text-align: center;
+        }
+
+        .footer a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-stats {
+                gap: 2rem;
+            }
+
+            .lms-logos {
+                gap: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">Klass</a>
+            <nav class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="{{ url_for('institutional.security') }}">Security</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Log In</a>
+                <a href="{{ url_for('institutional.request_demo') }}" class="btn btn-primary">Request Demo</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <h1>Transform Learning Across <span>Your Campus</span></h1>
+        <p>Klass helps students study smarter with AI-powered flashcards, quizzes, and study guides. Deployed campus-wide with LMS integration and analytics.</p>
+        <div class="hero-cta">
+            <a href="{{ url_for('institutional.request_demo') }}" class="btn btn-primary">Schedule a Demo</a>
+            <a href="#pricing" class="btn btn-outline">View Pricing</a>
+        </div>
+        <div class="hero-stats">
+            <div class="stat">
+                <div class="stat-value">40%</div>
+                <div class="stat-label">Improvement in test scores</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">2.5x</div>
+                <div class="stat-label">More study engagement</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">85%</div>
+                <div class="stat-label">Student satisfaction</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="features-header">
+            <h2>Built for Campus-Wide Deployment</h2>
+            <p>Everything your institution needs to improve student outcomes at scale</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3>AI-Powered Study Tools</h3>
+                <p>Automatic flashcard generation, smart quizzes, and AI tutoring that adapts to each student's needs.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3>LMS Integration</h3>
+                <p>Seamless integration with Canvas, Blackboard, and D2L. Sync courses, assignments, and materials automatically.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Learning Analytics</h3>
+                <p>Track engagement, retention, and outcomes across your entire institution. Identify at-risk students early.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h3>Enterprise Security</h3>
+                <p>SSO/SAML authentication, FERPA compliance, SOC 2 certification, and data encryption at rest and in transit.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Custom Branding</h3>
+                <p>White-label the platform with your institution's colors, logo, and domain.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Faculty Dashboard</h3>
+                <p>Give professors insight into how students are engaging with course materials.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- LMS Section -->
+    <section class="lms-section">
+        <div class="lms-content">
+            <h2>Integrates With Your LMS</h2>
+            <p>One-click course sync. Students see their classes automatically.</p>
+            <div class="lms-logos">
+                <div class="lms-logo">📚 Canvas</div>
+                <div class="lms-logo">📖 Blackboard</div>
+                <div class="lms-logo">💡 D2L Brightspace</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+        <div class="pricing-header">
+            <h2>Simple, Transparent Pricing</h2>
+            <p>Per-student pricing that scales with your institution</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>{{ tiers.starter.name }}</h3>
+                <div class="price">${{ tiers.starter.price_per_user_monthly }}<span>/student/mo</span></div>
+                <div class="price-note">Up to {{ tiers.starter.max_users }} students</div>
+                <ul class="pricing-features">
+                    {% for feature in tiers.starter.features %}
+                    <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="{{ url_for('institutional.request_demo') }}" class="btn btn-outline" style="width: 100%; text-align: center;">Get Started</a>
+            </div>
+            <div class="pricing-card popular">
+                <span class="popular-badge">Most Popular</span>
+                <h3>{{ tiers.professional.name }}</h3>
+                <div class="price">${{ tiers.professional.price_per_user_monthly }}<span>/student/mo</span></div>
+                <div class="price-note">Up to {{ tiers.professional.max_users }} students</div>
+                <ul class="pricing-features">
+                    {% for feature in tiers.professional.features %}
+                    <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="{{ url_for('institutional.request_demo') }}" class="btn btn-primary" style="width: 100%; text-align: center;">Request Demo</a>
+            </div>
+            <div class="pricing-card">
+                <h3>{{ tiers.enterprise.name }}</h3>
+                <div class="price">Custom</div>
+                <div class="price-note">Unlimited students</div>
+                <ul class="pricing-features">
+                    {% for feature in tiers.enterprise.features %}
+                    <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="{{ url_for('institutional.request_demo') }}" class="btn btn-outline" style="width: 100%; text-align: center;">Contact Sales</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quote Calculator -->
+    <section class="quote-section">
+        <div class="quote-content">
+            <h2>Get an Instant Quote</h2>
+            <p>Enter your student count to see pricing</p>
+            <div class="quote-form">
+                <div class="quote-input">
+                    <input type="number" id="studentCount" placeholder="Number of students" min="1">
+                    <button class="btn btn-primary" onclick="getQuote()">Get Quote</button>
+                </div>
+                <div class="quote-result" id="quoteResult">
+                    <p>Recommended tier: <strong id="quoteTier"></strong></p>
+                    <p class="quote-price">$<span id="quotePrice"></span>/year</p>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">Includes 20% annual discount</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <h2>Ready to Transform Your Campus?</h2>
+        <p>Join leading institutions using Klass to improve student outcomes.</p>
+        <a href="{{ url_for('institutional.request_demo') }}" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">Schedule Your Demo</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Klass. <a href="{{ url_for('institutional.security') }}">Security</a> · <a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a></p>
+    </footer>
+
+    <script>
+        async function getQuote() {
+            const students = parseInt(document.getElementById('studentCount').value);
+            if (!students || students <= 0) {
+                alert('Please enter a valid number of students');
+                return;
+            }
+
+            try {
+                const response = await fetch('/campus/api/quote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ students })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('quoteTier').textContent = data.tier_name;
+                    document.getElementById('quotePrice').textContent = data.annual_total ? data.annual_total.toLocaleString() : 'Contact us';
+                    document.getElementById('quoteResult').classList.add('visible');
+                }
+            } catch (error) {
+                console.error('Error getting quote:', error);
+            }
+        }
+    </script>
+</body>
+</html>

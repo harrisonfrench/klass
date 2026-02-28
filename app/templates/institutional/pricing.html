@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institutional Pricing - Klass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #f9fafb;
+            --white: #ffffff;
+            --success: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--white);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 2rem;
+        }
+
+        .hero {
+            padding: 8rem 2rem 4rem;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e5e7ff 100%);
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .pricing-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            border: 2px solid var(--primary);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            content: "Most Popular";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-card .subtitle {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-light);
+        }
+
+        .price-note {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .features-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .features-list li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .calculator {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 4rem;
+        }
+
+        .calculator h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .calculator-form {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .quote-result {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            display: none;
+        }
+
+        .quote-result.show {
+            display: block;
+        }
+
+        .quote-tier {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .quote-price {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .quote-savings {
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .faq {
+            margin-top: 4rem;
+        }
+
+        .faq h2 {
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem 0;
+        }
+
+        .faq-item h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .faq-item p {
+            color: var(--text-light);
+        }
+
+        .footer {
+            padding: 2rem;
+            background: #111827;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            .pricing-card.featured {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('institutional.landing') }}" class="logo">Klass</a>
+            <nav class="nav-links">
+                <a href="{{ url_for('institutional.features') }}">Features</a>
+                <a href="{{ url_for('institutional.security') }}">Security</a>
+                <a href="{{ url_for('institutional.request_demo') }}">Request Demo</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>Simple, Transparent Pricing</h1>
+        <p>Volume discounts for institutions. No hidden fees, no per-feature charges.</p>
+    </section>
+
+    <div class="content">
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>{{ tiers.starter.name }}</h3>
+                <p class="subtitle">Up to {{ tiers.starter.max_users }} students</p>
+                <div class="price">${{ tiers.starter.price_per_user_monthly }}<span>/user/month</span></div>
+                <p class="price-note">Billed annually (20% savings)</p>
+                <ul class="features-list">
+                    {% for feature in tiers.starter.features %}
+                    <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="{{ url_for('institutional.request_demo') }}" class="btn btn-outline">Get Started</a>
+            </div>
+
+            <div class="pricing-card featured">
+                <h3>{{ tiers.professional.name }}</h3>
+                <p class="subtitle">Up to {{ tiers.professional.max_users }} students</p>
+                <div class="price">${{ tiers.professional.price_per_user_monthly }}<span>/user/month</span></div>
+                <p class="price-note">Billed annually (20% savings)</p>
+                <ul class="features-list">
+                    {% for feature in tiers.professional.features %}
+                    <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="{{ url_for('institutional.request_demo') }}" class="btn btn-primary">Request Demo</a>
+            </div>
+
+            <div class="pricing-card">
+                <h3>{{ tiers.enterprise.name }}</h3>
+                <p class="subtitle">Unlimited students</p>
+                <div class="price">Custom</div>
+                <p class="price-note">Tailored to your institution</p>
+                <ul class="features-list">
+                    {% for feature in tiers.enterprise.features %}
+                    <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="{{ url_for('institutional.request_demo') }}" class="btn btn-outline">Contact Sales</a>
+            </div>
+        </div>
+
+        <div class="calculator">
+            <h2>Get Your Custom Quote</h2>
+            <div class="calculator-form">
+                <div class="form-group">
+                    <label for="studentCount">Number of Students</label>
+                    <input type="number" id="studentCount" placeholder="e.g., 2500" min="1">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="calculateQuote()">Calculate Quote</button>
+                <div class="quote-result" id="quoteResult">
+                    <div class="quote-tier" id="quoteTier"></div>
+                    <div class="quote-price" id="quotePrice"></div>
+                    <div class="quote-savings" id="quoteSavings"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq">
+            <h2>Frequently Asked Questions</h2>
+
+            <div class="faq-item">
+                <h4>How does billing work?</h4>
+                <p>We bill annually based on your enrolled student count. You can adjust your license count at renewal time. For mid-year additions, we prorate the cost.</p>
+            </div>
+
+            <div class="faq-item">
+                <h4>What's included in the per-user price?</h4>
+                <p>Every user gets full access to all Klass Pro features, including AI-powered study tools, flashcards with spaced repetition, and unlimited notes. No feature tiers within the product.</p>
+            </div>
+
+            <div class="faq-item">
+                <h4>Can we pilot Klass before committing?</h4>
+                <p>Yes! We offer free 30-day pilots for departments or cohorts. This lets you evaluate the impact on student outcomes before an institution-wide rollout.</p>
+            </div>
+
+            <div class="faq-item">
+                <h4>Do you offer academic discounts?</h4>
+                <p>Our institutional pricing is already significantly discounted compared to individual subscriptions. Contact us for additional discounts for community colleges and public institutions.</p>
+            </div>
+
+            <div class="faq-item">
+                <h4>What payment methods do you accept?</h4>
+                <p>We accept PO/invoice for annual contracts, as well as credit card payments. NET-30 terms are available for qualifying institutions.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Klass. All rights reserved.</p>
+    </footer>
+
+    <script>
+        async function calculateQuote() {
+            const studentCount = parseInt(document.getElementById('studentCount').value);
+            if (!studentCount || studentCount < 1) {
+                alert('Please enter a valid number of students');
+                return;
+            }
+
+            try {
+                const response = await fetch('{{ url_for("institutional.get_quote") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ students: studentCount })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('quoteTier').textContent = data.tier_name + ' Plan';
+
+                    if (data.annual_total) {
+                        const monthlyEquiv = data.annual_total / 12;
+                        document.getElementById('quotePrice').textContent =
+                            `$${data.annual_total.toLocaleString()}/year`;
+                        document.getElementById('quoteSavings').textContent =
+                            `Save ${(data.monthly_total * 12 - data.annual_total).toLocaleString()} with annual billing`;
+                    } else {
+                        document.getElementById('quotePrice').textContent = 'Custom Pricing';
+                        document.getElementById('quoteSavings').textContent =
+                            'Contact us for enterprise pricing';
+                    }
+
+                    document.getElementById('quoteResult').classList.add('show');
+                }
+            } catch (error) {
+                console.error('Error calculating quote:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features for Institutions - Klass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #f9fafb;
+            --white: #ffffff;
+            --success: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--white);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 2rem;
+        }
+
+        .hero {
+            padding: 8rem 2rem 4rem;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e5e7ff 100%);
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .feature-section {
+            margin-bottom: 4rem;
+        }
+
+        .feature-section h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .feature-section p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .feature-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .integration-logos {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .integration-logo {
+            background: var(--white);
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .comparison-table th {
+            background: var(--bg);
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .check {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .cta-section {
+            background: var(--primary);
+            color: white;
+            padding: 3rem;
+            border-radius: 16px;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .cta-section h2 {
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: white;
+            color: var(--primary);
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            padding: 2rem;
+            background: #111827;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('institutional.landing') }}" class="logo">Klass</a>
+            <nav class="nav-links">
+                <a href="{{ url_for('institutional.pricing') }}">Pricing</a>
+                <a href="{{ url_for('institutional.security') }}">Security</a>
+                <a href="{{ url_for('institutional.request_demo') }}">Request Demo</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>Built for Institutions</h1>
+        <p>Enterprise-grade features for campus-wide deployment, with the simplicity students love.</p>
+    </section>
+
+    <div class="content">
+        <section class="feature-section">
+            <h2>LMS Integration</h2>
+            <p>Seamlessly connect Klass with your existing learning management system for automatic course and assignment syncing.</p>
+
+            <div class="integration-logos">
+                <div class="integration-logo">
+                    <span style="font-size: 1.5rem;">C</span>
+                    Canvas
+                </div>
+                <div class="integration-logo">
+                    <span style="font-size: 1.5rem;">Bb</span>
+                    Blackboard
+                </div>
+                <div class="integration-logo">
+                    <span style="font-size: 1.5rem;">D2L</span>
+                    Brightspace
+                </div>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>Course Sync</h4>
+                    <p>Automatically import courses and enrollments from your LMS. Students see their classes without manual setup.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Assignment Import</h4>
+                    <p>Pull assignments and due dates directly from your LMS. Students always have up-to-date schedules.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Material Access</h4>
+                    <p>Access course materials, modules, and files within Klass for seamless study sessions.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Grade Sync</h4>
+                    <p>Optional two-way sync to push quiz scores back to your LMS gradebook.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="feature-section">
+            <h2>Administration & Control</h2>
+            <p>Powerful tools for IT administrators and academic leaders to manage and monitor usage.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>SSO/SAML Integration</h4>
+                    <p>Single sign-on with your institution's identity provider. Support for SAML 2.0, OAuth, and CAS.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Admin Dashboard</h4>
+                    <p>Monitor adoption, usage patterns, and student engagement across departments and courses.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Custom Branding</h4>
+                    <p>Add your institution's logo, colors, and custom domain for a seamless branded experience.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>User Management</h4>
+                    <p>Bulk provisioning via SCIM, CSV import, or LMS roster sync. Automatic deprovisioning.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="feature-section">
+            <h2>AI-Powered Learning</h2>
+            <p>Every student gets access to AI study tools designed to improve comprehension and retention.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>AI Study Guides</h4>
+                    <p>Automatically generate comprehensive study guides from lecture notes and course materials.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Smart Flashcards</h4>
+                    <p>AI creates flashcards from any content, with spaced repetition for optimal retention.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>AI Tutor Chat</h4>
+                    <p>24/7 AI tutor that can answer questions about course materials and explain concepts.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Practice Quizzes</h4>
+                    <p>Generate unlimited practice quizzes to test understanding before exams.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="feature-section">
+            <h2>Analytics & Insights</h2>
+            <p>Data-driven insights to improve student outcomes and identify at-risk students early.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>Engagement Metrics</h4>
+                    <p>Track study time, session frequency, and feature usage across your student body.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Progress Reports</h4>
+                    <p>Monitor flashcard mastery, quiz scores, and study streak trends.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Early Warning System</h4>
+                    <p>Identify students who may be struggling based on engagement patterns and performance.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Department Analytics</h4>
+                    <p>Compare adoption and effectiveness across departments and courses.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="feature-section">
+            <h2>Feature Comparison</h2>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Starter</th>
+                        <th>Professional</th>
+                        <th>Enterprise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Full Klass Pro for all users</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Basic admin dashboard</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Usage analytics</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>LMS integration</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>SSO/SAML</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Custom branding</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Advanced analytics</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Priority support</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Dedicated account manager</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Custom integrations</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>On-premise deployment</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>SLA guarantees</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>API access</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="check">✓</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <div class="cta-section">
+            <h2>Ready to Transform Learning at Your Institution?</h2>
+            <p>Schedule a demo to see how Klass can improve student outcomes.</p>
+            <a href="{{ url_for('institutional.request_demo') }}" class="btn">Request a Demo</a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Klass. All rights reserved.</p>
+    </footer>
+</body>
+</html>
