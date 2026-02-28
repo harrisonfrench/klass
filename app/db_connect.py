@@ -308,6 +308,7 @@ def init_db():
             pomodoro_short_break INT DEFAULT 5,
             pomodoro_long_break INT DEFAULT 15,
             pomodoro_sessions_until_long INT DEFAULT 4,
+            onboarding_completed TINYINT(1) DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
@@ -317,6 +318,13 @@ def init_db():
     # Add profile_picture column if it doesn't exist (for existing databases)
     try:
         cursor.execute('ALTER TABLE user_settings ADD COLUMN profile_picture VARCHAR(255) DEFAULT NULL')
+        db.commit()
+    except pymysql.err.OperationalError:
+        pass  # Column already exists
+
+    # Add onboarding_completed column if it doesn't exist
+    try:
+        cursor.execute('ALTER TABLE user_settings ADD COLUMN onboarding_completed TINYINT(1) DEFAULT 0')
         db.commit()
     except pymysql.err.OperationalError:
         pass  # Column already exists

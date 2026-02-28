@@ -300,6 +300,17 @@ a.stat-card {
 
 .streak-icon {
     font-size: 2.5rem;
+    animation: fire-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes fire-glow {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.4)); transform: scale(1); }
+    50% { filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.7)); transform: scale(1.05); }
+}
+
+.streak-icon.inactive {
+    animation: none;
+    filter: none;
 }
 
 .streak-count {
@@ -356,10 +367,26 @@ a.stat-card {
     background: linear-gradient(135deg, #f59e0b, #ef4444);
     border-color: transparent;
     color: white;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+    animation: streak-glow 2s ease-in-out infinite;
+}
+
+@keyframes streak-glow {
+    0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); }
+    50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.7); }
 }
 
 .streak-day-dot.today {
     border-color: var(--primary);
+}
+
+.streak-day-dot.today:not(.active) {
+    animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% { border-color: var(--primary); }
+    50% { border-color: rgba(99, 102, 241, 0.5); }
 }
 
 .streak-day-dot svg {
@@ -394,6 +421,11 @@ a.stat-card {
 
 {% block content %}
 <div class="dashboard-page">
+    <!-- Onboarding Widget -->
+    {% if show_onboarding %}
+    {% include 'components/onboarding_widget.html' %}
+    {% endif %}
+
     <!-- Header -->
     <div class="dashboard-header">
         <h1>Welcome back</h1>
@@ -434,10 +466,13 @@ a.stat-card {
         </a>
     </div>
 
+    <!-- Performance Insights -->
+    {% include 'components/insights_widget.html' %}
+
     <!-- Streak Widget -->
     <div class="streak-widget">
         <div class="streak-fire">
-            <span class="streak-icon">{{ '🔥' if streak.current_streak > 0 else '💤' }}</span>
+            <span class="streak-icon {{ 'inactive' if streak.current_streak == 0 else '' }}">{{ '🔥' if streak.current_streak > 0 else '💤' }}</span>
             <div class="streak-count">
                 <span class="streak-number">{{ streak.current_streak or 0 }}</span>
                 <span class="streak-label">Day{% if streak.current_streak != 1 %}s{% endif %} streak</span>
@@ -532,6 +567,7 @@ a.stat-card {
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/celebrations.js') }}"></script>
 <script>
     feather.replace();
 </script>

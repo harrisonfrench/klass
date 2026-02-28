@@ -3,6 +3,8 @@ from . import app
 from .db_connect import get_db
 from .blueprints.auth import login_required
 from .services.streak_service import get_user_streak, get_today_stats, get_weekly_activity, has_studied_today
+from .services.onboarding_service import get_onboarding_progress, check_onboarding_complete
+from .services.insights_service import get_user_insights
 from datetime import datetime, date
 import calendar as cal
 
@@ -79,6 +81,13 @@ def index():
     weekly_activity = get_weekly_activity(user_id)
     studied_today = has_studied_today(user_id)
 
+    # Get onboarding progress
+    onboarding = get_onboarding_progress(user_id)
+    show_onboarding = not onboarding['completed'] and onboarding['percentage'] < 100
+
+    # Get performance insights
+    insights = get_user_insights(user_id) if not show_onboarding else []
+
     return render_template('dashboard.html',
         classes=classes,
         class_count=class_count,
@@ -90,7 +99,10 @@ def index():
         streak=streak,
         today_stats=today_stats,
         weekly_activity=weekly_activity,
-        studied_today=studied_today
+        studied_today=studied_today,
+        onboarding=onboarding,
+        show_onboarding=show_onboarding,
+        insights=insights
     )
 
 
@@ -165,6 +177,13 @@ def dashboard():
     weekly_activity = get_weekly_activity(user_id)
     studied_today = has_studied_today(user_id)
 
+    # Get onboarding progress
+    onboarding = get_onboarding_progress(user_id)
+    show_onboarding = not onboarding['completed'] and onboarding['percentage'] < 100
+
+    # Get performance insights
+    insights = get_user_insights(user_id) if not show_onboarding else []
+
     return render_template('dashboard.html',
         classes=classes,
         class_count=class_count,
@@ -176,7 +195,10 @@ def dashboard():
         streak=streak,
         today_stats=today_stats,
         weekly_activity=weekly_activity,
-        studied_today=studied_today
+        studied_today=studied_today,
+        onboarding=onboarding,
+        show_onboarding=show_onboarding,
+        insights=insights
     )
 
 

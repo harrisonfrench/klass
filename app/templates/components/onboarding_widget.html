@@ -1,0 +1,264 @@
+<!-- Onboarding Progress Widget -->
+<div class="onboarding-widget" id="onboardingWidget">
+    <div class="onboarding-header">
+        <div class="onboarding-title">
+            <span class="onboarding-icon">🚀</span>
+            <div>
+                <h3>Getting Started</h3>
+                <p>Complete these steps to get the most out of Klass</p>
+            </div>
+        </div>
+        <button class="onboarding-dismiss" onclick="dismissOnboarding()" title="Dismiss">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+
+    <div class="onboarding-progress-bar">
+        <div class="onboarding-progress-fill" style="width: {{ onboarding.percentage }}%"></div>
+    </div>
+    <span class="onboarding-progress-text">{{ onboarding.percentage }}% complete</span>
+
+    <div class="onboarding-steps">
+        <div class="onboarding-step {{ 'completed' if onboarding.has_class else '' }}">
+            <div class="step-check">
+                {% if onboarding.has_class %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                {% else %}
+                <span>1</span>
+                {% endif %}
+            </div>
+            <div class="step-content">
+                <span class="step-title">Create a class</span>
+                <span class="step-desc">Organize your study materials</span>
+            </div>
+            {% if not onboarding.has_class %}
+            <a href="{{ url_for('classes.create_class') }}" class="btn btn-sm btn-primary">Create</a>
+            {% endif %}
+        </div>
+
+        <div class="onboarding-step {{ 'completed' if onboarding.has_note else '' }}">
+            <div class="step-check">
+                {% if onboarding.has_note %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                {% else %}
+                <span>2</span>
+                {% endif %}
+            </div>
+            <div class="step-content">
+                <span class="step-title">Take notes</span>
+                <span class="step-desc">Try the AI writing tools</span>
+            </div>
+            {% if onboarding.has_class and not onboarding.has_note %}
+            <a href="{{ url_for('notes.list_notes') }}" class="btn btn-sm btn-primary">Go</a>
+            {% endif %}
+        </div>
+
+        <div class="onboarding-step {{ 'completed' if onboarding.has_flashcards else '' }}">
+            <div class="step-check">
+                {% if onboarding.has_flashcards %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                {% else %}
+                <span>3</span>
+                {% endif %}
+            </div>
+            <div class="step-content">
+                <span class="step-title">Create flashcards</span>
+                <span class="step-desc">Generate cards from notes</span>
+            </div>
+            {% if onboarding.has_note and not onboarding.has_flashcards %}
+            <a href="{{ url_for('flashcards.list_decks') }}" class="btn btn-sm btn-primary">Go</a>
+            {% endif %}
+        </div>
+
+        <div class="onboarding-step {{ 'completed' if onboarding.has_studied else '' }}">
+            <div class="step-check">
+                {% if onboarding.has_studied %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                {% else %}
+                <span>4</span>
+                {% endif %}
+            </div>
+            <div class="step-content">
+                <span class="step-title">Start studying</span>
+                <span class="step-desc">Build your streak!</span>
+            </div>
+            {% if onboarding.has_flashcards and not onboarding.has_studied %}
+            <a href="{{ url_for('flashcards.list_decks') }}" class="btn btn-sm btn-primary">Study</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.onboarding-widget {
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg) 100%);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+}
+
+.onboarding-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.onboarding-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.onboarding-icon {
+    font-size: 2rem;
+}
+
+.onboarding-title h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.onboarding-title p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.onboarding-dismiss {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.onboarding-dismiss:hover {
+    background: var(--bg);
+    color: var(--text-dark);
+}
+
+.onboarding-progress-bar {
+    height: 8px;
+    background: var(--bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.onboarding-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), #8b5cf6);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.onboarding-progress-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.onboarding-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.onboarding-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+}
+
+.onboarding-step:hover {
+    border-color: var(--primary);
+}
+
+.onboarding-step.completed {
+    opacity: 0.7;
+}
+
+.onboarding-step.completed .step-check {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.step-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.step-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.step-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.onboarding-step .btn {
+    flex-shrink: 0;
+}
+
+@media (max-width: 576px) {
+    .onboarding-steps {
+        gap: 0.5rem;
+    }
+
+    .onboarding-step {
+        padding: 0.5rem;
+    }
+
+    .step-desc {
+        display: none;
+    }
+}
+</style>
+
+<script>
+function dismissOnboarding() {
+    const widget = document.getElementById('onboardingWidget');
+    widget.style.transition = 'all 0.3s ease';
+    widget.style.opacity = '0';
+    widget.style.transform = 'translateY(-20px)';
+
+    setTimeout(() => {
+        widget.remove();
+        // Save dismissal to server
+        fetch('/settings/dismiss-onboarding', { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token() }}'} });
+    }, 300);
+}
+</script>

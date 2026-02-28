@@ -318,6 +318,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/celebrations.js') }}"></script>
 <script>
     feather.replace();
 
@@ -327,6 +328,8 @@
     let isFlipped = false;
     let correctCount = 0;
     let reviewedCount = 0;
+    let streakCelebrated = false;
+    let currentStreak = 0;
 
     // DOM elements
     const flashcard = document.getElementById('flashcard');
@@ -384,14 +387,25 @@
 
         // Send review to server
         try {
-            await fetch(`/flashcards/card/${card.id}/review`, {
+            const response = await fetch(`/flashcards/card/${card.id}/review`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCsrfToken()
                 },
-                body: JSON.stringify({ difficulty, correct })
+                body: JSON.stringify({ quality: difficulty })
             });
+            const data = await response.json();
+
+            // Check for streak increase and trigger celebration
+            if (data.streak_increased && !streakCelebrated) {
+                streakCelebrated = true;
+                currentStreak = data.streak;
+                // Trigger streak celebration
+                if (window.Celebrations) {
+                    Celebrations.streakCelebration(currentStreak);
+                }
+            }
         } catch (error) {
             console.error('Error recording review:', error);
         }
@@ -421,6 +435,17 @@
         document.getElementById('accuracy').textContent = acc + '%';
 
         progressBar.style.width = '100%';
+
+        // Trigger milestone celebration for completing a study session
+        if (reviewedCount > 0 && window.Celebrations) {
+            setTimeout(() => {
+                if (acc >= 80) {
+                    Celebrations.milestoneCelebration('Great Study Session!');
+                } else {
+                    Celebrations.confetti({ count: 50 });
+                }
+            }, 300);
+        }
     }
 
     // Keyboard shortcuts

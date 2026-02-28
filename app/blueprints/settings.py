@@ -393,3 +393,13 @@ def export_backup():
         mimetype='application/json',
         headers={'Content-Disposition': f'attachment; filename={filename}'}
     )
+
+
+@settings.route('/dismiss-onboarding', methods=['POST'])
+@login_required
+def dismiss_onboarding():
+    """Mark onboarding as complete/dismissed."""
+    from app.services.onboarding_service import complete_onboarding
+    user_id = session['user_id']
+    complete_onboarding(user_id)
+    return jsonify({'success': True})

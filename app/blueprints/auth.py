@@ -177,6 +177,13 @@ def register():
             )
             db.commit()
 
+            # Create demo content for onboarding
+            try:
+                from app.services.onboarding_service import create_demo_content
+                create_demo_content(user['id'])
+            except Exception:
+                pass  # Don't block registration if demo content fails
+
             # Process referral if code was provided
             ref_code = request.form.get('ref') or request.args.get('ref')
             if ref_code:
