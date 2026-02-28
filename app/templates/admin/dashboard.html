@@ -231,6 +231,76 @@
     font-weight: 600;
     font-size: 0.85rem;
 }
+
+/* Admin Navigation */
+.admin-nav {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.5rem;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.admin-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.admin-nav-item:hover {
+    background: var(--bg);
+    color: var(--text-dark);
+}
+
+.admin-nav-item.active {
+    background: var(--primary);
+    color: white;
+}
+
+.admin-nav-item svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Key Metrics Row */
+.key-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.metric-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.metric-value.success { color: var(--success); }
+.metric-value.warning { color: #f59e0b; }
+.metric-value.info { color: #0ea5e9; }
+
+.metric-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
 </style>
 {% endblock %}
 
@@ -240,6 +310,22 @@
     <div class="admin-header">
         <h1>Admin Dashboard</h1>
         <p>Overview of all users and activity</p>
+    </div>
+
+    <!-- Admin Navigation -->
+    <div class="admin-nav mb-4">
+        <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-item active">
+            <span data-feather="home"></span> Overview
+        </a>
+        <a href="{{ url_for('admin.ai_analytics') }}" class="admin-nav-item">
+            <span data-feather="cpu"></span> AI Analytics
+        </a>
+        <a href="{{ url_for('admin.retention') }}" class="admin-nav-item">
+            <span data-feather="users"></span> Retention
+        </a>
+        <a href="{{ url_for('admin.revenue') }}" class="admin-nav-item">
+            <span data-feather="dollar-sign"></span> Revenue
+        </a>
     </div>
 
     <!-- Stats Cards -->
@@ -279,6 +365,30 @@
             <div class="stat-icon">
                 <span data-feather="layers"></span>
             </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="key-metrics">
+        <div class="metric-card">
+            <div class="metric-value">{{ retention.dau }}</div>
+            <div class="metric-label">Daily Active Users</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ retention.wau }}</div>
+            <div class="metric-label">Weekly Active Users</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value success">{{ subscriptions.active_pro }}</div>
+            <div class="metric-label">Pro Subscribers</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value info">{{ subscriptions.conversion_rate }}%</div>
+            <div class="metric-label">Conversion Rate</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value warning">${{ subscriptions.mrr }}</div>
+            <div class="metric-label">Monthly Recurring Revenue</div>
         </div>
     </div>
 

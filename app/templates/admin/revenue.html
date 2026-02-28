@@ -1,0 +1,463 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Revenue Analytics - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-page {
+    padding: 1.5rem;
+}
+
+.admin-header {
+    margin-bottom: 1.5rem;
+}
+
+.admin-header h1 {
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.admin-header p {
+    color: var(--text-muted);
+    margin: 0.25rem 0 0;
+}
+
+/* Admin Navigation */
+.admin-nav {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.5rem;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+}
+
+.admin-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.admin-nav-item:hover {
+    background: var(--bg);
+    color: var(--text-dark);
+}
+
+.admin-nav-item.active {
+    background: var(--primary);
+    color: white;
+}
+
+.admin-nav-item svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Revenue Cards */
+.revenue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.revenue-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.revenue-card.highlight {
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    color: white;
+}
+
+.revenue-card h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.5rem;
+    opacity: 0.8;
+}
+
+.revenue-card.highlight h3 {
+    color: rgba(255,255,255,0.8);
+}
+
+.revenue-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.revenue-subtext {
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    opacity: 0.7;
+}
+
+/* Margin Indicator */
+.margin-indicator {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+}
+
+.margin-indicator h4 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.margin-bar {
+    height: 32px;
+    background: var(--bg);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+.margin-bar-fill {
+    height: 100%;
+    border-radius: 16px;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+}
+
+.margin-bar-fill.good {
+    background: linear-gradient(90deg, var(--success), #34d399);
+}
+
+.margin-bar-fill.warning {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.margin-bar-fill.danger {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.margin-target {
+    position: absolute;
+    left: 70%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--text-dark);
+}
+
+.margin-target::after {
+    content: '70% target';
+    position: absolute;
+    top: -20px;
+    left: -30px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.margin-details {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Stats Section */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.stat-value.success { color: var(--success); }
+.stat-value.warning { color: #f59e0b; }
+.stat-value.info { color: #0ea5e9; }
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+/* Tables */
+.data-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.data-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-card-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dark);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
+}
+
+.data-table td {
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.badge-secondary {
+    background: var(--bg);
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <!-- Header -->
+    <div class="admin-header">
+        <h1>Revenue Analytics</h1>
+        <p>Subscriptions, referrals, and profit margins</p>
+    </div>
+
+    <!-- Admin Navigation -->
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-item">
+            <span data-feather="home"></span> Overview
+        </a>
+        <a href="{{ url_for('admin.ai_analytics') }}" class="admin-nav-item">
+            <span data-feather="cpu"></span> AI Analytics
+        </a>
+        <a href="{{ url_for('admin.retention') }}" class="admin-nav-item">
+            <span data-feather="users"></span> Retention
+        </a>
+        <a href="{{ url_for('admin.revenue') }}" class="admin-nav-item active">
+            <span data-feather="dollar-sign"></span> Revenue
+        </a>
+    </div>
+
+    <!-- Revenue Cards -->
+    <div class="revenue-grid">
+        <div class="revenue-card highlight">
+            <h3>Monthly Recurring Revenue</h3>
+            <div class="revenue-value">${{ subscriptions.mrr }}</div>
+            <div class="revenue-subtext">From {{ subscriptions.active_pro }} Pro subscribers</div>
+        </div>
+        <div class="revenue-card">
+            <h3>Annual Run Rate</h3>
+            <div class="revenue-value" style="color: var(--success);">${{ subscriptions.arr }}</div>
+            <div class="revenue-subtext">Projected yearly revenue</div>
+        </div>
+        <div class="revenue-card">
+            <h3>AI Costs (30 Days)</h3>
+            <div class="revenue-value" style="color: #f59e0b;">${{ cost_per_user.total_cost }}</div>
+            <div class="revenue-subtext">${{ cost_per_user.cost_per_pro_user }} per Pro user</div>
+        </div>
+    </div>
+
+    <!-- Margin Indicator -->
+    <div class="margin-indicator">
+        <h4>Gross Margin</h4>
+        <div class="margin-bar">
+            <div class="margin-bar-fill {% if margin >= 70 %}good{% elif margin >= 50 %}warning{% else %}danger{% endif %}"
+                 style="width: {{ [margin, 100]|min }}%">
+                {{ margin }}%
+            </div>
+            <div class="margin-target"></div>
+        </div>
+        <div class="margin-details">
+            <span>Revenue: ${{ subscriptions.mrr }}</span>
+            <span>AI Costs: ${{ cost_per_user.total_cost }}</span>
+            <span>Net: ${{ "%.2f"|format(subscriptions.mrr - cost_per_user.total_cost) }}</span>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ subscriptions.total_users }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value success">{{ subscriptions.active_pro }}</div>
+            <div class="stat-label">Paid Pro</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value info">{{ subscriptions.referral_pro }}</div>
+            <div class="stat-label">Referral Pro</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value warning">{{ subscriptions.conversion_rate }}%</div>
+            <div class="stat-label">Conversion Rate</div>
+        </div>
+    </div>
+
+    <!-- Subscription Breakdown -->
+    <div class="data-card">
+        <div class="data-card-header">
+            <h5>Subscription Breakdown</h5>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Plan</th>
+                    <th>Status</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in subscriptions.subscription_breakdown %}
+                <tr>
+                    <td><strong>{{ sub.plan|replace('_', ' ')|title }}</strong></td>
+                    <td>
+                        {% if sub.status == 'active' %}
+                        <span class="badge badge-success">Active</span>
+                        {% elif sub.status == 'canceled' %}
+                        <span class="badge badge-warning">Canceled</span>
+                        {% else %}
+                        <span class="badge badge-secondary">{{ sub.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ sub.count }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: var(--text-muted);">No subscriptions yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Referral Stats -->
+    <div class="data-card">
+        <div class="data-card-header">
+            <h5>Referral Program</h5>
+        </div>
+        <div style="padding: 1.25rem;">
+            <div class="stats-row" style="margin-bottom: 0;">
+                <div class="stat-card">
+                    <div class="stat-value">{{ referrals.total_referrals }}</div>
+                    <div class="stat-label">Total Referrals</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value success">{{ referrals.completed_referrals }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value info">{{ referrals.conversion_rate }}%</div>
+                    <div class="stat-label">Conversion</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Referrers -->
+    {% if referrals.top_referrers %}
+    <div class="data-card">
+        <div class="data-card-header">
+            <h5>Top Referrers</h5>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Referrals</th>
+                    <th>Completed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in referrals.top_referrers %}
+                <tr>
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td style="color: var(--text-muted);">{{ user.email }}</td>
+                    <td>{{ user.referrals }}</td>
+                    <td><span class="badge badge-success">{{ user.completed }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+</script>
+{% endblock %}

@@ -1,0 +1,429 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}AI Analytics - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-page {
+    padding: 1.5rem;
+}
+
+.admin-header {
+    margin-bottom: 1.5rem;
+}
+
+.admin-header h1 {
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.admin-header p {
+    color: var(--text-muted);
+    margin: 0.25rem 0 0;
+}
+
+/* Admin Navigation */
+.admin-nav {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.5rem;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+}
+
+.admin-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.admin-nav-item:hover {
+    background: var(--bg);
+    color: var(--text-dark);
+}
+
+.admin-nav-item.active {
+    background: var(--primary);
+    color: white;
+}
+
+.admin-nav-item svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--primary);
+}
+
+.stat-card.success { border-left-color: var(--success); }
+.stat-card.warning { border-left-color: #f59e0b; }
+.stat-card.danger { border-left-color: #ef4444; }
+.stat-card.info { border-left-color: #0ea5e9; }
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+}
+
+/* Charts */
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.chart-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.chart-card-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.chart-card-body {
+    padding: 1.25rem;
+}
+
+/* Tables */
+.data-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.data-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-card-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dark);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
+}
+
+.data-table td {
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+/* Cost Alert */
+.cost-alert {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 1px solid #f59e0b;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cost-alert.good {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border-color: var(--success);
+}
+
+.cost-alert-icon {
+    font-size: 1.5rem;
+}
+
+.cost-alert-content h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.cost-alert-content p {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <!-- Header -->
+    <div class="admin-header">
+        <h1>AI Analytics</h1>
+        <p>Monitor AI usage and costs</p>
+    </div>
+
+    <!-- Admin Navigation -->
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-item">
+            <span data-feather="home"></span> Overview
+        </a>
+        <a href="{{ url_for('admin.ai_analytics') }}" class="admin-nav-item active">
+            <span data-feather="cpu"></span> AI Analytics
+        </a>
+        <a href="{{ url_for('admin.retention') }}" class="admin-nav-item">
+            <span data-feather="users"></span> Retention
+        </a>
+        <a href="{{ url_for('admin.revenue') }}" class="admin-nav-item">
+            <span data-feather="dollar-sign"></span> Revenue
+        </a>
+    </div>
+
+    <!-- Cost Summary -->
+    {% if cost_per_user.total_cost < 10 %}
+    <div class="cost-alert good">
+        <span class="cost-alert-icon">✅</span>
+        <div class="cost-alert-content">
+            <h4>AI Costs Under Control</h4>
+            <p>Total spend is ${{ cost_per_user.total_cost }} this month. Cost per active user: ${{ cost_per_user.cost_per_active_user }}</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="cost-alert">
+        <span class="cost-alert-icon">⚠️</span>
+        <div class="cost-alert-content">
+            <h4>Monitor AI Spending</h4>
+            <p>Total spend is ${{ cost_per_user.total_cost }} this month. Consider reviewing high-usage accounts.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ "{:,}".format(ai_stats.totals.requests) }}</div>
+            <div class="stat-label">Total Requests (30d)</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ "{:,}".format(ai_stats.totals.tokens) }}</div>
+            <div class="stat-label">Tokens Used</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">${{ cost_per_user.total_cost }}</div>
+            <div class="stat-label">Estimated Cost</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value">${{ cost_per_user.cost_per_active_user }}</div>
+            <div class="stat-label">Cost per Active User</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ cost_per_user.cost_per_pro_user }}</div>
+            <div class="stat-label">Cost per Pro User</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-value">{{ ai_stats.totals.failed }}</div>
+            <div class="stat-label">Failed Requests</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h5>Daily Token Usage (Last 30 Days)</h5>
+            </div>
+            <div class="chart-card-body">
+                <canvas id="tokensChart" height="200"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h5>Daily Requests (Last 30 Days)</h5>
+            </div>
+            <div class="chart-card-body">
+                <canvas id="requestsChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage by Endpoint -->
+    <div class="data-card">
+        <div class="data-card-header">
+            <h5>Usage by Endpoint</h5>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Endpoint</th>
+                    <th>Requests</th>
+                    <th>Tokens</th>
+                    <th>Est. Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for endpoint in ai_stats.by_endpoint %}
+                <tr>
+                    <td><strong>{{ endpoint.endpoint }}</strong></td>
+                    <td>{{ "{:,}".format(endpoint.requests) }}</td>
+                    <td>{{ "{:,}".format(endpoint.tokens) }}</td>
+                    <td>${{ "%.2f"|format(endpoint.tokens * 0.0000006) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted);">No data</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Top Users -->
+    <div class="data-card">
+        <div class="data-card-header">
+            <h5>Top Users by AI Usage</h5>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Requests</th>
+                    <th>Tokens</th>
+                    <th>Est. Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in ai_stats.top_users %}
+                <tr>
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td style="color: var(--text-muted);">{{ user.email }}</td>
+                    <td>{{ "{:,}".format(user.requests) }}</td>
+                    <td>{{ "{:,}".format(user.tokens) }}</td>
+                    <td>${{ "%.2f"|format(user.tokens * 0.0000006) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted);">No data</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    feather.replace();
+
+    // Tokens Chart
+    const tokensCtx = document.getElementById('tokensChart').getContext('2d');
+    new Chart(tokensCtx, {
+        type: 'line',
+        data: {
+            labels: {{ daily_labels|tojson }},
+            datasets: [{
+                label: 'Tokens',
+                data: {{ daily_tokens|tojson }},
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#f59e0b',
+                pointRadius: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#e3e6f0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Requests Chart
+    const requestsCtx = document.getElementById('requestsChart').getContext('2d');
+    new Chart(requestsCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ daily_labels|tojson }},
+            datasets: [{
+                label: 'Requests',
+                data: {{ daily_requests|tojson }},
+                backgroundColor: '#6366f1',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#e3e6f0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+{% endblock %}
